@@ -57,14 +57,7 @@ export const LikeButton = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isLiked, setIsLiked] = useState(isInitiallyLiked);
-  const [likeCount, setLikeCount] = useState(initialLikes);
   const [showHearts, setShowHearts] = useState(false);
-
-  useEffect(() => {
-    setIsLiked(isInitiallyLiked);
-    setLikeCount(initialLikes);
-  }, [isInitiallyLiked, initialLikes]);
 
   useEffect(() => {
     if (showHearts) {
@@ -84,7 +77,6 @@ export const LikeButton = ({
         }, 
         async () => {
             const newCount = await getLikeCount(postId);
-            setLikeCount(newCount);
             onLikeCountChange(newCount);
         }
       )
@@ -107,12 +99,10 @@ export const LikeButton = ({
     }
 
     // Optimistic UI updates
-    const wasLiked = isLiked;
+    const wasLiked = isInitiallyLiked;
     const newLikedState = !wasLiked;
-    const newLikeCount = newLikedState ? likeCount + 1 : Math.max(0, likeCount - 1);
+    const newLikeCount = newLikedState ? initialLikes + 1 : Math.max(0, initialLikes - 1);
 
-    setIsLiked(newLikedState);
-    setLikeCount(newLikeCount);
     onIsLikedChange(newLikedState);
     onLikeCountChange(newLikeCount);
 
@@ -128,10 +118,8 @@ export const LikeButton = ({
       }
     } catch (error) {
       // Revert UI on error
-      setIsLiked(wasLiked);
-      setLikeCount(likeCount);
       onIsLikedChange(wasLiked);
-      onLikeCountChange(likeCount);
+      onLikeCountChange(initialLikes);
       toast({
         title: "Something went wrong",
         description: "Could not update like status. Please try again.",
@@ -146,7 +134,7 @@ export const LikeButton = ({
       <Heart
         className={cn(
           "h-6 w-6 cursor-pointer transition-colors duration-200 ease-in-out",
-          isLiked ? "text-red-500 fill-current" : "text-foreground"
+          isInitiallyLiked ? "text-red-500 fill-current" : "text-foreground"
         )}
         onClick={handleClick}
       />

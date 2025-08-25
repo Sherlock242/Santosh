@@ -37,7 +37,7 @@ import { motion, useMotionValue, AnimatePresence, useAnimation, animate } from '
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { setMood, removeMood, recordMoodView, getMoodViewers, likePost } from '@/app/actions';
+import { setMood, removeMood, recordMoodView, getMoodViewers, likePost, unlikePost } from '@/app/actions';
 import { LikeButton } from './like-button';
 import { TimeRemaining } from './time-remaining';
 import Image from 'next/image';
@@ -122,6 +122,7 @@ const PostContent = memo(({
     onSetMood: (id: string) => void,
 }) => {
     const { user } = useAuth();
+    const { toast } = useToast();
     const [localLikeCount, setLocalLikeCount] = useState(emoji.like_count);
     const [isLikedState, setIsLikedState] = useState(emoji.is_liked);
     const [showLikers, setShowLikers] = useState(false);
@@ -151,17 +152,42 @@ const PostContent = memo(({
         }
     };
 
-    const handleLike = useCallback(async () => {
-        if (!user || isLikedState) return;
+    const handleLikeToggle = useCallback(async () => {
+        if (!user) {
+            toast({
+              title: "Login Required",
+              description: "You need to be logged in to like posts.",
+              variant: "destructive",
+            });
+            return;
+        }
+
+        const wasLiked = isLikedState;
+        const newLikedState = !wasLiked;
         
-        setIsLikedState(true);
-        setLocalLikeCount(prev => prev + 1);
-        setShowHeart(true);
-        setTimeout(() => setShowHeart(false), 800);
-        await likePost(emoji.id);
+        // Optimistic UI updates
+        setIsLikedState(newLikedState);
+        setLocalLikeCount(prev => newLikedState ? prev + 1 : Math.max(0, prev - 1));
+        
+        if (newLikedState) {
+            setShowHeart(true);
+            setTimeout(() => setShowHeart(false), 800);
+        }
 
-    }, [isLikedState, user, emoji.id]);
-
+        try {
+            if (wasLiked) {
+                await unlikePost(emoji.id);
+            } else {
+                await likePost(emoji.id);
+            }
+        } catch (error) {
+            // Revert on failure
+            setIsLikedState(wasLiked);
+            setLocalLikeCount(prev => wasLiked ? Math.max(0, prev -1) : prev + 1);
+            toast({ title: "Error", description: "Could not update like status.", variant: "destructive" });
+        }
+    }, [isLikedState, user, emoji.id, toast]);
+    
     useEffect(() => {
         setIsLikedState(emoji.is_liked);
         setLocalLikeCount(emoji.like_count);
@@ -222,7 +248,7 @@ const PostContent = memo(({
                     backgroundColor: emoji.background_color,
                     filter: activeFilterCss,
                 }}
-                onDoubleClick={handleLike}
+                onDoubleClick={handleLikeToggle}
             >
                 {renderEmojiFace(emoji)}
                  <AnimatePresence>
@@ -244,8 +270,8 @@ const PostContent = memo(({
                 <div className="flex items-center gap-4">
                     <LikeButton 
                         postId={emoji.id} 
-                        initialLikes={emoji.like_count ?? 0} 
-                        isInitiallyLiked={emoji.is_liked ?? false} 
+                        initialLikes={localLikeCount} 
+                        isInitiallyLiked={isLikedState} 
                         onLikeCountChange={setLocalLikeCount}
                         onIsLikedChange={setIsLikedState}
                     />
@@ -752,3 +778,4 @@ export function PostView({
     </>
   );
 }
+
