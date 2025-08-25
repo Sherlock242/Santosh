@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback, memo, lazy, Suspense } from 'react';
@@ -160,6 +161,11 @@ const PostContent = memo(({
         await likePost(emoji.id);
 
     }, [isLikedState, user, emoji.id]);
+
+    useEffect(() => {
+        setIsLikedState(emoji.is_liked);
+        setLocalLikeCount(emoji.like_count);
+    }, [emoji.is_liked, emoji.like_count]);
 
     return (
         <div
