@@ -32,7 +32,7 @@ export default function RootLayout({
       <head>
         <title>Edengram</title>
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2882939249270622"
-             crossorigin="anonymous"></script>
+             crossOrigin="anonymous"></script>
         <meta name="description" content="Create and share interactive emojis." />
         <meta name="google-adsense-account" content="ca-pub-2882939249270622" />
       </head>
