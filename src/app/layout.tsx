@@ -31,7 +31,7 @@ export default function RootLayout({
     <html lang="en" className={cn("dark", inter.variable, kalam.variable)}>
       <head>
         <title>Edengram</title>
-        <meta name="description" content="AI Chat and Image Generation" />
+        <meta name="description" content="Create and share interactive emojis." />
         <meta name="google-adsense-account" content="ca-pub-2882939249270622" />
       </head>
       <body className={cn("font-body antialiased bg-background overflow-x-hidden")}>
