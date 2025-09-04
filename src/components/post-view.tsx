@@ -121,12 +121,11 @@ const PostContent = memo(({
     onDelete: (id: string) => void,
     onSetMood: (id: string) => void,
 }) => {
-    const { user } = useAuth();
-    const { toast } = useToast();
     const [localLikeCount, setLocalLikeCount] = useState(emoji.like_count);
     const [isLikedState, setIsLikedState] = useState(emoji.is_liked);
     const [showLikers, setShowLikers] = useState(false);
-    const [showHeart, setShowHeart] = useState(false);
+    
+    const likeButtonRef = useRef<{ triggerLike: () => void }>(null);
 
     const featureOffsetX = useMotionValue(emoji.feature_offset_x || 0);
     const featureOffsetY = useMotionValue(emoji.feature_offset_y || 0);
@@ -151,47 +150,15 @@ const PostContent = memo(({
             default: return <Face {...props} />;
         }
     };
-
-    const handleLikeToggle = useCallback(async () => {
-        if (!user) {
-            toast({
-              title: "Login Required",
-              description: "You need to be logged in to like posts.",
-              variant: "destructive",
-            });
-            return;
-        }
-
-        const wasLiked = isLikedState;
-        const newLikedState = !wasLiked;
-        
-        // Optimistic UI updates
-        setIsLikedState(newLikedState);
-        setLocalLikeCount(prev => newLikedState ? prev + 1 : Math.max(0, prev - 1));
-        
-        if (newLikedState) {
-            setShowHeart(true);
-            setTimeout(() => setShowHeart(false), 800);
-        }
-
-        try {
-            if (wasLiked) {
-                await unlikePost(emoji.id);
-            } else {
-                await likePost(emoji.id);
-            }
-        } catch (error) {
-            // Revert on failure
-            setIsLikedState(wasLiked);
-            setLocalLikeCount(prev => wasLiked ? Math.max(0, prev -1) : prev + 1);
-            toast({ title: "Error", description: "Could not update like status.", variant: "destructive" });
-        }
-    }, [isLikedState, user, emoji.id, toast]);
     
     useEffect(() => {
         setIsLikedState(emoji.is_liked);
         setLocalLikeCount(emoji.like_count);
     }, [emoji.is_liked, emoji.like_count]);
+    
+    const handleDoubleClick = () => {
+        likeButtonRef.current?.triggerLike();
+    }
 
     return (
         <div
@@ -206,40 +173,34 @@ const PostContent = memo(({
                 {emoji.created_at && (
                     <TimeRemaining createdAt={emoji.created_at} className="text-xs text-muted-foreground ml-2" />
                 )}
-                {user && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="ml-auto h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onSetMood(emoji.id)}>
-                                <Smile className="mr-2 h-4 w-4" />
-                                <span>Set as Mood</span>
-                            </DropdownMenuItem>
-                            {user && emoji.user && user.id === emoji.user.id && (
-                                <>
-                                    <DropdownMenuItem asChild>
-                                        <Link href={`/design?emojiId=${emoji.id}`} className="flex items-center w-full">
-                                            <Edit className="mr-2 h-4 w-4" />
-                                            <span>Edit</span>
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    {onDelete && (
-                                        <>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => onDelete(emoji.id)}>
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                <span>Delete</span>
-                                            </DropdownMenuItem>
-                                        </>
-                                    )}
-                                </>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="ml-auto h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onSetMood(emoji.id)}>
+                            <Smile className="mr-2 h-4 w-4" />
+                            <span>Set as Mood</span>
+                        </DropdownMenuItem>
+                        {onDelete && (
+                            <>
+                                <DropdownMenuItem asChild>
+                                    <Link href={`/design?emojiId=${emoji.id}`} className="flex items-center w-full">
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        <span>Edit</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => onDelete(emoji.id)}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>Delete</span>
+                                </DropdownMenuItem>
+                            </>
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             <div 
@@ -248,27 +209,15 @@ const PostContent = memo(({
                     backgroundColor: emoji.background_color,
                     filter: activeFilterCss,
                 }}
-                onDoubleClick={handleLikeToggle}
+                onDoubleClick={handleDoubleClick}
             >
                 {renderEmojiFace(emoji)}
-                 <AnimatePresence>
-                    {showHeart && (
-                        <motion.div
-                            className="absolute inset-0 flex items-center justify-center"
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 1.2, opacity: 0 }}
-                            transition={{ duration: 0.4, ease: 'easeIn' }}
-                        >
-                            <Heart className="w-24 h-24 text-white/90" fill="currentColor" />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
             </div>
 
             <div className="px-4 pt-3 pb-4">
                 <div className="flex items-center gap-4">
                     <LikeButton 
+                        ref={likeButtonRef}
                         postId={emoji.id} 
                         initialLikes={localLikeCount} 
                         isInitiallyLiked={isLikedState} 
@@ -728,11 +677,12 @@ export function PostView({
           >
               {localEmojis.map((emoji) => {
                   if (isCurrentEmojiMood(emoji)) return null;
+                  const isOwner = user?.id === emoji.user_id;
                   return (
                     <div key={emoji.id} className="h-full w-full snap-start flex-shrink-0">
                       <PostContent 
                           emoji={emoji as PostViewEmoji} 
-                          onDelete={handleDeleteClick} 
+                          onDelete={isOwner ? handleDeleteClick : undefined}
                           onSetMood={handleSetMoodClick}
                       />
                     </div>
@@ -778,4 +728,5 @@ export function PostView({
     </>
   );
 }
+
 

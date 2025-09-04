@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { likePost, unlikePost, getLikeCount } from '@/app/actions';
@@ -42,22 +42,28 @@ const AnimatedHeart = ({ delay, gradientId, colors }: { delay: number, gradientI
     </motion.svg>
 );
   
-export const LikeButton = ({
-  postId,
-  initialLikes,
-  isInitiallyLiked,
-  onLikeCountChange,
-  onIsLikedChange
-}: {
+interface LikeButtonProps {
   postId: string;
   initialLikes: number;
   isInitiallyLiked: boolean;
   onLikeCountChange: (newCount: number) => void;
   onIsLikedChange: (isLiked: boolean) => void;
-}) => {
+}
+
+export const LikeButton = forwardRef<
+  { triggerLike: () => void },
+  LikeButtonProps
+>(({
+  postId,
+  initialLikes,
+  isInitiallyLiked,
+  onLikeCountChange,
+  onIsLikedChange
+}, ref) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [showHearts, setShowHearts] = useState(false);
+  const [showHeartIcon, setShowHeartIcon] = useState(false);
 
   useEffect(() => {
     if (showHearts) {
@@ -65,6 +71,14 @@ export const LikeButton = ({
       return () => clearTimeout(timer);
     }
   }, [showHearts]);
+  
+   useEffect(() => {
+    if (showHeartIcon) {
+        const timer = setTimeout(() => setShowHeartIcon(false), 600);
+        return () => clearTimeout(timer);
+    }
+  }, [showHeartIcon]);
+
 
   useEffect(() => {
     const channel = supabase
@@ -87,8 +101,8 @@ export const LikeButton = ({
     }
   }, [postId, onLikeCountChange]);
 
-  const handleClick = async (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    e.stopPropagation();
+  const handleClick = async (e?: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+    e?.stopPropagation();
     if (!user) {
       toast({
         title: "Login Required",
@@ -108,6 +122,7 @@ export const LikeButton = ({
 
     if (newLikedState) {
         setShowHearts(true);
+        setShowHeartIcon(true);
     }
 
     try {
@@ -129,6 +144,10 @@ export const LikeButton = ({
     }
   };
 
+  useImperativeHandle(ref, () => ({
+      triggerLike: () => handleClick()
+  }));
+
   return (
     <div className="relative flex items-center justify-center">
       <Heart
@@ -145,7 +164,19 @@ export const LikeButton = ({
               <AnimatedHeart delay={0.1} gradientId="grad2" colors={['#FFFF00', '#8A2BE2']} />
             </>
         )}
+        {showHeartIcon && (
+             <motion.div
+                className="absolute"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 1.2, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            >
+                <Heart className="w-20 h-20 text-white/90" fill="currentColor" />
+            </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
-};
+});
+LikeButton.displayName = 'LikeButton';
