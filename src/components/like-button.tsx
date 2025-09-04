@@ -48,6 +48,7 @@ interface LikeButtonProps {
   isInitiallyLiked: boolean;
   onLikeCountChange: (newCount: number) => void;
   onIsLikedChange: (isLiked: boolean) => void;
+  onLikeAnimation: () => void;
 }
 
 export const LikeButton = forwardRef<
@@ -58,12 +59,12 @@ export const LikeButton = forwardRef<
   initialLikes,
   isInitiallyLiked,
   onLikeCountChange,
-  onIsLikedChange
+  onIsLikedChange,
+  onLikeAnimation
 }, ref) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [showHearts, setShowHearts] = useState(false);
-  const [showHeartIcon, setShowHeartIcon] = useState(false);
 
   useEffect(() => {
     if (showHearts) {
@@ -71,14 +72,6 @@ export const LikeButton = forwardRef<
       return () => clearTimeout(timer);
     }
   }, [showHearts]);
-  
-   useEffect(() => {
-    if (showHeartIcon) {
-        const timer = setTimeout(() => setShowHeartIcon(false), 600);
-        return () => clearTimeout(timer);
-    }
-  }, [showHeartIcon]);
-
 
   useEffect(() => {
     const channel = supabase
@@ -112,18 +105,16 @@ export const LikeButton = forwardRef<
       return;
     }
 
-    // Optimistic UI updates
     const wasLiked = isInitiallyLiked;
+    if (!wasLiked) {
+        onLikeAnimation();
+    }
+
     const newLikedState = !wasLiked;
     const newLikeCount = newLikedState ? initialLikes + 1 : Math.max(0, initialLikes - 1);
 
     onIsLikedChange(newLikedState);
     onLikeCountChange(newLikeCount);
-
-    if (newLikedState) {
-        setShowHearts(true);
-        setShowHeartIcon(true);
-    }
 
     try {
       if (wasLiked) {
@@ -157,25 +148,6 @@ export const LikeButton = forwardRef<
         )}
         onClick={handleClick}
       />
-      <AnimatePresence>
-        {showHearts && (
-            <>
-              <AnimatedHeart delay={0} gradientId="grad1" colors={['#FF0000', '#FFFF00']} />
-              <AnimatedHeart delay={0.1} gradientId="grad2" colors={['#FFFF00', '#8A2BE2']} />
-            </>
-        )}
-        {showHeartIcon && (
-             <motion.div
-                className="absolute"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 1.2, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            >
-                <Heart className="w-20 h-20 text-white/90" fill="currentColor" />
-            </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 });

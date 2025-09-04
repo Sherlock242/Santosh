@@ -124,12 +124,24 @@ const PostContent = memo(({
     const [localLikeCount, setLocalLikeCount] = useState(emoji.like_count);
     const [isLikedState, setIsLikedState] = useState(emoji.is_liked);
     const [showLikers, setShowLikers] = useState(false);
+    const [showHeartIcon, setShowHeartIcon] = useState(false);
     
     const likeButtonRef = useRef<{ triggerLike: () => void }>(null);
 
     const featureOffsetX = useMotionValue(emoji.feature_offset_x || 0);
     const featureOffsetY = useMotionValue(emoji.feature_offset_y || 0);
     const activeFilterCss = filters.find(f => f.name === emoji.selected_filter)?.css || 'none';
+
+    const handleLikeAnimation = useCallback(() => {
+        setShowHeartIcon(true);
+    }, []);
+
+    useEffect(() => {
+        if (showHeartIcon) {
+            const timer = setTimeout(() => setShowHeartIcon(false), 600);
+            return () => clearTimeout(timer);
+        }
+    }, [showHeartIcon]);
 
     const renderEmojiFace = (emoji: EmojiState) => {
         const props = {
@@ -212,6 +224,19 @@ const PostContent = memo(({
                 onDoubleClick={handleDoubleClick}
             >
                 {renderEmojiFace(emoji)}
+                <AnimatePresence>
+                    {showHeartIcon && (
+                        <motion.div
+                            className="absolute"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 1.2, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                        >
+                            <Heart className="w-20 h-20 text-white/90" fill="currentColor" />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             <div className="px-4 pt-3 pb-4">
@@ -223,6 +248,7 @@ const PostContent = memo(({
                         isInitiallyLiked={isLikedState} 
                         onLikeCountChange={setLocalLikeCount}
                         onIsLikedChange={setIsLikedState}
+                        onLikeAnimation={handleLikeAnimation}
                     />
                     <Send className="h-6 w-6 cursor-pointer" onClick={() => onSetMood(emoji.id)} />
                 </div>
@@ -728,6 +754,3 @@ export function PostView({
     </>
   );
 }
-
-
-
