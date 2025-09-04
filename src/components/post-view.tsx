@@ -168,10 +168,6 @@ const PostContent = memo(({
         setLocalLikeCount(emoji.like_count);
     }, [emoji.is_liked, emoji.like_count]);
     
-    const handleDoubleClick = () => {
-        likeButtonRef.current?.triggerLike();
-    }
-
     return (
         <div
             className="w-full flex-shrink-0 flex flex-col border-b border-border/40"
@@ -221,7 +217,7 @@ const PostContent = memo(({
                     backgroundColor: emoji.background_color,
                     filter: activeFilterCss,
                 }}
-                onDoubleClick={handleDoubleClick}
+                onDoubleClick={() => likeButtonRef.current?.triggerLike()}
             >
                 {renderEmojiFace(emoji)}
                 <AnimatePresence>
