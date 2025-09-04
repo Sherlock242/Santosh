@@ -118,7 +118,7 @@ const PostContent = memo(({
     onSetMood
 }: { 
     emoji: PostViewEmoji,
-    onDelete: (id: string) => void,
+    onDelete?: (id: string) => void,
     onSetMood: (id: string) => void,
 }) => {
     const [localLikeCount, setLocalLikeCount] = useState(emoji.like_count);
@@ -728,5 +728,6 @@ export function PostView({
     </>
   );
 }
+
 
 
