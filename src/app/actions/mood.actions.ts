@@ -88,14 +88,46 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
     const supabase = createSupabaseServerClient();
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     if (!currentUser) return [];
-    
-    const { data, error } = await supabase
-        .rpc('get_mood_viewers', { p_mood_id: moodId, p_current_user_id: currentUser.id });
 
-    if (error) {
-        console.error('Error getting mood viewers:', error);
+    const { data: viewersData, error: viewersError } = await supabase
+        .from('mood_views')
+        .select('viewer_id')
+        .eq('mood_id', moodId);
+
+    if (viewersError) {
+        console.error('Error getting mood viewers:', viewersError);
+        return [];
+    }
+
+    const viewerIds = viewersData.map(v => v.viewer_id);
+    if (viewerIds.length === 0) return [];
+
+    const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, name, picture, is_private')
+        .in('id', viewerIds);
+    
+    if (usersError) {
+        console.error('Error fetching viewer profiles:', usersError);
         return [];
     }
     
-    return (data || []) as UserWithSupportStatus[];
+    const { data: supportStatusData, error: supportStatusError } = await supabase
+        .from('supports')
+        .select('supported_id, status')
+        .eq('supporter_id', currentUser.id)
+        .in('supported_id', viewerIds);
+
+    if (supportStatusError) {
+        console.error('Error fetching support statuses:', supportStatusError);
+        // Continue without this data if it fails
+    }
+
+    const supportStatusMap = new Map(supportStatusData?.map(s => [s.supported_id, s.status]));
+
+    return usersData.map(user => ({
+        ...user,
+        support_status: supportStatusMap.get(user.id) || null,
+        has_mood: false // This info is not available in this context, default to false.
+    })) as UserWithSupportStatus[];
 }

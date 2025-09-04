@@ -105,7 +105,7 @@ export async function getLikers({ emojiId, page = 1, limit = 15 }: { emojiId: st
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     
     const { data, error } = await supabase
-        .rpc('get_paginated_likers', {
+        .rpc('get_likers_with_details', {
             p_emoji_id: emojiId,
             p_current_user_id: currentUser?.id,
             p_limit: limit,
