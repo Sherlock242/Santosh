@@ -539,7 +539,7 @@ export function PostView({
   const renderEmojiFace = (emoji: EmojiState) => {
     const props = {
       ...emoji,
-      animation_type: isMoodView ? 'random' : emoji.animation_type,
+      animation_type: emoji.animation_type,
       color: emoji.emoji_color,
       isDragging: false,
       isInteractive: false,
