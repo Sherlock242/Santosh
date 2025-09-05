@@ -24,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const isLoginPage = pathname === '/';
-  const showNav = !isLoginPage;
+  const publicPaths = ['/', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy'];
+  const showNav = !publicPaths.includes(pathname);
 
   return (
     <html lang="en" className={cn("dark", inter.variable, kalam.variable)}>
