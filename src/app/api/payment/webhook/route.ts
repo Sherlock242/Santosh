@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
       const notes = subscription.notes;
       const supabaseUserId = notes?.supabase_user_id;
       const subscriptionId = subscription.id;
+      const customerId = subscription.customer_id;
 
       if (!supabaseUserId) {
         console.error('Webhook Error: supabase_user_id not found in subscription notes.');
@@ -49,7 +50,8 @@ export async function POST(req: NextRequest) {
         .from('users')
         .update({ 
             is_gold_member: true,
-            razorpay_subscription_id: subscriptionId
+            razorpay_subscription_id: subscriptionId,
+            razorpay_customer_id: customerId, // Also save the customer ID
         })
         .eq('id', supabaseUserId);
 
