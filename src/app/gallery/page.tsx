@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import type { EmojiState } from '@/app/design/page';
 import { GalleryThumbnail } from '@/components/gallery-thumbnail';
 import { Button } from '@/components/ui/button';
-import { Lock, Grid3x3, Menu, LogOut, Share2, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
+import { Lock, Grid3x3, Menu, LogOut, Share2, Loader2, ArrowLeft, Trash2, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -350,7 +350,13 @@ function GalleryPageContent() {
                         <SheetHeader className="text-left">
                             <SheetTitle>Menu</SheetTitle>
                         </SheetHeader>
-                        <div className="flex-1">
+                        <div className="flex-1 space-y-2">
+                           <Button variant="ghost" className="w-full justify-start" asChild>
+                                <Link href="/plan">
+                                    <Star className="mr-2 h-4 w-4" />
+                                    Upgrade to Gold
+                                </Link>
+                           </Button>
                         </div>
                         <div className="mt-auto">
                            <Button variant="ghost" className="w-full justify-start" onClick={() => setShowSignOutConfirm(true)}>
