@@ -32,7 +32,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, MoreHorizontal, Edit, Trash2, Send, Smile, X, Eye, Loader2, Heart, Star } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Edit, Trash2, Send, Smile, X, Eye, Loader2, Heart } from 'lucide-react';
 import { motion, useMotionValue, AnimatePresence, useAnimation, animate } from 'framer-motion';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
@@ -43,6 +43,7 @@ import { TimeRemaining } from './time-remaining';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { UserListItem } from './user-list-item';
+import { GoldTick } from './gold-tick';
 
 const LikerListSheet = dynamic(() => import('@/components/liker-list-sheet'), { ssr: false });
 
@@ -182,7 +183,7 @@ const PostContent = memo(({
                 </Avatar>
                 <Link href={`/gallery?userId=${emoji.user?.id}`} className="ml-3 font-semibold text-sm flex items-center gap-1">
                   {emoji.user?.name || 'User'}
-                  {emoji.user?.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-current" />}
+                  {emoji.user?.is_gold_member && <GoldTick />}
                 </Link>
                 {emoji.created_at && (
                     <TimeRemaining createdAt={emoji.created_at} className="text-xs text-muted-foreground ml-2" />
@@ -587,7 +588,7 @@ export function PostView({
                     </Avatar>
                      <span className="font-semibold text-sm text-white flex items-center gap-1">
                       {postAuthor?.name}
-                      {postAuthor?.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-current" />}
+                      {postAuthor?.is_gold_member && <GoldTick />}
                     </span>
                     {isCurrentEmojiMood(currentEmojiState) && currentEmojiState.mood_created_at && (
                         <TimeRemaining createdAt={currentEmojiState.mood_created_at} className="text-sm text-white/70" />

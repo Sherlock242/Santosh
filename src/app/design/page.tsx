@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion, useMotionValue } from 'framer-motion';
-import { Loader2, Plus, RotateCcw, Save, Wand2, Star } from 'lucide-react';
+import { Loader2, Plus, RotateCcw, Save, Wand2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Face } from '@/components/emoji-face';
@@ -25,6 +25,7 @@ import { ClockFace } from '@/components/loki-face';
 import { RimuruFace } from '@/components/rimuru-face';
 import { CreatorMoji } from '@/components/creator-moji';
 import { Droplet, Users, Clock } from 'lucide-react';
+import { GoldTick } from '@/components/gold-tick';
 
 
 export type Expression = 'neutral' | 'happy' | 'angry' | 'sad' | 'surprised' | 'scared' | 'love';
@@ -517,7 +518,7 @@ const DesignPageContent = () => {
                     className="bg-white text-black hover:bg-white/90"
                   >
                     Create
-                    {!user?.is_gold_member && <Star className="ml-2 h-4 w-4 text-yellow-400 fill-yellow-400" />}
+                    {!user?.is_gold_member && <GoldTick className="ml-2 h-4 w-4" />}
                 </Button>
             </div>
 

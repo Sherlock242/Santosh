@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
-import { Search, User, Loader2, Lock, Star } from 'lucide-react';
+import { Search, User, Loader2, Lock } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GalleryThumbnail } from '@/components/gallery-thumbnail';
 import type { EmojiState } from '@/app/design/page';
@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { getExplorePosts, searchUsers as searchUsersAction } from '../actions';
 import Image from 'next/image';
 import { updatePostCache } from '@/lib/post-cache';
+import { GoldTick } from '@/components/gold-tick';
 
 const PostView = dynamic(() => 
   import('@/components/post-view').then(mod => mod.PostView),
@@ -261,7 +262,7 @@ export default function ExplorePage() {
                        </Avatar>
                         <span className="font-semibold flex-1 flex items-center gap-1">
                           {user.name}
-                          {user.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-current" />}
+                          {user.is_gold_member && <GoldTick />}
                         </span>
                     </Link>
                  ))

@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import type { EmojiState } from '@/app/design/page';
 import { GalleryThumbnail } from '@/components/gallery-thumbnail';
 import { Button } from '@/components/ui/button';
-import { Lock, Grid3x3, Menu, LogOut, Share2, Loader2, ArrowLeft, Trash2, Star } from 'lucide-react';
+import { Lock, Grid3x3, Menu, LogOut, Share2, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -35,6 +35,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSupport } from '@/hooks/use-support';
 import Image from 'next/image';
 import { getPostsByUserFromCache, updatePostCache, getProfileStatsFromCache, updateProfileStatsCache, getUserFromCache } from '@/lib/post-cache';
+import { GoldTick } from '@/components/gold-tick';
 
 const PostView = dynamic(() => 
   import('@/components/post-view').then(mod => mod.PostView),
@@ -353,7 +354,7 @@ function GalleryPageContent() {
                  {profileUser?.is_private && <Lock className="h-4 w-4" />}
                 <span className="flex items-center gap-1">
                   {profileUser?.name || 'Profile'}
-                  {profileUser?.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-current" />}
+                  {profileUser?.is_gold_member && <GoldTick />}
                 </span>
             </div>
             {isOwnProfile && authUser && (
@@ -372,7 +373,7 @@ function GalleryPageContent() {
                         <div className="flex-1 space-y-2">
                            <Button variant="ghost" className="w-full justify-start" asChild>
                                 <Link href="/plan">
-                                    <Star className="mr-2 h-4 w-4" />
+                                    <GoldTick className="mr-2 h-4 w-4" />
                                     Upgrade to Gold
                                 </Link>
                            </Button>
