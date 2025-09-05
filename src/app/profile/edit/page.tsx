@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export default function EditProfilePage() {
-    const { user, loading: authLoading, supabase } = useAuth();
+    const { user, loading: authLoading, supabase, refreshUser } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
 
@@ -111,6 +111,9 @@ export default function EditProfilePage() {
                 variant: 'success'
             });
 
+            // Refresh the user session to get the new avatar URL everywhere
+            await refreshUser();
+
             // The server action revalidates paths, so we can just navigate back.
             router.push(`/gallery?userId=${user.id}`);
             
@@ -137,6 +140,8 @@ export default function EditProfilePage() {
                 title: "Profile picture removed",
                 variant: 'success'
             });
+             // Refresh the user session to update the avatar URL everywhere
+            await refreshUser();
         } catch (error: any) {
             toast({
                 title: "Error removing picture",
