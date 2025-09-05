@@ -126,7 +126,7 @@ const PostContent = memo(({
 }) => {
     const [localLikeCount, setLocalLikeCount] = useState(emoji.like_count);
     const [isLikedState, setIsLikedState] = useState(emoji.is_liked);
-    const [showLikers, setShowLikers] = useState(false);
+    const [likersEmojiId, setLikersEmojiId] = useState<string | null>(null);
     const [showHeartIcon, setShowHeartIcon] = useState(false);
     
     const likeButtonRef = useRef<{ triggerLike: () => void }>(null);
@@ -253,7 +253,7 @@ const PostContent = memo(({
                     <Send className="h-6 w-6 cursor-pointer" onClick={() => onSetMood(emoji.id)} />
                 </div>
                 {localLikeCount > 0 && (
-                    <button className="text-sm font-semibold mt-2" onClick={() => setShowLikers(true)}>
+                    <button className="text-sm font-semibold mt-2" onClick={() => setLikersEmojiId(emoji.id)}>
                         {localLikeCount} {localLikeCount === 1 ? 'like' : 'likes'}
                     </button>
                 )}
@@ -264,9 +264,9 @@ const PostContent = memo(({
                     </p>
                 )}
             </div>
-             {showLikers && (
+             {likersEmojiId && (
                 <Suspense fallback={null}>
-                    <LikerListSheet open={showLikers} onOpenChange={setShowLikers} emojiId={emoji.id} />
+                    <LikerListSheet open={!!likersEmojiId} onOpenChange={(isOpen) => !isOpen && setLikersEmojiId(null)} emojiId={likersEmojiId} />
                 </Suspense>
             )}
         </div>

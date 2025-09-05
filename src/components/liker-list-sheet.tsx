@@ -21,6 +21,7 @@ interface Liker {
   is_private: boolean;
   support_status: 'approved' | 'pending' | null;
   has_mood: boolean;
+  is_gold_member: boolean;
 }
 
 const likerListCache: {
@@ -35,7 +36,7 @@ const likerListCache: {
 interface LikerListSheetProps {
     open: boolean;
     onOpenChange: (isOpen: boolean) => void;
-    emojiId: string | undefined;
+    emojiId: string;
 }
 
 function LikerListSheet({ open, onOpenChange, emojiId }: LikerListSheetProps) {
