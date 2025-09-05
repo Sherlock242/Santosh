@@ -128,9 +128,15 @@ export default function PlanPage() {
                 <p className="text-4xl font-bold">₹99 <span className="text-base font-normal text-muted-foreground">/ month</span></p>
             </div>
 
-            <Button size="lg" className="w-full mt-8" onClick={handleUpgradeClick} disabled={isPending}>
-              {isPending ? <Loader2 className="animate-spin" /> : 'Upgrade to Gold'}
-            </Button>
+            {user?.is_gold_member ? (
+              <Button size="lg" className="w-full mt-8" disabled>
+                You are a Gold Member
+              </Button>
+            ) : (
+              <Button size="lg" className="w-full mt-8" onClick={handleUpgradeClick} disabled={isPending}>
+                {isPending ? <Loader2 className="animate-spin" /> : 'Upgrade to Gold'}
+              </Button>
+            )}
           </div>
         </main>
       </div>
