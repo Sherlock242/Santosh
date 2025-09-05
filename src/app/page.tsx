@@ -160,10 +160,11 @@ function LoginPageContent() {
           
         </motion.div>
           <footer className="absolute bottom-4 text-xs text-muted-foreground">
-              <div className="flex gap-4 justify-center">
+              <div className="flex gap-4 justify-center flex-wrap px-4">
                   <Link href="/about" className="hover:text-foreground">About Us</Link>
                   <Link href="/terms" className="hover:text-foreground">Terms</Link>
                   <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
+                  <Link href="/cancellation-policy" className="hover:text-foreground">Cancellation Policy</Link>
                   <Link href="/blogs" className="hover:text-foreground">Blogs</Link>
                   <Link href="/contact" className="hover:text-foreground">Contact</Link>
               </div>
