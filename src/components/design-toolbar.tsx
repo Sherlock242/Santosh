@@ -351,7 +351,7 @@ export const DesignToolbar = (props: DesignToolbarProps) => {
                         return (
                             <React.Fragment key={tool.name}>
                                  {(tool.name === 'Caption' || tool.name === 'Random') && <Separator orientation="vertical" className="h-full mx-1 md:h-px md:w-full md:my-1" />}
-                                 <Button variant="ghost" className="h-auto p-2 flex flex-col" onClick={tool.action}>
+                                 <Button variant="ghost" className="h-auto p-1 flex flex-col" onClick={tool.action}>
                                     <tool.icon className="h-4 w-4" />
                                     <span className="text-xs mt-1">{tool.name}</span>
                                 </Button>
