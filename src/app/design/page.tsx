@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion, useMotionValue } from 'framer-motion';
-import { Loader2, Plus, RotateCcw, Save, Wand2 } from 'lucide-react';
+import { Loader2, Plus, RotateCcw, Save, Wand2, Star } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Face } from '@/components/emoji-face';
@@ -329,6 +329,11 @@ const DesignPageContent = () => {
   const handleModelChange = (newModel: ModelType) => {
     if (model === newModel) return;
 
+    if (newModel === 'creator' && !user?.is_gold_member) {
+        router.push('/plan');
+        return;
+    }
+
     // Reset all common properties to their defaults for a clean slate
     setExpression('neutral');
     setShape('default');
@@ -505,8 +510,14 @@ const DesignPageContent = () => {
             </div>
             
             <div className="absolute top-4 right-4 z-20">
-                 <Button variant="outline" size="sm" onClick={() => handleModelChange('creator')} className="bg-white text-black hover:bg-white/90">
+                 <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleModelChange('creator')} 
+                    className="bg-white text-black hover:bg-white/90"
+                  >
                     Create
+                    {!user?.is_gold_member && <Star className="ml-2 h-4 w-4 text-yellow-400 fill-yellow-400" />}
                 </Button>
             </div>
 

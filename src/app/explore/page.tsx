@@ -32,7 +32,7 @@ interface SearchedUser {
 }
 
 interface ExploreEmoji extends EmojiState {
-    user: EmojiState['user'] & { has_mood: boolean };
+    user: EmojiState['user'] & { has_mood: boolean; is_gold_member: boolean; };
     like_count: number;
     is_liked: boolean;
 }

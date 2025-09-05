@@ -187,6 +187,7 @@ const PostContent = memo(({
                 {emoji.created_at && (
                     <TimeRemaining createdAt={emoji.created_at} className="text-xs text-muted-foreground ml-2" />
                 )}
+                {onDelete && (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="ml-auto h-8 w-8">
@@ -198,23 +199,20 @@ const PostContent = memo(({
                             <Smile className="mr-2 h-4 w-4" />
                             <span>Set as Mood</span>
                         </DropdownMenuItem>
-                        {onDelete && (
-                            <>
-                                <DropdownMenuItem asChild>
-                                    <Link href={`/design?emojiId=${emoji.id}`} className="flex items-center w-full">
-                                        <Edit className="mr-2 h-4 w-4" />
-                                        <span>Edit</span>
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => onDelete(emoji.id)}>
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    <span>Delete</span>
-                                </DropdownMenuItem>
-                            </>
-                        )}
+                        <DropdownMenuItem asChild>
+                            <Link href={`/design?emojiId=${emoji.id}`} className="flex items-center w-full">
+                                <Edit className="mr-2 h-4 w-4" />
+                                <span>Edit</span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => onDelete(emoji.id)}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>Delete</span>
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
+                )}
             </div>
 
             <div 
