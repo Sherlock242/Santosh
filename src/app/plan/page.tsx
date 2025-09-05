@@ -3,7 +3,7 @@
 
 import React, { useTransition } from 'react';
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Star } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { createRazorpaySubscription } from '@/app/actions/payment.actions';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -96,9 +96,6 @@ export default function PlanPage() {
         <main className="container mx-auto py-12 px-4 md:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl font-bold tracking-tight text-amber-400">Upgrade to Gold</h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Unlock exclusive features and support the platform.
-            </p>
           </div>
 
           <div className="max-w-md mx-auto mt-16 bg-card p-8 rounded-lg shadow-lg border border-amber-400/50">
