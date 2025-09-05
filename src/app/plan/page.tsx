@@ -8,7 +8,7 @@ import { createRazorpaySubscription } from '@/app/actions/payment.actions';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import Head from 'next/head';
+import Script from 'next/script';
 
 declare global {
   interface Window {
@@ -84,9 +84,10 @@ export default function PlanPage() {
 
   return (
     <>
-      <Head>
-        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-      </Head>
+      <Script
+        id="razorpay-checkout-js"
+        src="https://checkout.razorpay.com/v1/checkout.js"
+      />
       <div className="min-h-screen bg-background text-foreground">
         <header className="py-6 px-4 md:px-8 border-b border-border">
           <div className="container mx-auto">
