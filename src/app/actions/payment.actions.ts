@@ -27,11 +27,14 @@ export async function createStripeCheckoutSession() {
     .eq('id', user.id)
     .single();
 
-  if (profileError || !profile) {
+  // Important: We should NOT throw an error if the profile is not found,
+  // as new users won't have one initially. We handle this below.
+  if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
+    console.error('Error retrieving user profile:', profileError);
     throw new Error('Could not retrieve user profile.');
   }
 
-  let customerId = profile.stripe_customer_id;
+  let customerId = profile?.stripe_customer_id;
 
   // Create a new Stripe customer if one doesn't exist
   if (!customerId) {
@@ -45,10 +48,15 @@ export async function createStripeCheckoutSession() {
     customerId = customer.id;
 
     // Save the new customer ID to the user's profile in Supabase
-    await supabase
+    const { error: updateError } = await supabase
       .from('users')
       .update({ stripe_customer_id: customerId })
       .eq('id', user.id);
+      
+    if (updateError) {
+        console.error("Failed to save new stripe_customer_id:", updateError);
+        throw new Error('Could not update user profile with Stripe ID.');
+    }
   }
 
   const origin = headers().get('origin')!;
