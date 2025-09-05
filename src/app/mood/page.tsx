@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
-import { getFeedPosts, getFeedMoods } from '@/app/actions';
+import { getFeedPosts, getFeedMoods } from '../actions';
 import MoodStories from '@/components/mood-stories';
 import type { Mood, PostViewEmoji } from '@/components/post-view';
 import { updatePostCache } from '@/lib/post-cache';
@@ -288,11 +288,7 @@ export default function MoodPage() {
 
   return (
     <div className="flex h-full w-full flex-col overflow-x-hidden">
-      <MoodHeader>
-          <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isLoading}>
-              <RefreshCw className={isLoading ? "animate-spin" : ""} />
-          </Button>
-      </MoodHeader>
+      <MoodHeader />
       <div className="flex-1 overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
       
         <MoodStories 
