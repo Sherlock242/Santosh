@@ -182,7 +182,7 @@ const PostContent = memo(({
                 </Avatar>
                 <Link href={`/gallery?userId=${emoji.user?.id}`} className="ml-3 font-semibold text-sm flex items-center gap-1">
                   {emoji.user?.name || 'User'}
-                  {emoji.user?.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
+                  {emoji.user?.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-current" />}
                 </Link>
                 {emoji.created_at && (
                     <TimeRemaining createdAt={emoji.created_at} className="text-xs text-muted-foreground ml-2" />
@@ -586,7 +586,7 @@ export function PostView({
                     </Avatar>
                      <span className="font-semibold text-sm text-white flex items-center gap-1">
                       {postAuthor?.name}
-                      {postAuthor?.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
+                      {postAuthor?.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-current" />}
                     </span>
                     {isCurrentEmojiMood(currentEmojiState) && currentEmojiState.mood_created_at && (
                         <TimeRemaining createdAt={currentEmojiState.mood_created_at} className="text-sm text-white/70" />

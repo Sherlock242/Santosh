@@ -46,7 +46,7 @@ export const UserListItem = React.memo(({ itemUser, onSupportChange }: UserListI
             </Link>
             <Link href={`/gallery?userId=${itemUser.id}`} className="font-semibold flex-1 flex items-center gap-1">
               {itemUser.name}
-              {itemUser.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
+              {itemUser.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-current" />}
             </Link>
             {!isSelf && currentUser && (
                  <Button 

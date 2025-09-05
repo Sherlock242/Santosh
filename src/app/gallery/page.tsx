@@ -353,7 +353,7 @@ function GalleryPageContent() {
                  {profileUser?.is_private && <Lock className="h-4 w-4" />}
                 <span className="flex items-center gap-1">
                   {profileUser?.name || 'Profile'}
-                  {profileUser?.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
+                  {profileUser?.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-current" />}
                 </span>
             </div>
             {isOwnProfile && authUser && (
