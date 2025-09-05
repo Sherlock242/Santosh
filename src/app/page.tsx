@@ -164,9 +164,9 @@ function LoginPageContent() {
                   <Link href="/about" className="hover:text-foreground">About Us</Link>
                   <Link href="/terms" className="hover:text-foreground">Terms</Link>
                   <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
-                  <Link href="/cancellation-policy" className="hover:text-foreground">Cancellation Policy</Link>
                   <Link href="/blogs" className="hover:text-foreground">Blogs</Link>
                   <Link href="/contact" className="hover:text-foreground">Contact</Link>
+                  <Link href="/cancellation-policy" className="hover:text-foreground">Cancellation & Refund Policy</Link>
               </div>
           </footer>
       </div>
