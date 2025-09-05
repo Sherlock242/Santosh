@@ -3,7 +3,7 @@
 
 import React, { useTransition } from 'react';
 import { Button } from "@/components/ui/button";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Star } from "lucide-react";
 import { createRazorpaySubscription } from '@/app/actions/payment.actions';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
