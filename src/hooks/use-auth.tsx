@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
   
-    const publicPaths = ['/', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact'];
+    const publicPaths = ['/', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy'];
     const isPublicPath = publicPaths.includes(pathname);
     
     // If the user is logged in and on the main sign-in page, redirect to /mood
@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loading, pathname, router]);
   
-  if (loading && !user && !['/', '/terms', '/about', '/privacy', '/blogs', '/contact'].includes(pathname)) {
+  if (loading && !user && !['/', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy'].includes(pathname)) {
     return (
         <div className="flex items-center justify-center h-screen">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
