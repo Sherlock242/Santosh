@@ -4,10 +4,17 @@
 import React, { useTransition } from 'react';
 import { Button } from "@/components/ui/button";
 import { Check, Loader2 } from "lucide-react";
-import { createStripeCheckoutSession } from '@/app/actions/payment.actions';
+import { createRazorpaySubscription } from '@/app/actions/payment.actions';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import Head from 'next/head';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 export default function PlanPage() {
   const { user } = useAuth();
@@ -28,12 +35,43 @@ export default function PlanPage() {
 
     startTransition(async () => {
       try {
-        const { url } = await createStripeCheckoutSession();
-        if (url) {
-          router.push(url);
-        } else {
-          throw new Error("Could not create a payment session.");
+        const result = await createRazorpaySubscription();
+        
+        if (!result) {
+            throw new Error("Could not create a subscription.");
         }
+
+        const options = {
+            key: result.key,
+            subscription_id: result.subscriptionId,
+            name: "Edengram Gold",
+            description: "Monthly Subscription",
+            image: "/icon.png",
+            handler: function (response: any) {
+                // Handle success: You would typically verify the payment signature here
+                // on your backend before granting access to premium features.
+                toast({
+                    title: "Payment Successful!",
+                    description: "Welcome to Edengram Gold!",
+                    variant: "success",
+                });
+                router.push('/gallery');
+            },
+            prefill: {
+                name: result.userName,
+                email: result.userEmail,
+            },
+            notes: {
+                supabase_user_id: user.id,
+            },
+            theme: {
+                color: "#8A2BE2" // A nice purple color
+            }
+        };
+        
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+
       } catch (error: any) {
         toast({
           title: "Payment Error",
@@ -46,6 +84,9 @@ export default function PlanPage() {
 
   return (
     <>
+      <Head>
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+      </Head>
       <div className="min-h-screen bg-background text-foreground">
         <header className="py-6 px-4 md:px-8 border-b border-border">
           <div className="container mx-auto">
