@@ -1,10 +1,11 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
-import { Search, User, Loader2, Lock } from 'lucide-react';
+import { Search, User, Loader2, Lock, Star } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GalleryThumbnail } from '@/components/gallery-thumbnail';
 import type { EmojiState } from '@/app/design/page';
@@ -27,6 +28,7 @@ interface SearchedUser {
   name: string;
   picture: string;
   is_private: boolean;
+  is_gold_member: boolean;
 }
 
 interface ExploreEmoji extends EmojiState {
@@ -257,7 +259,10 @@ export default function ExplorePage() {
                             <AvatarImage src={user.picture} alt={user.name} data-ai-hint="profile picture" className="rounded-full" />
                             <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                        </Avatar>
-                        <span className="font-semibold flex-1">{user.name}</span>
+                        <span className="font-semibold flex-1 flex items-center gap-1">
+                          {user.name}
+                          {user.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
+                        </span>
                     </Link>
                  ))
              ) : (

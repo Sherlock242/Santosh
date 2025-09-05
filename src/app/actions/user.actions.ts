@@ -126,7 +126,7 @@ export async function searchUsers(query: string) {
     
     let queryBuilder = supabase
         .from('users')
-        .select('id, name, picture, is_private')
+        .select('id, name, picture, is_private, is_gold_member')
         .ilike('name', `${query}%`);
         
     const { data, error } = await queryBuilder.limit(10);

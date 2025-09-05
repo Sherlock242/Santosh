@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
@@ -54,6 +55,7 @@ interface ProfileUser {
     name: string;
     picture: string;
     is_private: boolean;
+    is_gold_member: boolean;
 }
 
 interface GalleryEmoji extends EmojiState {
@@ -64,7 +66,7 @@ interface GalleryEmoji extends EmojiState {
 const MemoizedThumbnail = React.memo(GalleryThumbnail);
 
 function GalleryPageContent() {
-    const { user: authUser, supabase } = useAuth();
+    const { user: authUser, supabase, refreshUser } = useAuth();
     const { toast } = useToast();
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -157,7 +159,7 @@ function GalleryPageContent() {
 
             const { data: userProfile, error: userError } = await supabase
                 .from('users')
-                .select('id, name, picture, is_private')
+                .select('id, name, picture, is_private, is_gold_member')
                 .eq('id', viewingUserId)
                 .single();
 
@@ -197,6 +199,20 @@ function GalleryPageContent() {
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [viewingUserId, supabase, isOwnProfile, authUser, toast]);
+    
+    // This effect runs when coming back from the payment page to refresh the user data.
+    useEffect(() => {
+        const fromPayment = searchParams.get('from_payment');
+        if (fromPayment === 'true') {
+            refreshUser(); // Refresh the authUser in the context
+            fetchProfileInfo(); // Refetch this profile's info
+            
+            // Clean up the URL
+            const nextUrl = new URL(window.location.href);
+            nextUrl.searchParams.delete('from_payment');
+            router.replace(nextUrl.toString(), { scroll: false });
+        }
+    }, [searchParams, router, fetchProfileInfo, refreshUser]);
 
     useEffect(() => {
         if (!viewingUserId) {
@@ -335,7 +351,10 @@ function GalleryPageContent() {
                     </Button>
                 ) : null }
                  {profileUser?.is_private && <Lock className="h-4 w-4" />}
-                <span>{profileUser?.name || 'Profile'}</span>
+                <span className="flex items-center gap-1">
+                  {profileUser?.name || 'Profile'}
+                  {profileUser?.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
+                </span>
             </div>
             {isOwnProfile && authUser && (
             <div className="flex items-center gap-2">
@@ -398,6 +417,7 @@ function GalleryPageContent() {
             id: profileUser?.id || '',
             name: profileUser?.name || '',
             picture: profileUser?.picture || '',
+            is_gold_member: profileUser?.is_gold_member,
         }
     }));
 

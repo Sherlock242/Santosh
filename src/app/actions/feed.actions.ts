@@ -35,7 +35,7 @@ export async function getFeedMoods() {
             mood_id:id,
             mood_created_at:created_at,
             mood_user_id:user_id,
-            mood_user:users (id, name, picture),
+            mood_user:users (id, name, picture, is_gold_member),
             emojis (
                 id, created_at, user_id, model, expression, background_color, emoji_color, show_sunglasses, show_mustache,
                 selected_filter, animation_type, shape, eye_style, mouth_style, eyebrow_style, feature_offset_x,
@@ -112,7 +112,7 @@ export async function getFeedPosts({ page = 1, limit = 5 }: { page: number, limi
     // 2. Fetch the posts from those users
     const { data: posts, error: postsError } = await supabase
         .from('emojis')
-        .select('*, user:users(id, name, picture, moods(user_id))')
+        .select('*, user:users(id, name, picture, is_gold_member, moods(user_id))')
         .in('user_id', feedUserIds)
         .order('created_at', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
@@ -157,7 +157,7 @@ export async function getGalleryPosts({ userId }: { userId: string }) {
 
     const { data: posts, error: postsError } = await supabase
         .from('emojis')
-        .select('*, user:users!inner(id, name, picture)')
+        .select('*, user:users!inner(id, name, picture, is_gold_member)')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
     
@@ -206,7 +206,7 @@ export async function getExplorePosts({ page = 1, limit = 12 }: { page: number, 
     // Directly query public posts and join user data
     const { data: posts, error: postsError } = await supabase
         .from('emojis')
-        .select('*, user:users!inner(id, name, picture, is_private, moods(user_id))')
+        .select('*, user:users!inner(id, name, picture, is_private, is_gold_member, moods(user_id))')
         .eq('user.is_private', false)
         .order('created_at', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);

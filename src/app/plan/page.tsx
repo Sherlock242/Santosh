@@ -17,7 +17,7 @@ declare global {
 }
 
 export default function PlanPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -47,15 +47,14 @@ export default function PlanPage() {
             name: "Edengram Gold",
             description: "Monthly Subscription",
             image: "/icon.png",
-            handler: function (response: any) {
-                // Handle success: You would typically verify the payment signature here
-                // on your backend before granting access to premium features.
+            handler: async function (response: any) {
                 toast({
                     title: "Payment Successful!",
-                    description: "Welcome to Edengram Gold!",
+                    description: "Welcome to Edengram Gold! Refreshing your profile...",
                     variant: "success",
                 });
-                router.push('/gallery');
+                await refreshUser();
+                router.push('/gallery?from_payment=true');
             },
             prefill: {
                 name: result.userName,
@@ -65,7 +64,7 @@ export default function PlanPage() {
                 supabase_user_id: user.id,
             },
             theme: {
-                color: "#8A2BE2" // A nice purple color
+                color: "#8A2BE2"
             }
         };
         

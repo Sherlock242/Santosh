@@ -32,7 +32,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, MoreHorizontal, Edit, Trash2, Send, Smile, X, Eye, Loader2, Heart } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Edit, Trash2, Send, Smile, X, Eye, Loader2, Heart, Star } from 'lucide-react';
 import { motion, useMotionValue, AnimatePresence, useAnimation, animate } from 'framer-motion';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
@@ -56,6 +56,7 @@ export interface Mood extends EmojiState {
       name: string;
       picture: string;
       has_mood: boolean;
+      is_gold_member?: boolean;
     };
     like_count: number;
     is_liked: boolean;
@@ -64,6 +65,7 @@ export interface Mood extends EmojiState {
         name: string;
         picture: string;
         has_mood?: boolean;
+        is_gold_member?: boolean;
     };
 }
 
@@ -84,6 +86,7 @@ export interface PostViewEmoji extends EmojiState {
         name: string;
         picture: string;
         has_mood?: boolean;
+        is_gold_member?: boolean;
     };
 }
 
@@ -177,7 +180,10 @@ const PostContent = memo(({
                     {emoji.user?.picture && <AvatarImage src={emoji.user.picture} alt={emoji.user.name || 'User'} data-ai-hint="profile picture" className="rounded-full" />}
                     <AvatarFallback>{emoji.user?.name ? emoji.user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
-                <Link href={`/gallery?userId=${emoji.user?.id}`} className="ml-3 font-semibold text-sm">{emoji.user?.name || 'User'}</Link>
+                <Link href={`/gallery?userId=${emoji.user?.id}`} className="ml-3 font-semibold text-sm flex items-center gap-1">
+                  {emoji.user?.name || 'User'}
+                  {emoji.user?.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
+                </Link>
                 {emoji.created_at && (
                     <TimeRemaining createdAt={emoji.created_at} className="text-xs text-muted-foreground ml-2" />
                 )}
@@ -580,7 +586,10 @@ export function PostView({
                         {postAuthor?.picture && <AvatarImage src={postAuthor.picture} alt={postAuthor.name || 'User'} data-ai-hint="profile picture" className="rounded-full" />}
                         <AvatarFallback>{postAuthor?.name ? postAuthor.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                     </Avatar>
-                    <span className="font-semibold text-sm text-white">{postAuthor?.name}</span>
+                     <span className="font-semibold text-sm text-white flex items-center gap-1">
+                      {postAuthor?.name}
+                      {postAuthor?.is_gold_member && <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
+                    </span>
                     {isCurrentEmojiMood(currentEmojiState) && currentEmojiState.mood_created_at && (
                         <TimeRemaining createdAt={currentEmojiState.mood_created_at} className="text-sm text-white/70" />
                     )}

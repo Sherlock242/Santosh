@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
@@ -14,6 +14,7 @@ interface UserProfile {
     email: string;
     picture: string;
     is_private: boolean;
+    is_gold_member: boolean;
     deleted_at?: string | null;
 }
 
@@ -23,6 +24,7 @@ interface AuthContextType {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   supabase: SupabaseClient;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,64 +38,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const client = useMemo(() => supabase, []);
 
+  const handleAuthChange = useCallback(async (currentSession: Session | null) => {
+    setSession(currentSession);
+    
+    if (currentSession?.user) {
+        const { data: profile, error } = await client
+            .from('users')
+            .select('*')
+            .eq('id', currentSession.user.id)
+            .single();
+
+        if (error) {
+            console.error("Error fetching user profile:", error);
+             const authUser = currentSession.user;
+             const newUser = {
+                id: authUser.id,
+                email: authUser.email || '',
+                name: authUser.user_metadata.name || authUser.email?.split('@')[0] || 'User',
+                picture: authUser.user_metadata.picture || `https://placehold.co/64x64.png?text=${(authUser.email || 'U').charAt(0).toUpperCase()}`,
+                is_private: false,
+                is_gold_member: false,
+            };
+             setUser(newUser);
+        } else if (profile) {
+            const userProfile: UserProfile = {
+                id: profile.id,
+                name: profile.name,
+                email: profile.email,
+                picture: profile.picture,
+                is_private: profile.is_private,
+                is_gold_member: profile.is_gold_member,
+                deleted_at: profile.deleted_at,
+            };
+            setUser(userProfile);
+        }
+    } else {
+        setUser(null);
+    }
+  }, [client]);
+
+  const refreshUser = useCallback(async () => {
+    const { data: { session } } = await client.auth.getSession();
+    await handleAuthChange(session);
+  }, [client, handleAuthChange]);
+
+
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
 
-    const handleAuthChange = async (currentSession: Session | null) => {
-        if (!isMounted) return;
-        
-        setSession(currentSession);
-        
-        if (currentSession?.user) {
-            const { data: profile, error } = await client
-                .from('users')
-                .select('*')
-                .eq('id', currentSession.user.id)
-                .single();
-
-            if (error) {
-                console.error("Error fetching user profile:", error);
-                 const authUser = currentSession.user;
-                 const newUser = {
-                    id: authUser.id,
-                    email: authUser.email || '',
-                    name: authUser.user_metadata.name || authUser.email?.split('@')[0] || 'User',
-                    picture: authUser.user_metadata.picture || `https://placehold.co/64x64.png?text=${(authUser.email || 'U').charAt(0).toUpperCase()}`,
-                    is_private: false,
-                };
-                 setUser(newUser);
-            } else if (profile) {
-                const userProfile = {
-                    id: profile.id,
-                    name: profile.name,
-                    email: profile.email,
-                    picture: profile.picture,
-                    is_private: profile.is_private,
-                    deleted_at: profile.deleted_at,
-                };
-                setUser(userProfile);
-            }
-        } else {
-            setUser(null);
-        }
-        
-        if (isMounted) {
-            setLoading(false);
-        }
-    };
-    
     client.auth.getSession().then(({ data: { session } }) => {
-        handleAuthChange(session);
-    }).finally(() => {
-      if (isMounted) {
-        setLoading(false);
-      }
+        if (isMounted) {
+            handleAuthChange(session).finally(() => setLoading(false));
+        }
     });
 
     const { data: { subscription } } = client.auth.onAuthStateChange(
       (_event, newSession) => {
-        handleAuthChange(newSession);
+        if (isMounted) {
+            handleAuthChange(newSession);
+        }
       }
     );
 
@@ -101,8 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isMounted = false;
         subscription?.unsubscribe();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [client, handleAuthChange]);
 
   useEffect(() => {
     if (loading) return;
@@ -129,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, setLoading, supabase: client }}>
+    <AuthContext.Provider value={{ user, session, loading, setLoading, supabase: client, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
