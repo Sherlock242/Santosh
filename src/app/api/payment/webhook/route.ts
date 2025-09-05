@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get('x-razorpay-signature');
 
   if (!signature) {
+    console.error("Webhook Error: No signature found");
     return NextResponse.json({ error: 'No signature found' }, { status: 400 });
   }
 
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
     const digest = shasum.digest('hex');
 
     if (digest !== signature) {
+      console.error("Webhook Error: Invalid signature");
       return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
     }
 
@@ -30,33 +32,26 @@ export async function POST(req: NextRequest) {
     // We only care about the subscription being successfully charged.
     if (event.event === 'subscription.charged') {
       const subscription = event.payload.subscription.entity;
-      const customerId = subscription.customer_id;
+      const notes = subscription.notes;
+      const supabaseUserId = notes?.supabase_user_id;
       const subscriptionId = subscription.id;
+
+      if (!supabaseUserId) {
+        console.error('Webhook Error: supabase_user_id not found in subscription notes.');
+        return NextResponse.json({ received: true, message: 'User ID missing from webhook notes.' });
+      }
 
       // Step 3: Find the user and update their status in Supabase
       const supabase = createSupabaseServerClient(true); // Use admin client to update user data
-
-      // Find the user by their Razorpay customer ID
-      const { data: user, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('razorpay_customer_id', customerId)
-        .single();
-
-      if (userError || !user) {
-        console.error('Webhook Error: User not found for customer ID:', customerId);
-        // Return a 200 OK to Razorpay so it doesn't keep retrying, but log the error.
-        return NextResponse.json({ received: true, message: 'User not found' });
-      }
 
       // Update the user's profile to mark them as a gold member
       const { error: updateError } = await supabase
         .from('users')
         .update({ 
             is_gold_member: true,
-            razorpay_subscription_id: subscriptionId // Store the subscription ID for future management
+            razorpay_subscription_id: subscriptionId
         })
-        .eq('id', user.id);
+        .eq('id', supabaseUserId);
 
       if (updateError) {
         console.error('Webhook Error: Failed to update user status:', updateError);
@@ -64,7 +59,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
       }
       
-      console.log(`Successfully upgraded user ${user.id} to Gold Member.`);
+      console.log(`Successfully upgraded user ${supabaseUserId} to Gold Member.`);
     }
 
     // Step 4: Acknowledge the event
