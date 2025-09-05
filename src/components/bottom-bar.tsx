@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -29,19 +30,8 @@ export function BottomBar() {
   useEffect(() => {
     if (!user) return;
 
-    const checkInitialNotifications = async () => {
-      const { count, error } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('recipient_id', user.id)
-        .eq('is_read', false);
-
-      if (!error && (count ?? 0) > 0) {
-        setHasNewNotifications(true);
-      }
-    };
-    checkInitialNotifications();
-
+    // This subscription listens for new notifications in real-time.
+    // The initial check for unread notifications has been removed to prevent the dot from reappearing incorrectly.
     const channel = supabase
       .channel('realtime-notifications')
       .on(
@@ -52,8 +42,11 @@ export function BottomBar() {
           table: 'notifications',
           filter: `recipient_id=eq.${user.id}`,
         },
-        () => {
-          setHasNewNotifications(true);
+        (payload) => {
+          // Only show the dot for genuinely new, unread notifications.
+          if (payload.new && !(payload.new as any).is_read) {
+            setHasNewNotifications(true);
+          }
         }
       )
       .subscribe();
