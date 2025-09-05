@@ -104,7 +104,7 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
 
     const { data: usersData, error: usersError } = await supabase
         .from('users')
-        .select('id, name, picture, is_private')
+        .select('id, name, picture, is_private, is_gold_member')
         .in('id', viewerIds);
     
     if (usersError) {
