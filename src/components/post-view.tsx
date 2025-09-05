@@ -295,6 +295,7 @@ export function PostView({
   const [viewers, setViewers] = useState<Viewer[]>([]);
   const [isViewersSheetOpen, setIsViewersSheetOpen] = useState(false);
   const [isFetchingViewers, setIsFetchingViewers] = useState(false);
+  const [likerListEmojiId, setLikerListEmojiId] = useState<string | null>(null);
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -754,6 +755,15 @@ export function PostView({
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
+      {likerListEmojiId && (
+          <Suspense fallback={null}>
+              <LikerListSheet
+                  open={!!likerListEmojiId}
+                  onOpenChange={(isOpen) => !isOpen && setLikerListEmojiId(null)}
+                  emojiId={likerListEmojiId}
+              />
+          </Suspense>
+      )}
     </>
   );
 }

@@ -103,19 +103,55 @@ export async function getIsLiked(emojiId: string) {
 export async function getLikers({ emojiId, page = 1, limit = 15 }: { emojiId: string, page: number, limit: number }): Promise<UserWithSupportStatus[]> {
     const supabase = createSupabaseServerClient();
     const { data: { user: currentUser } } = await supabase.auth.getUser();
-    
-    const { data, error } = await supabase
-        .rpc('get_likers_with_details', {
-            p_emoji_id: emojiId,
-            p_current_user_id: currentUser?.id,
-            p_limit: limit,
-            p_offset: (page - 1) * limit
-        });
 
-    if (error) {
-        console.error('Error getting likers:', error);
+    // 1. Fetch the user IDs of the likers with pagination
+    const { data: likersData, error: likersError } = await supabase
+        .from('likes')
+        .select('user_id')
+        .eq('emoji_id', emojiId)
+        .order('created_at', { ascending: false })
+        .range((page - 1) * limit, page * limit - 1);
+
+    if (likersError) {
+        console.error('Error getting likers user_ids:', likersError);
+        return [];
+    }
+
+    const userIds = likersData.map(l => l.user_id);
+    if (userIds.length === 0) return [];
+
+    // 2. Fetch the profile details for those user IDs
+    const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id, name, picture, is_private, is_gold_member')
+        .in('id', userIds);
+
+    if (usersError) {
+        console.error('Error fetching liker profiles:', usersError);
         return [];
     }
     
-    return (data || []) as UserWithSupportStatus[];
+    // 3. Fetch the support status of the current user towards the likers
+    let supportStatusMap = new Map<string, 'approved' | 'pending'>();
+    if (currentUser) {
+        const { data: supportStatuses, error: supportError } = await supabase
+            .from('supports')
+            .select('supported_id, status')
+            .eq('supporter_id', currentUser.id)
+            .in('supported_id', userIds);
+
+        if (supportError) {
+            console.error('Error fetching support statuses:', supportError);
+            // Continue without this data if it fails
+        } else if (supportStatuses) {
+            supportStatusMap = new Map(supportStatuses.map(s => [s.supported_id, s.status]));
+        }
+    }
+    
+    // 4. Combine the data
+    return users.map(user => ({
+        ...user,
+        support_status: supportStatusMap.get(user.id) || null,
+        has_mood: false // Note: We can't easily get has_mood here, default to false.
+    })) as UserWithSupportStatus[];
 }

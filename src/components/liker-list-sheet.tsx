@@ -10,23 +10,13 @@ import {
 } from '@/components/ui/sheet';
 import { Loader2 } from 'lucide-react';
 import { getLikers } from '@/app/actions';
-import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { UserListItem } from './user-list-item';
-
-interface Liker {
-  id: string;
-  name: string;
-  picture: string;
-  is_private: boolean;
-  support_status: 'approved' | 'pending' | null;
-  has_mood: boolean;
-  is_gold_member: boolean;
-}
+import type { UserWithSupportStatus } from '@/app/actions';
 
 const likerListCache: {
     [key: string]: {
-        items: Liker[],
+        items: UserWithSupportStatus[],
         page: number,
         hasMore: boolean,
         scrollPosition: number
@@ -43,7 +33,7 @@ function LikerListSheet({ open, onOpenChange, emojiId }: LikerListSheetProps) {
     const { toast } = useToast();
     const cacheKey = `likers-${emojiId}`;
 
-    const [likerList, setLikerList] = useState<Liker[]>(likerListCache[cacheKey]?.items || []);
+    const [likerList, setLikerList] = useState<UserWithSupportStatus[]>(likerListCache[cacheKey]?.items || []);
     const [page, setPage] = useState(likerListCache[cacheKey]?.page || 1);
     const [hasMore, setHasMore] = useState(likerListCache[cacheKey]?.hasMore ?? true);
     
@@ -71,8 +61,8 @@ function LikerListSheet({ open, onOpenChange, emojiId }: LikerListSheetProps) {
                 const existingIds = new Set(prev.map(u => u.id));
                 const uniqueNew = users.filter(u => !existingIds.has(u.id as string));
                 const updatedList = pageNum === 1 ? users : [...prev, ...uniqueNew];
-                if (likerListCache[cacheKey]) likerListCache[cacheKey].items = updatedList as Liker[];
-                return updatedList as Liker[];
+                if (likerListCache[cacheKey]) likerListCache[cacheKey].items = updatedList as UserWithSupportStatus[];
+                return updatedList as UserWithSupportStatus[];
             });
 
             const nextPage = pageNum + 1;
@@ -145,7 +135,7 @@ function LikerListSheet({ open, onOpenChange, emojiId }: LikerListSheetProps) {
     }, [fetchLikers, hasMore, isFetchingMore, isLoading, page]);
 
     const handleSupportChange = (changedUserId: string, newStatus: 'approved' | 'pending' | null) => {
-        const updateList = (list: Liker[]) => list.map(user => 
+        const updateList = (list: UserWithSupportStatus[]) => list.map(user => 
             user.id === changedUserId 
             ? { ...user, support_status: newStatus } 
             : user
