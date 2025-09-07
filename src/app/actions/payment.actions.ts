@@ -57,12 +57,18 @@ export async function createRazorpaySubscription() {
   }
 
   try {
+    // Set an expiry date far in the future (e.g., 10 years) to create an ongoing subscription
+    // This is the standard way to handle recurring subscriptions without a fixed end.
+    const tenYearsFromNow = new Date();
+    tenYearsFromNow.setFullYear(tenYearsFromNow.getFullYear() + 10);
+    const expireByTimestamp = Math.floor(tenYearsFromNow.getTime() / 1000);
+
     const subscription = await instance.subscriptions.create({
       plan_id: RAZORPAY_PLAN_ID,
       customer_id: customerId,
-      total_count: 60, // For a recurring plan, this should be a higher number (e.g., 5 years)
       quantity: 1,
       customer_notify: 1,
+      expire_by: expireByTimestamp, // Use expire_by instead of total_count
       notes: {
         supabase_user_id: user.id,
       }
