@@ -73,17 +73,8 @@ export async function createRazorpaySubscription() {
       },
     };
 
+    // The customer_id is not passed here. It will be associated during checkout.
     const subscription = await instance.subscriptions.create(subscriptionRequest);
-    
-    // Now, associate the customer with the subscription if it's not already.
-    // This is a separate step that sometimes is necessary.
-    if (subscription.customer_id !== customerId) {
-      // This is a fallback and might not be strictly necessary with modern versions,
-      // but it ensures association. The create call should ideally handle this.
-      // The error you saw indicates `customer_id` is not a direct creation param, so we ensure it this way.
-      // However, the customer is usually created via the subscription if not provided.
-      // Let's rely on the customer object created above.
-    }
     
     return { 
         subscriptionId: subscription.id,
