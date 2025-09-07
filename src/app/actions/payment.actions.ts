@@ -28,37 +28,41 @@ export async function createRazorpaySubscription() {
     .eq('id', user.id)
     .single();
 
-  if (profileError && profileError.code !== 'PGRST116') {
+  if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
     console.error('Error retrieving user profile:', profileError);
     throw new Error('Could not retrieve user profile.');
   }
 
   let customerId = profile?.razorpay_customer_id;
 
-  // Create a new Razorpay customer if one doesn't exist
+  // Create a new Razorpay customer only if one doesn't exist
   if (!customerId) {
-    const customer = await instance.customers.create({
-      name: user.user_metadata.name || user.email,
-      email: user.email!,
-      contact: '', // You might want to collect phone number during signup
-      fail_existing: 0
-    });
-    customerId = customer.id;
+    try {
+        const customer = await instance.customers.create({
+            name: user.user_metadata.name || user.email,
+            email: user.email!,
+            contact: '', // You might want to collect phone number during signup
+            fail_existing: 0 // This will not fail if a customer with the same email already exists.
+        });
+        customerId = customer.id;
 
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ razorpay_customer_id: customerId })
-      .eq('id', user.id);
-      
-    if (updateError) {
-        console.error("Failed to save new razorpay_customer_id:", updateError);
-        throw new Error('Could not update user profile with Razorpay ID.');
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ razorpay_customer_id: customerId })
+            .eq('id', user.id);
+            
+        if (updateError) {
+            console.error("Failed to save new razorpay_customer_id:", updateError);
+            throw new Error('Could not update user profile with Razorpay ID.');
+        }
+    } catch(error: any) {
+        console.error('Error creating Razorpay customer:', error);
+        throw new Error('Could not create a payment customer.');
     }
   }
 
   try {
     // Set an expiry date far in the future (e.g., 10 years) to create an ongoing subscription
-    // This is the standard way to handle recurring subscriptions without a fixed end.
     const tenYearsFromNow = new Date();
     tenYearsFromNow.setFullYear(tenYearsFromNow.getFullYear() + 10);
     const expireByTimestamp = Math.floor(tenYearsFromNow.getTime() / 1000);
@@ -68,7 +72,7 @@ export async function createRazorpaySubscription() {
       customer_id: customerId,
       quantity: 1,
       customer_notify: 1,
-      expire_by: expireByTimestamp, // Use expire_by instead of total_count
+      expire_by: expireByTimestamp,
       notes: {
         supabase_user_id: user.id,
       }
@@ -83,6 +87,6 @@ export async function createRazorpaySubscription() {
     };
   } catch (error: any) {
     console.error('Error creating Razorpay subscription:', error);
-    throw new Error('Could not create subscription.');
+    throw new Error('Could not create subscription. Please ensure the Razorpay plan is active and configured correctly.');
   }
 }
