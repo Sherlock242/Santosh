@@ -38,26 +38,27 @@ export async function createRazorpaySubscription() {
   // Create a new Razorpay customer only if one doesn't exist
   if (!customerId) {
     try {
-        const customer = await instance.customers.create({
-            name: user.user_metadata.name || user.email,
-            email: user.email!,
-            contact: '', // You might want to collect phone number during signup
-            fail_existing: 0 // This will not fail if a customer with the same email already exists.
-        });
-        customerId = customer.id;
+      const customer = await instance.customers.create({
+        name: user.user_metadata.name || user.email,
+        email: user.email!,
+        fail_existing: 0
+      });
+      customerId = customer.id;
 
-        const { error: updateError } = await supabase
-            .from('users')
-            .update({ razorpay_customer_id: customerId })
-            .eq('id', user.id);
-            
-        if (updateError) {
-            console.error("Failed to save new razorpay_customer_id:", updateError);
-            throw new Error('Could not update user profile with Razorpay ID.');
-        }
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ razorpay_customer_id: customerId })
+        .eq('id', user.id);
+        
+      if (updateError) {
+        console.error("Failed to save new razorpay_customer_id:", updateError);
+        // Don't throw here, as the customer was created. Proceed with subscription.
+      }
     } catch(error: any) {
-        console.error('Error creating Razorpay customer:', error);
-        throw new Error('Could not create a payment customer.');
+        console.error('Error creating or fetching Razorpay customer:', error);
+        // Provide a more specific error message if available
+        const description = error.error?.description ? `Razorpay Error: ${error.error.description}` : 'Could not create a payment customer.';
+        throw new Error(description);
     }
   }
 
@@ -70,9 +71,9 @@ export async function createRazorpaySubscription() {
     const subscription = await instance.subscriptions.create({
       plan_id: RAZORPAY_PLAN_ID,
       customer_id: customerId,
+      total_count: 60, // Standard for 5 years of monthly payments
       quantity: 1,
       customer_notify: 1,
-      expire_by: expireByTimestamp,
       notes: {
         supabase_user_id: user.id,
       }
@@ -87,6 +88,7 @@ export async function createRazorpaySubscription() {
     };
   } catch (error: any) {
     console.error('Error creating Razorpay subscription:', error);
-    throw new Error('Could not create subscription. Please ensure the Razorpay plan is active and configured correctly.');
+    const description = error.error?.description ? `Razorpay Error: ${error.error.description}` : 'Could not create subscription. Please ensure the Razorpay plan is active and configured correctly.';
+    throw new Error(description);
   }
 }
