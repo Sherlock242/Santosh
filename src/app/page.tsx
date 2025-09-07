@@ -133,7 +133,10 @@ function LoginPageContent() {
                               <Input id="email-in" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={!isClient || authLoading} />
                           </div>
                            <div className="space-y-2 text-left">
-                              <Label htmlFor="password-in">Password</Label>
+                               <div className="flex justify-between items-baseline">
+                                <Label htmlFor="password-in">Password</Label>
+                                <Link href="/forgot-password" passHref className="text-sm text-primary hover:underline">Forgot?</Link>
+                               </div>
                               <Input id="password-in" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={!isClient || authLoading} />
                           </div>
                           <Button type="submit" className="w-full" disabled={!isClient || authLoading}>
@@ -171,7 +174,6 @@ function LoginPageContent() {
                   <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
                   <Link href="/blogs" className="hover:text-foreground">Blogs</Link>
                   <Link href="/contact" className="hover:text-foreground">Contact</Link>
-                  <Link href="/cancellation-policy" className="hover:text-foreground">Cancellation & Refund Policy</Link>
               </div>
           </footer>
       </div>

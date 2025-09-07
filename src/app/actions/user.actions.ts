@@ -4,6 +4,7 @@
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { updateUserInCache } from '@/lib/post-cache';
+import { redirect } from 'next/navigation';
 
 // --- User Profile Actions ---
 
@@ -137,4 +138,27 @@ export async function searchUsers(query: string) {
     }
     
     return data || [];
+}
+
+export async function sendPasswordResetEmail(email: string) {
+    const supabase = createSupabaseServerClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').origin}/auth/callback?next=/reset-password`
+    });
+
+    if (error) {
+        console.error("Password reset error:", error);
+        throw new Error(error.message);
+    }
+}
+
+export async function resetUserPassword(password: string) {
+    const supabase = createSupabaseServerClient();
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) {
+        console.error("Password reset failed:", error);
+        throw new Error(error.message);
+    }
+    redirect('/mood');
 }

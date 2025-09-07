@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 id: authUser.id,
                 email: authUser.email || '',
                 name: authUser.user_metadata.name || authUser.email?.split('@')[0] || 'User',
-                picture: authUser.user_metadata.picture || `https://placehold.co/64x64.png?text=${(authUser.email || 'U').charAt(0).toUpperCase()}`,
+                picture: authUser.user_metadata.picture || `https://placehold.co/64x64.png?text=${(authUser.user_metadata.name || authUser.email || 'U').charAt(0).toUpperCase()}`,
                 is_private: false,
                 is_gold_member: false,
             };
@@ -110,8 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
   
-    const publicPaths = ['/', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy'];
-    const isPublicPath = publicPaths.includes(pathname);
+    const publicPaths = ['/', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy', '/forgot-password', '/reset-password'];
+    const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/reset-password'); // Allow reset-password with params
     
     // If the user is logged in and on the main sign-in page, redirect to /mood
     if (user && pathname === '/') {
@@ -123,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loading, pathname, router]);
   
-  if (loading && !user && !['/', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy'].includes(pathname)) {
+  if (loading && !user && !['/', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy', '/forgot-password', '/reset-password'].some(p => pathname.startsWith(p))) {
     return (
         <div className="flex items-center justify-center h-screen">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
