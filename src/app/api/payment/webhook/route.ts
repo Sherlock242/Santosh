@@ -31,31 +31,32 @@ export async function POST(req: NextRequest) {
     const eventType = event.event;
 
     // We only care about the subscription being successfully charged.
-    // Razorpay sends 'payment.captured' for the first payment, and 'subscription.charged' for subsequent ones.
-    if (eventType === 'payment.captured' || eventType === 'subscription.charged') {
-      const subscription = event.payload.subscription?.entity || event.payload.payment?.entity?.notes;
+    // Razorpay sends this event for both the first payment and subsequent ones.
+    if (eventType === 'subscription.charged') {
+      const subscription = event.payload.subscription.entity;
       const payment = event.payload.payment.entity;
 
-      // The user ID might be in the subscription notes OR the payment notes.
-      const supabaseUserId = subscription?.notes?.supabase_user_id || payment?.notes?.supabase_user_id;
+      // The user ID should be in the subscription notes.
+      const supabaseUserId = subscription?.notes?.supabase_user_id;
       const subscriptionId = subscription?.id;
       const customerId = payment?.customer_id;
 
       if (!supabaseUserId) {
-        console.error('Webhook Error: supabase_user_id not found in subscription or payment notes.');
+        console.error('Webhook Error: supabase_user_id not found in subscription notes.');
+        // Acknowledge receipt to prevent Razorpay from retrying, but log the issue.
         return NextResponse.json({ received: true, message: 'User ID missing from webhook notes.' });
       }
 
       // Step 3: Find the user and update their status in Supabase
-      const supabase = createSupabaseServerClient(true); // Use admin client to update user data
+      // Use the admin client to bypass RLS for updating user data
+      const supabase = createSupabaseServerClient(true); 
 
-      // Update the user's profile to mark them as a gold member
       const { error: updateError } = await supabase
         .from('users')
         .update({ 
             is_gold_member: true,
             razorpay_subscription_id: subscriptionId,
-            razorpay_customer_id: customerId, // Also save the customer ID
+            razorpay_customer_id: customerId,
         })
         .eq('id', supabaseUserId);
 
