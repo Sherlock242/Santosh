@@ -63,7 +63,7 @@ export async function createRazorpaySubscription() {
   }
 
   try {
-    const subscriptionRequest = {
+    const subscriptionRequest: Razorpay.SubscriptionCreateRequestBody = {
       plan_id: RAZORPAY_PLAN_ID,
       customer_notify: 1,
       quantity: 1,
@@ -73,7 +73,6 @@ export async function createRazorpaySubscription() {
       },
     };
 
-    // The customer_id is not passed here. It will be associated during checkout.
     const subscription = await instance.subscriptions.create(subscriptionRequest);
     
     return { 
