@@ -73,7 +73,7 @@ export async function createRazorpaySubscription() {
       },
     };
 
-    const subscription = await instance.subscriptions.create(subscriptionRequest);
+    const subscription = await instance.subscriptions.create(subscriptionRequest as any);
     
     return { 
         subscriptionId: subscription.id,
