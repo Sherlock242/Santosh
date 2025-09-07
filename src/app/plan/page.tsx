@@ -17,7 +17,7 @@ declare global {
 }
 
 export default function PlanPage() {
-  const { user, refreshUser } = useAuth();
+  const { user, supabase, refreshUser } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -48,11 +48,32 @@ export default function PlanPage() {
             description: "Monthly Subscription",
             image: "/icon.png",
             handler: async function (response: any) {
-                toast({
-                    title: "Payment Successful!",
-                    description: "Welcome to Edengram Gold! Refreshing your profile...",
-                    variant: "success",
-                });
+                // --- Start of new logic ---
+                // Update user to Gold Member immediately on the client-side
+                if (supabase) {
+                    const { error } = await supabase
+                        .from('users')
+                        .update({ is_gold_member: true })
+                        .eq('id', user.id);
+
+                    if (error) {
+                       console.error("Failed to update user to gold member on client:", error);
+                       // The webhook will still act as a fallback, but we can inform the user.
+                       toast({
+                           title: "Payment Successful!",
+                           description: "Your status will be updated shortly.",
+                           variant: "success",
+                       });
+                    } else {
+                        toast({
+                            title: "Payment Successful!",
+                            description: "Welcome to Edengram Gold! Your profile is updated.",
+                            variant: "success",
+                        });
+                    }
+                }
+                // --- End of new logic ---
+
                 await refreshUser();
                 router.push('/gallery?from_payment=true');
             },
