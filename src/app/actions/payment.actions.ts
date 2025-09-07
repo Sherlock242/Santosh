@@ -60,7 +60,7 @@ export async function createRazorpaySubscription() {
     const subscription = await instance.subscriptions.create({
       plan_id: RAZORPAY_PLAN_ID,
       customer_id: customerId,
-      total_count: 12, // For a yearly plan, 12 installments
+      total_count: 60, // For a recurring plan, this should be a higher number (e.g., 5 years)
       quantity: 1,
       customer_notify: 1,
       notes: {
@@ -75,7 +75,7 @@ export async function createRazorpaySubscription() {
         userName: user.user_metadata.name || user.email,
         userEmail: user.email
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating Razorpay subscription:', error);
     throw new Error('Could not create subscription.');
   }
