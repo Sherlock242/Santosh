@@ -28,17 +28,21 @@ export async function POST(req: NextRequest) {
 
     // Step 2: Parse the event payload
     const event = JSON.parse(body);
+    const eventType = event.event;
 
     // We only care about the subscription being successfully charged.
-    if (event.event === 'subscription.charged') {
-      const subscription = event.payload.subscription.entity;
-      const notes = subscription.notes;
-      const supabaseUserId = notes?.supabase_user_id;
-      const subscriptionId = subscription.id;
-      const customerId = subscription.customer_id;
+    // Razorpay sends 'payment.captured' for the first payment, and 'subscription.charged' for subsequent ones.
+    if (eventType === 'payment.captured' || eventType === 'subscription.charged') {
+      const subscription = event.payload.subscription?.entity || event.payload.payment?.entity?.notes;
+      const payment = event.payload.payment.entity;
+
+      // The user ID might be in the subscription notes OR the payment notes.
+      const supabaseUserId = subscription?.notes?.supabase_user_id || payment?.notes?.supabase_user_id;
+      const subscriptionId = subscription?.id;
+      const customerId = payment?.customer_id;
 
       if (!supabaseUserId) {
-        console.error('Webhook Error: supabase_user_id not found in subscription notes.');
+        console.error('Webhook Error: supabase_user_id not found in subscription or payment notes.');
         return NextResponse.json({ received: true, message: 'User ID missing from webhook notes.' });
       }
 
