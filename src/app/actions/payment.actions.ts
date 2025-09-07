@@ -3,6 +3,7 @@
 
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import Razorpay from 'razorpay';
+import type { SubscriptionCreateRequestBody } from 'razorpay/dist/types/subscription';
 import { randomBytes } from 'crypto';
 
 const instance = new Razorpay({
@@ -63,7 +64,7 @@ export async function createRazorpaySubscription() {
   }
 
   try {
-    const subscriptionRequest: Razorpay.SubscriptionCreateRequestBody = {
+    const subscriptionRequest: SubscriptionCreateRequestBody = {
       plan_id: RAZORPAY_PLAN_ID,
       customer_notify: 1,
       quantity: 1,
