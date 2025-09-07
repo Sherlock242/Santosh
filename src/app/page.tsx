@@ -21,6 +21,7 @@ function LoginPageContent() {
   const { user, supabase, loading: authLoading, setLoading: setAuthLoading } = useAuth();
   const { toast } = useToast();
   
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isClient, setIsClient] = useState(false);
@@ -38,8 +39,8 @@ function LoginPageContent() {
         options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
             data: {
-                name: email.split('@')[0],
-                picture: `https://placehold.co/64x64.png?text=${email.charAt(0).toUpperCase()}`
+                name: name,
+                picture: `https://placehold.co/64x64.png?text=${name.charAt(0).toUpperCase()}`
             }
         }
     });
@@ -142,6 +143,10 @@ function LoginPageContent() {
                   </TabsContent>
                   <TabsContent value="signup">
                       <form onSubmit={handleManualSignUp} className="space-y-4 pt-4">
+                          <div className="space-y-2 text-left">
+                              <Label htmlFor="name-up">Name</Label>
+                              <Input id="name-up" type="text" placeholder="Your Name" required value={name} onChange={e => setName(e.target.value)} disabled={!isClient || authLoading} />
+                          </div>
                           <div className="space-y-2 text-left">
                               <Label htmlFor="email-up">Email</Label>
                               <Input id="email-up" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={!isClient || authLoading} />
