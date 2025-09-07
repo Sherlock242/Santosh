@@ -5,16 +5,21 @@ import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import Razorpay from 'razorpay';
 import { randomBytes } from 'crypto';
 
-const instance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
-// This is the plan ID for the ₹99/month plan in Razorpay.
-// You would create this subscription plan in your Razorpay Dashboard.
-const RAZORPAY_PLAN_ID = process.env.RAZORPAY_PLAN_ID!;
-
 export async function createRazorpaySubscription() {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const planId = process.env.RAZORPAY_PLAN_ID;
+
+  if (!keyId || !keySecret || !planId) {
+    console.error('Razorpay environment variables are not set.');
+    throw new Error('Payment service is not configured correctly. Please contact support.');
+  }
+
+  const instance = new Razorpay({
+    key_id: keyId,
+    key_secret: keySecret,
+  });
+  
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -64,7 +69,7 @@ export async function createRazorpaySubscription() {
 
   try {
     const subscriptionRequest = {
-      plan_id: RAZORPAY_PLAN_ID,
+      plan_id: planId,
       customer_notify: 1,
       quantity: 1,
       total_count: 60, // Standard for 5 years of monthly payments
