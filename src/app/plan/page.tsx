@@ -96,11 +96,11 @@ export default function PlanPage() {
               </li>
               <li className="flex items-center gap-4">
                 <Check className="h-6 w-6 text-amber-400" />
-                <span>Priority access to new features.</span>
+                <span>Unlock the exclusive 'Creator' emoji model.</span>
               </li>
               <li className="flex items-center gap-4">
                 <Check className="h-6 w-6 text-amber-400" />
-                <span>Faster customer support.</span>
+                <span>Priority access to new features.</span>
               </li>
               <li className="flex items-center gap-4">
                 <Check className="h-6 w-6 text-amber-400" />
