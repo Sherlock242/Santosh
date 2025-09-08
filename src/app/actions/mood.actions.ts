@@ -103,7 +103,9 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
     }
 
     // Extract the nested user objects and filter out any nulls
-    const users: UserProfile[] = viewersData.map(v => v.users).filter((u): u is UserProfile => u !== null);
+    const users = viewersData
+        .map(v => v.users)
+        .filter((u): u is UserProfile => u !== null);
     
     if (users.length === 0) return [];
     
