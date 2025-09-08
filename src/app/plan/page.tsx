@@ -77,39 +77,8 @@ export default function PlanPage() {
                 await refreshUser();
                 router.push('/gallery?from_payment=true');
             },
-            prefill: {
-                name: result.userName,
-                email: result.userEmail,
-            },
             notes: {
                 supabase_user_id: user.id,
-            },
-            theme: {
-                color: "#F59E0B" // Gold color for Razorpay modal
-            },
-            config: {
-              display: {
-                blocks: {
-                  banks: {
-                    name: 'Pay using another method',
-                    instruments: [
-                      {
-                        method: 'upi'
-                      },
-                      {
-                        method: 'wallet'
-                      },
-                      {
-                        method: 'netbanking'
-                      }
-                    ],
-                  },
-                },
-                sequence: ['block.banks'],
-                preferences: {
-                  show_default_blocks: true,
-                },
-              },
             },
         };
         
