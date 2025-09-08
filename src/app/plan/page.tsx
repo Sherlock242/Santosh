@@ -64,7 +64,7 @@ export default function PlanPage() {
                     });
                     
                     await refreshUser();
-                    router.push('/gallery?from_payment=true');
+                    router.push(`/gallery?userId=${user.id}&from_payment=true`);
 
                 } catch (verifyError: any) {
                     toast({
@@ -83,7 +83,7 @@ export default function PlanPage() {
                 address: "Edengram Corporate Office"
             },
             theme: {
-                color: "#8A2BE2"
+                color: "#FBBF24"
             }
         };
         
