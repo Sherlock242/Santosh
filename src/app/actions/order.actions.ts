@@ -1,6 +1,7 @@
 
 'use server';
 
+import 'dotenv/config';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import Razorpay from 'razorpay';
 import { randomBytes } from 'crypto';
@@ -91,8 +92,14 @@ export async function verifyPayment(data: {
     }
     
     // Fetch order details from Razorpay first to get the user ID from notes
-    const order = await instance.orders.fetch(razorpay_order_id);
-    const supabaseUserId = order.notes?.supabase_user_id;
+    let supabaseUserId;
+    try {
+        const order = await instance.orders.fetch(razorpay_order_id);
+        supabaseUserId = order.notes?.supabase_user_id;
+    } catch (error: any) {
+         console.error('Razorpay API error fetching order:', error);
+         throw new Error('Could not fetch order details from payment gateway.');
+    }
 
     if (!supabaseUserId) {
         console.error('Verification Error: supabase_user_id not found in order notes.');
