@@ -89,6 +89,9 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     if (!currentUser) return [];
 
+    // Define a type for the shape of the user profile we expect
+    type UserProfile = { id: string; name: string; picture: string; is_private: boolean; is_gold_member: boolean; };
+
     const { data: viewersData, error: viewersError } = await supabase
         .from('mood_views')
         .select('users:viewer_id(id, name, picture, is_private, is_gold_member)')
@@ -99,7 +102,9 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
         return [];
     }
 
-    const users = viewersData.map(v => v.users).filter(Boolean);
+    // Extract the nested user objects and filter out any nulls
+    const users: UserProfile[] = viewersData.map(v => v.users).filter((u): u is UserProfile => u !== null);
+    
     if (users.length === 0) return [];
     
     const userIds = users.map(u => u.id);
