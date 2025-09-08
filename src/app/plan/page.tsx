@@ -44,38 +44,16 @@ export default function PlanPage() {
         const options = {
             key: result.key,
             subscription_id: result.subscriptionId,
-            handler: async function (response: any) {
-                // --- Start of new logic ---
-                // Update user to Gold Member immediately on the client-side
-                if (supabase) {
-                    const { error } = await supabase
-                        .from('users')
-                        .update({ is_gold_member: true })
-                        .eq('id', user.id);
-
-                    if (error) {
-                       console.error("Failed to update user to gold member on client:", error);
-                       // The webhook will still act as a fallback, but we can inform the user.
-                       toast({
-                           title: "Payment Successful!",
-                           description: "Your status will be updated shortly.",
-                           variant: "success",
-                       });
-                    } else {
-                        toast({
-                            title: "Payment Successful!",
-                            description: "Welcome to Edengram Gold! Your profile is updated.",
-                            variant: "success",
-                        });
-                    }
-                }
-                // --- End of new logic ---
-
+            handler: async function () {
+                // The webhook will handle the success logic.
+                // We just need to show a confirmation to the user and refresh their state.
+                 toast({
+                    title: "Payment Successful!",
+                    description: "Your status will be updated shortly. Welcome to Gold!",
+                    variant: "success",
+                });
                 await refreshUser();
                 router.push('/gallery?from_payment=true');
-            },
-            notes: {
-                supabase_user_id: user.id,
             },
         };
         
