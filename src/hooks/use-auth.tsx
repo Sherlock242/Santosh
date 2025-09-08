@@ -48,19 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq('id', currentSession.user.id)
             .single();
 
-        if (error) {
-            console.error("Error fetching user profile:", error);
-             const authUser = currentSession.user;
-             const newUser = {
-                id: authUser.id,
-                email: authUser.email || '',
-                name: authUser.user_metadata.name || authUser.email?.split('@')[0] || 'User',
-                picture: authUser.user_metadata.picture || `https://placehold.co/64x64.png?text=${(authUser.user_metadata.name || authUser.email || 'U').charAt(0).toUpperCase()}`,
-                is_private: false,
-                is_gold_member: false,
-            };
-             setUser(newUser);
-        } else if (profile) {
+        if (error || !profile) {
+            console.error("Error fetching user profile or profile not found:", error);
+            setUser(null);
+        } else {
             const userProfile: UserProfile = {
                 id: profile.id,
                 name: profile.name,
