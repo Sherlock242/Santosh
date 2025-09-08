@@ -14,18 +14,13 @@ export function BottomBar() {
   const segment = useSelectedLayoutSegment();
   const { user, supabase } = useAuth();
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
-  const [pendingSegment, setPendingSegment] = useState<string | null>(null);
 
   useEffect(() => {
-    // When the actual segment changes (page loads), clear the pending state.
-    if (segment !== pendingSegment) {
-      setPendingSegment(null);
-    }
     // If we navigate to the notifications page, clear the indicator immediately
     if (segment === 'notifications') {
       setHasNewNotifications(false);
     }
-  }, [segment, pendingSegment]);
+  }, [segment]);
 
   useEffect(() => {
     if (!user) return;
@@ -64,9 +59,8 @@ export function BottomBar() {
     { href: '/gallery', segment: 'gallery', label: 'Profile', icon: User, isProfile: true },
   ];
   
-  const handleNavClick = (itemSegment: string) => {
-    setPendingSegment(itemSegment);
-    if (itemSegment === 'notifications') {
+  const handleNotificationsClick = () => {
+    if (hasNewNotifications) {
       setHasNewNotifications(false);
     }
   }
@@ -76,14 +70,13 @@ export function BottomBar() {
       <nav className="flex h-14 items-center justify-around">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = (pendingSegment || segment) === item.segment;
+          const isActive = item.segment === segment;
 
           if (item.isProfile) {
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => handleNavClick(item.segment)}
                 className={cn(
                   'flex items-center justify-center rounded-full transition-colors w-9 h-9',
                   isActive && 'ring-2 ring-primary ring-offset-2 ring-offset-background'
@@ -96,12 +89,14 @@ export function BottomBar() {
               </Link>
             );
           }
+          
+          const clickHandler = item.segment === 'notifications' ? handleNotificationsClick : undefined;
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => handleNavClick(item.segment)}
+              onClick={clickHandler}
               className="relative flex items-center justify-center rounded-md transition-colors w-12 h-12 text-muted-foreground hover:bg-muted/50"
             >
               <Icon className={cn('h-7 w-7', isActive && 'text-primary')} />
