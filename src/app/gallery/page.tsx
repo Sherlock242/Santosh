@@ -118,6 +118,7 @@ function GalleryPageContent() {
     const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
     const [showSignOutConfirm, setShowSignOutConfirm] = React.useState(false);
     const [sheetContent, setSheetContent] = React.useState<'supporters' | 'supporting' | null>(null);
+    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -343,7 +344,7 @@ function GalleryPageContent() {
         }
     };
 
-    const ProfileHeader = () => (
+    const ProfileHeader = React.memo(() => (
         <header className="flex h-16 items-center justify-between bg-background px-4 md:px-6">
             <div className="flex items-center gap-1 font-semibold text-lg">
                 {!isOwnProfile ? (
@@ -359,7 +360,7 @@ function GalleryPageContent() {
             </div>
             {isOwnProfile && authUser && (
             <div className="flex items-center gap-2">
-                 <Sheet>
+                 <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon" className="text-muted-foreground hover:bg-transparent hover:text-primary">
                             <Menu />
@@ -379,11 +380,11 @@ function GalleryPageContent() {
                            </Button>
                         </div>
                         <div className="mt-auto">
-                           <Button variant="ghost" className="w-full justify-start" onClick={() => setShowSignOutConfirm(true)}>
+                           <Button variant="ghost" className="w-full justify-start" onClick={() => { setIsMenuOpen(false); setShowSignOutConfirm(true); }}>
                                 <LogOut className="mr-2 h-4 w-4" />
                                 Sign Out
                            </Button>
-                           <Button variant="destructive" className="w-full justify-start mt-2" onClick={() => setShowDeleteConfirm(true)}>
+                           <Button variant="destructive" className="w-full justify-start mt-2" onClick={() => { setIsMenuOpen(false); setShowDeleteConfirm(true); }}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete Account
                            </Button>
@@ -393,7 +394,8 @@ function GalleryPageContent() {
             </div>
             )}
         </header>
-    );
+    ));
+    ProfileHeader.displayName = "ProfileHeader";
     
     const selectedEmojiIndex = selectedEmojiId ? savedEmojis.findIndex(e => e.id === selectedEmojiId) : -1;
     
