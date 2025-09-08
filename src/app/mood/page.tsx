@@ -15,8 +15,8 @@ import MoodStories from '@/components/mood-stories';
 import type { Mood, PostViewEmoji } from '@/components/post-view';
 import { updatePostCache } from '@/lib/post-cache';
 
-const PostView = dynamic(() => 
-  import('@/components/post-view').then(mod => mod.PostView),
+const PostView = dynamic(
+  () => import('@/components/post-view').then(mod => mod.PostView),
   {
     loading: () => <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>,
     ssr: false 
