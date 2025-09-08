@@ -42,16 +42,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(currentSession);
     
     if (currentSession?.user) {
+        // We must have a profile in the database to consider the user logged in.
         const { data: profile, error } = await client
             .from('users')
             .select('*')
             .eq('id', currentSession.user.id)
             .single();
 
+        // If there's an error or no profile, the user is not valid.
         if (error || !profile) {
-            console.error("Error fetching user profile or profile not found:", error);
+            if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows found", which is expected.
+              console.error("Error fetching user profile:", error);
+            }
             setUser(null);
         } else {
+            // Profile found, this is a valid user.
             const userProfile: UserProfile = {
                 id: profile.id,
                 name: profile.name,
@@ -64,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(userProfile);
         }
     } else {
+        // No session, no user.
         setUser(null);
     }
   }, [client]);
