@@ -99,10 +99,10 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
         return [];
     }
 
-    const users = viewersData.map(v => v.users).filter(Boolean);
+    const users = viewersData.map(v => v.users).filter(Boolean) as { id: string; name: string; picture: string; is_private: boolean; is_gold_member: boolean; }[];
     if (users.length === 0) return [];
     
-    const userIds = users.map(u => u!.id);
+    const userIds = users.map(u => u.id);
 
     const { data: supportStatusData, error: supportStatusError } = await supabase
         .from('supports')
@@ -118,8 +118,8 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
     const supportStatusMap = new Map(supportStatusData?.map(s => [s.supported_id, s.status]));
 
     return users.map(user => ({
-        ...user!,
-        support_status: supportStatusMap.get(user!.id) || null,
+        ...user,
+        support_status: supportStatusMap.get(user.id) || null,
         has_mood: false // This info is not available in this context, default to false.
     })) as UserWithSupportStatus[];
 }
