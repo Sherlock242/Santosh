@@ -81,7 +81,7 @@ export async function getSupporters({ userId, page = 1, limit = 15 }: { userId: 
     // 2. Get the profiles for those IDs
     const { data: usersData, error: usersError } = await supabase
         .from('users')
-        .select('id, name, picture, is_private, is_gold_member, moods(user_id)')
+        .select('id, name, picture, is_private, is_gold_member')
         .in('id', userIds);
 
     if (usersError) {
@@ -107,7 +107,7 @@ export async function getSupporters({ userId, page = 1, limit = 15 }: { userId: 
     return usersData.map(user => ({
         ...user,
         support_status: supportStatusMap.get(user.id) || null,
-        has_mood: user.moods.length > 0,
+        has_mood: false, // This data is not essential for this view and complicates the query.
     })) as UserWithSupportStatus[];
 }
 
@@ -135,7 +135,7 @@ export async function getSupporting({ userId, page = 1, limit = 15 }: { userId: 
     // 2. Get the profiles for those IDs
     const { data: usersData, error: usersError } = await supabase
         .from('users')
-        .select('id, name, picture, is_private, is_gold_member, moods(user_id)')
+        .select('id, name, picture, is_private, is_gold_member')
         .in('id', userIds);
 
     if (usersError) {
@@ -162,7 +162,7 @@ export async function getSupporting({ userId, page = 1, limit = 15 }: { userId: 
     return usersData.map(user => ({
         ...user,
         support_status: supportStatusMap.get(user.id) || null,
-        has_mood: user.moods.length > 0
+        has_mood: false // This data is not essential for this view and complicates the query.
     })) as UserWithSupportStatus[];
 }
 
