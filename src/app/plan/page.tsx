@@ -4,7 +4,7 @@
 import React, { useTransition } from 'react';
 import { Button } from "@/components/ui/button";
 import { Check, Loader2 } from "lucide-react";
-import { createRazorpaySubscription } from '@/app/actions/payment.actions';
+import { createRazorpayOrder, verifyPayment } from '@/app/actions/order.actions';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -17,7 +17,7 @@ declare global {
 }
 
 export default function PlanPage() {
-  const { user, supabase, refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -35,24 +35,56 @@ export default function PlanPage() {
 
     startTransition(async () => {
       try {
-        const result = await createRazorpaySubscription();
+        const orderDetails = await createRazorpayOrder();
         
-        if (!result) {
-            throw new Error("Could not create a subscription.");
+        if (!orderDetails) {
+            throw new Error("Could not create a payment order.");
         }
 
         const options = {
-            key: result.key,
-            subscription_id: result.subscriptionId,
-            handler: async function () {
-                toast({
-                    title: "Payment Successful!",
-                    description: "Your status will be updated shortly. Welcome to Gold!",
-                    variant: "success",
-                });
-                await refreshUser();
-                router.push('/gallery?from_payment=true');
+            key: orderDetails.key,
+            amount: orderDetails.amount,
+            currency: orderDetails.currency,
+            name: "Edengram",
+            description: "Gold Plan Membership",
+            image: "/icon.png",
+            order_id: orderDetails.orderId,
+            handler: async function (response: any) {
+                try {
+                    await verifyPayment({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature
+                    });
+
+                    toast({
+                        title: "Payment Successful!",
+                        description: "Welcome to Gold! Your status has been updated.",
+                        variant: "success",
+                    });
+                    
+                    await refreshUser();
+                    router.push('/gallery?from_payment=true');
+
+                } catch (verifyError: any) {
+                    toast({
+                        title: "Verification Failed",
+                        description: verifyError.message || "Your payment was successful but we couldn't verify it automatically. Please contact support.",
+                        variant: "destructive",
+                        duration: 10000,
+                    });
+                }
             },
+            prefill: {
+                name: orderDetails.userName,
+                email: orderDetails.userEmail,
+            },
+            notes: {
+                address: "Edengram Corporate Office"
+            },
+            theme: {
+                color: "#8A2BE2"
+            }
         };
         
         const rzp = new window.Razorpay(options);
@@ -109,7 +141,7 @@ export default function PlanPage() {
             </ul>
 
             <div className="text-center mt-10">
-                <p className="text-4xl font-bold">₹99 <span className="text-base font-normal text-muted-foreground">/ month</span></p>
+                <p className="text-4xl font-bold">₹99 <span className="text-base font-normal text-muted-foreground">one-time</span></p>
             </div>
 
             {user?.is_gold_member ? (
