@@ -64,7 +64,7 @@ export async function getSupporters({ userId, page = 1, limit = 15 }: { userId: 
     // 1. Fetch the user profiles directly through the join
     const { data: supportersData, error: supportersError } = await supabase
         .from('supports')
-        .select('user:supporter_id(id, name, picture, is_private, is_gold_member)')
+        .select('users:supporter_id(id, name, picture, is_private, is_gold_member)')
         .eq('supported_id', userId)
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
@@ -75,7 +75,7 @@ export async function getSupporters({ userId, page = 1, limit = 15 }: { userId: 
         return [];
     }
 
-    const users = supportersData.map(s => s.user).filter(Boolean); // Extract user profiles
+    const users = supportersData.map(s => s.users).filter(Boolean); // Extract user profiles
     if (users.length === 0) return [];
     
     const userIds = users.map(u => u!.id);
@@ -110,7 +110,7 @@ export async function getSupporting({ userId, page = 1, limit = 15 }: { userId: 
     // 1. Get the profiles for those IDs
     const { data: supportingData, error: supportingError } = await supabase
         .from('supports')
-        .select('user:supported_id(id, name, picture, is_private, is_gold_member)')
+        .select('users:supported_id(id, name, picture, is_private, is_gold_member)')
         .eq('supporter_id', userId)
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
@@ -121,7 +121,7 @@ export async function getSupporting({ userId, page = 1, limit = 15 }: { userId: 
         return [];
     }
     
-    const users = supportingData.map(s => s.user).filter(Boolean);
+    const users = supportingData.map(s => s.users).filter(Boolean);
     if (users.length === 0) return [];
 
     const userIds = users.map(u => u!.id);
