@@ -102,7 +102,7 @@ export function BottomBar() {
               key={item.href}
               href={item.href}
               onClick={() => handleNavClick(item.segment)}
-              className="relative flex items-center justify-center rounded-md transition-colors w-12 h-12 text-muted-foreground"
+              className="relative flex items-center justify-center rounded-md transition-colors w-12 h-12 text-muted-foreground hover:bg-muted/50"
             >
               <Icon className={cn('h-7 w-7', isActive && 'text-primary')} />
               {item.hasIndicator && (
