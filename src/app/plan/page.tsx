@@ -45,9 +45,7 @@ export default function PlanPage() {
             key: result.key,
             subscription_id: result.subscriptionId,
             handler: async function () {
-                // The webhook will handle the success logic.
-                // We just need to show a confirmation to the user and refresh their state.
-                 toast({
+                toast({
                     title: "Payment Successful!",
                     description: "Your status will be updated shortly. Welcome to Gold!",
                     variant: "success",
