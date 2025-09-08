@@ -99,7 +99,7 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
         return [];
     }
 
-    const users = viewersData.map(v => v.users).filter(Boolean) as { id: string; name: string; picture: string; is_private: boolean; is_gold_member: boolean; }[];
+    const users = viewersData.map(v => v.users).filter(Boolean);
     if (users.length === 0) return [];
     
     const userIds = users.map(u => u.id);
