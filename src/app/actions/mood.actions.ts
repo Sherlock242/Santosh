@@ -91,7 +91,7 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
 
     const { data: viewersData, error: viewersError } = await supabase
         .from('mood_views')
-        .select('viewer_id')
+        .select('users:viewer_id(id, name, picture, is_private, is_gold_member)')
         .eq('mood_id', moodId);
 
     if (viewersError) {
@@ -99,24 +99,16 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
         return [];
     }
 
-    const viewerIds = viewersData.map(v => v.viewer_id);
-    if (viewerIds.length === 0) return [];
+    const users = viewersData.map(v => v.users).filter(Boolean);
+    if (users.length === 0) return [];
+    
+    const userIds = users.map(u => u!.id);
 
-    const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('id, name, picture, is_private, is_gold_member')
-        .in('id', viewerIds);
-    
-    if (usersError) {
-        console.error('Error fetching viewer profiles:', usersError);
-        return [];
-    }
-    
     const { data: supportStatusData, error: supportStatusError } = await supabase
         .from('supports')
         .select('supported_id, status')
         .eq('supporter_id', currentUser.id)
-        .in('supported_id', viewerIds);
+        .in('supported_id', userIds);
 
     if (supportStatusError) {
         console.error('Error fetching support statuses:', supportStatusError);
@@ -125,9 +117,9 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
 
     const supportStatusMap = new Map(supportStatusData?.map(s => [s.supported_id, s.status]));
 
-    return usersData.map(user => ({
-        ...user,
-        support_status: supportStatusMap.get(user.id) || null,
+    return users.map(user => ({
+        ...user!,
+        support_status: supportStatusMap.get(user!.id) || null,
         has_mood: false // This info is not available in this context, default to false.
     })) as UserWithSupportStatus[];
 }
