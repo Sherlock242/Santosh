@@ -9,9 +9,9 @@ export function createSupabaseServerClient(bypassRls = false) {
   const cookieStore = cookies();
   
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_URL!,
     // Use service role for admin actions, but anon key for user-level access
-    bypassRls ? process.env.SUPABASE_SERVICE_ROLE_KEY! : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, 
+    bypassRls ? process.env.SUPABASE_SERVICE_ROLE_KEY! : process.env.SUPABASE_ANON_KEY!, 
     {
       cookies: {
         get(name: string) {
