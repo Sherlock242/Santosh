@@ -44,43 +44,6 @@ export default function PlanPage() {
         const options = {
             key: result.key,
             subscription_id: result.subscriptionId,
-            name: "Edengram Gold",
-            description: "Monthly Subscription",
-            image: "/icon.png",
-            config: {
-              display: {
-                blocks: {
-                  upi: {
-                    name: "Pay with UPI",
-                    instruments: [
-                      { method: "upi" },
-                    ],
-                  },
-                  wallets: {
-                    name: "Pay with Wallets",
-                    instruments: [
-                      { method: "wallet" },
-                    ],
-                  },
-                  netbanking: {
-                    name: "Pay with Netbanking",
-                    instruments: [
-                      { method: "netbanking" },
-                    ],
-                  },
-                  card: {
-                    name: "Pay with Card",
-                    instruments: [
-                      { method: "card" },
-                    ],
-                  },
-                },
-                sequence: ["block.upi", "block.card", "block.netbanking", "block.wallets"],
-                preferences: {
-                  show_default_blocks: true,
-                },
-              },
-            },
             handler: async function (response: any) {
                 // --- Start of new logic ---
                 // Update user to Gold Member immediately on the client-side
