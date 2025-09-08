@@ -89,34 +89,38 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     if (!currentUser) return [];
 
-    // Define a type for the shape of the user profile we expect
-    type UserProfile = { id: string; name: string; picture: string; is_private: boolean; is_gold_member: boolean; };
-
-    const { data: viewersData, error: viewersError } = await supabase
+    // Step 1: Directly get the IDs of the viewers.
+    const { data: viewers, error: viewersError } = await supabase
         .from('mood_views')
-        .select('users:viewer_id(id, name, picture, is_private, is_gold_member)')
+        .select('viewer_id')
         .eq('mood_id', moodId);
 
     if (viewersError) {
-        console.error('Error getting mood viewers:', viewersError);
+        console.error('Error getting mood viewer IDs:', viewersError);
         return [];
     }
 
-    // Extract the nested user objects and filter out any nulls
-    const users = viewersData
-        .map(v => v.users)
-        .filter((u): u is UserProfile => u !== null);
-    
-    if (users.length === 0) return [];
-    
-    const userIds = users.map(u => u.id);
+    const viewerIds = viewers.map(v => v.viewer_id);
+    if (viewerIds.length === 0) return [];
 
+    // Step 2: Fetch all user profiles for those IDs in a separate, direct query.
+    const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id, name, picture, is_private, is_gold_member')
+        .in('id', viewerIds);
+
+    if (usersError) {
+        console.error('Error fetching viewer profiles:', usersError);
+        return [];
+    }
+
+    // Step 3: Get the current user's support status towards the viewers.
     const { data: supportStatusData, error: supportStatusError } = await supabase
         .from('supports')
         .select('supported_id, status')
         .eq('supporter_id', currentUser.id)
-        .in('supported_id', userIds);
-
+        .in('supported_id', viewerIds);
+        
     if (supportStatusError) {
         console.error('Error fetching support statuses:', supportStatusError);
         // Continue without this data if it fails
@@ -124,6 +128,7 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
 
     const supportStatusMap = new Map(supportStatusData?.map(s => [s.supported_id, s.status]));
 
+    // Step 4: Combine the data.
     return users.map(user => ({
         ...user,
         support_status: supportStatusMap.get(user.id) || null,
