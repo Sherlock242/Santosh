@@ -38,8 +38,8 @@ export function ChatHeader({ children }: { children?: React.ReactNode }) {
   const handleSignOut = async () => {
     setShowSignOutConfirm(false);
     if (!supabase) return;
+    router.replace('/');
     await supabase.auth.signOut();
-    router.push('/');
   };
   
   const handleDeleteAccount = async () => {
@@ -55,8 +55,8 @@ export function ChatHeader({ children }: { children?: React.ReactNode }) {
         variant: 'success',
       });
 
+      router.replace('/');
       await supabase.auth.signOut();
-      router.push('/');
       
     } catch (error: any) {
       console.error("Failed to delete account:", error);
