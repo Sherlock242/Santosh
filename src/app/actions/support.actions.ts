@@ -75,10 +75,10 @@ export async function getSupporters({ userId, page = 1, limit = 15 }: { userId: 
         return [];
     }
 
-    const users = supportersData.map(s => s.users).filter(Boolean); // Extract user profiles
+    const users = supportersData.map(s => s.users).filter(Boolean) as { id: string; name: string; picture: string; is_private: boolean; is_gold_member: boolean }[];
     if (users.length === 0) return [];
     
-    const userIds = users.map(u => u!.id);
+    const userIds = users.map(u => u.id);
 
     // 2. Get the current user's support status towards these supporters
     let supportStatusMap = new Map<string, 'approved' | 'pending'>();
@@ -90,14 +90,14 @@ export async function getSupporters({ userId, page = 1, limit = 15 }: { userId: 
             .in('supported_id', userIds);
 
         if (!supportStatusError && supportStatusData) {
-            supportStatusMap = new Map(supportStatusData.map(s => [s.supported_id, s.status]));
+            supportStatusMap = new Map(supportStatusData.map(s => [s.supported_id, s.status as 'approved' | 'pending']));
         }
     }
 
     // 3. Combine the data
     return users.map(user => ({
-        ...user!,
-        support_status: supportStatusMap.get(user!.id) || null,
+        ...user,
+        support_status: supportStatusMap.get(user.id) || null,
         has_mood: false, // This data is not essential for this view and complicates the query.
     })) as UserWithSupportStatus[];
 }
@@ -121,10 +121,10 @@ export async function getSupporting({ userId, page = 1, limit = 15 }: { userId: 
         return [];
     }
     
-    const users = supportingData.map(s => s.users).filter(Boolean);
+    const users = supportingData.map(s => s.users).filter(Boolean) as { id: string; name: string; picture: string; is_private: boolean; is_gold_member: boolean }[];
     if (users.length === 0) return [];
 
-    const userIds = users.map(u => u!.id);
+    const userIds = users.map(u => u.id);
 
     // 2. Get the current user's support status towards these users
     let supportStatusMap = new Map<string, 'approved' | 'pending'>();
@@ -136,14 +136,14 @@ export async function getSupporting({ userId, page = 1, limit = 15 }: { userId: 
             .in('supported_id', userIds);
         
         if (!supportStatusError && supportStatusData) {
-            supportStatusMap = new Map(supportStatusData.map(s => [s.supported_id, s.status]));
+            supportStatusMap = new Map(supportStatusData.map(s => [s.supported_id, s.status as 'approved' | 'pending']));
         }
     }
     
     // 3. Combine the data
     return users.map(user => ({
-        ...user!,
-        support_status: supportStatusMap.get(user!.id) || null,
+        ...user,
+        support_status: supportStatusMap.get(user.id) || null,
         has_mood: false // This data is not essential for this view and complicates the query.
     })) as UserWithSupportStatus[];
 }
