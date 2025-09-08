@@ -42,21 +42,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(currentSession);
     
     if (currentSession?.user) {
-        // We must have a profile in the database to consider the user logged in.
         const { data: profile, error } = await client
             .from('users')
             .select('*')
             .eq('id', currentSession.user.id)
             .single();
 
-        // If there's an error or no profile, the user is not valid.
         if (error || !profile) {
-            if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows found", which is expected.
+            if (error && error.code !== 'PGRST116') {
               console.error("Error fetching user profile:", error);
             }
             setUser(null);
         } else {
-            // Profile found, this is a valid user.
             const userProfile: UserProfile = {
                 id: profile.id,
                 name: profile.name,
@@ -69,7 +66,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(userProfile);
         }
     } else {
-        // No session, no user.
         setUser(null);
     }
   }, [client]);
@@ -110,17 +106,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const publicPaths = ['/', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy', '/forgot-password', '/reset-password'];
     const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/reset-password'); // Allow reset-password with params
     
-    // If the user is logged in and on the main sign-in page, redirect to /mood
     if (user && pathname === '/') {
         router.push('/mood');
     } 
-    // If the user is not logged in and not on a public path, redirect to the sign-in page
     else if (!user && !isPublicPath) {
         router.push('/');
     }
   }, [user, loading, pathname, router]);
   
-  if (loading && !user && !['/', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy', '/forgot-password', '/reset-password'].some(p => pathname.startsWith(p))) {
+  const publicPaths = ['/', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy', '/forgot-password', '/reset-password'];
+  const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/reset-password');
+
+  if (loading && !isPublicPath) {
     return (
         <div className="flex items-center justify-center h-screen">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

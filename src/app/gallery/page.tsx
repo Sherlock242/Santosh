@@ -87,6 +87,8 @@ function GalleryPageContent() {
     
     const [canViewContent, setCanViewContent] = useState(true);
 
+    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
     const onSupportStatusChange = useCallback((newStatus: 'approved' | 'pending' | null, oldStatus: 'approved' | 'pending' | null) => {
         // Optimistically update supporter count
         const isSupporting = newStatus === 'approved';
@@ -118,7 +120,6 @@ function GalleryPageContent() {
     const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
     const [showSignOutConfirm, setShowSignOutConfirm] = React.useState(false);
     const [sheetContent, setSheetContent] = React.useState<'supporters' | 'supporting' | null>(null);
-    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -219,6 +220,9 @@ function GalleryPageContent() {
     useEffect(() => {
         if (authLoading) return; // Wait for auth to finish
         if (!viewingUserId) {
+            if (!isOwnProfile) {
+                router.push('/gallery');
+            }
             setIsLoading(false);
             setIsInitialPostsLoading(false);
             return;
@@ -400,25 +404,9 @@ function GalleryPageContent() {
     
     const selectedEmojiIndex = selectedEmojiId ? savedEmojis.findIndex(e => e.id === selectedEmojiId) : -1;
     
-    if (authLoading) {
-        return (
-            <div className="flex h-full w-full flex-col items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        );
-    }
-    
-    if (!authUser && !userId) {
-        return (
-            <div className="flex h-full w-full flex-col items-center justify-center text-center p-8">
-                <Lock className="h-16 w-16 text-muted-foreground" />
-                <h2 className="mt-4 text-2xl font-bold">Please sign in</h2>
-                <p className="text-muted-foreground">You need to be signed in to view your gallery.</p>
-                <Button asChild className="mt-4">
-                    <Link href="/">Go to Sign In</Link>
-                </Button>
-            </div>
-        );
+    if (authLoading || (!authUser && !userId)) {
+        // This state is now handled by the global loader in AuthProvider
+        return null;
     }
     
     const showLoadingScreen = isLoading;
