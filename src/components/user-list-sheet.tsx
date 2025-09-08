@@ -12,16 +12,8 @@ import { Loader2 } from 'lucide-react';
 import { getSupporters, getSupporting } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { UserListItem } from './user-list-item';
+import type { UserWithSupportStatus } from '@/app/actions';
 
-
-interface User {
-  id: string;
-  name: string;
-  picture: string;
-  is_private: boolean;
-  support_status: 'approved' | 'pending' | null;
-  has_mood: boolean;
-}
 
 interface UserListSheetProps {
     open: boolean;
@@ -33,7 +25,7 @@ interface UserListSheetProps {
 export function UserListSheet({ open, onOpenChange, type, userId }: UserListSheetProps) {
     const { toast } = useToast();
     
-    const [userList, setUserList] = useState<User[]>([]);
+    const [userList, setUserList] = useState<UserWithSupportStatus[]>([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     
