@@ -67,7 +67,7 @@ interface GalleryEmoji extends EmojiState {
 const MemoizedThumbnail = React.memo(GalleryThumbnail);
 
 function GalleryPageContent() {
-    const { user: authUser, supabase, refreshUser } = useAuth();
+    const { user: authUser, loading: authLoading, supabase, refreshUser } = useAuth();
     const { toast } = useToast();
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -217,6 +217,7 @@ function GalleryPageContent() {
     }, [searchParams, router, fetchProfileInfo, refreshUser]);
 
     useEffect(() => {
+        if (authLoading) return; // Wait for auth to finish
         if (!viewingUserId) {
             setIsLoading(false);
             setIsInitialPostsLoading(false);
@@ -250,7 +251,7 @@ function GalleryPageContent() {
         fetchProfileInfo();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [viewingUserId]);
+    }, [viewingUserId, authLoading]);
     
     const handleDelete = async (emojiId: string) => {
         if (!supabase || !viewingUserId) return;
@@ -398,6 +399,14 @@ function GalleryPageContent() {
     ProfileHeader.displayName = "ProfileHeader";
     
     const selectedEmojiIndex = selectedEmojiId ? savedEmojis.findIndex(e => e.id === selectedEmojiId) : -1;
+    
+    if (authLoading) {
+        return (
+            <div className="flex h-full w-full flex-col items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
     
     if (!authUser && !userId) {
         return (
