@@ -237,7 +237,7 @@ export default function ExplorePage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             placeholder="Search for users"
-            className="pl-10 h-12 rounded-lg bg-muted border-none focus-visible:ring-amber-400"
+            className="pl-10 h-12 rounded-lg bg-muted border-none focus-visible:ring-ring"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
