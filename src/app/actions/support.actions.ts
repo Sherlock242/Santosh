@@ -75,7 +75,10 @@ export async function getSupporters({ userId, page = 1, limit = 15 }: { userId: 
         return [];
     }
 
-    const users = supportersData.map(s => s.users).filter(Boolean) as { id: string; name: string; picture: string; is_private: boolean; is_gold_member: boolean }[];
+    const users = supportersData
+        .map(s => s.users)
+        .filter(Boolean) as { id: string; name: string; picture: string; is_private: boolean; is_gold_member: boolean; }[];
+        
     if (users.length === 0) return [];
     
     const userIds = users.map(u => u.id);
@@ -99,7 +102,7 @@ export async function getSupporters({ userId, page = 1, limit = 15 }: { userId: 
         ...user,
         support_status: supportStatusMap.get(user.id) || null,
         has_mood: false, // This data is not essential for this view and complicates the query.
-    })) as UserWithSupportStatus[];
+    }));
 }
 
 
@@ -121,7 +124,10 @@ export async function getSupporting({ userId, page = 1, limit = 15 }: { userId: 
         return [];
     }
     
-    const users = supportingData.map(s => s.users).filter(Boolean) as { id: string; name: string; picture: string; is_private: boolean; is_gold_member: boolean }[];
+    const users = supportingData
+        .map(s => s.users)
+        .filter(Boolean) as { id: string; name: string; picture: string; is_private: boolean; is_gold_member: boolean; }[];
+        
     if (users.length === 0) return [];
 
     const userIds = users.map(u => u.id);
@@ -145,7 +151,7 @@ export async function getSupporting({ userId, page = 1, limit = 15 }: { userId: 
         ...user,
         support_status: supportStatusMap.get(user.id) || null,
         has_mood: false // This data is not essential for this view and complicates the query.
-    })) as UserWithSupportStatus[];
+    }));
 }
 
 
