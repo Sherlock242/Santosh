@@ -70,6 +70,7 @@ export async function createRazorpaySubscription() {
   try {
     const subscriptionRequest = {
       plan_id: planId,
+      customer_id: customerId,
       customer_notify: 1,
       quantity: 1,
       total_count: 60, // Standard for 5 years of monthly payments
