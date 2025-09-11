@@ -14,6 +14,8 @@ export function AutoAds() {
     '/contact',
     '/privacy',
     '/terms',
+    '/cancellation-policy',
+    '/forgot-password'
   ];
 
   if (!publicPages.includes(pathname)) {
@@ -22,11 +24,10 @@ export function AutoAds() {
 
   return (
     <Script
-      id="adsbygoogle"
-      async
-      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2882939249270622"
-      crossOrigin="anonymous"
+      id="adsbygoogle-init"
       strategy="afterInteractive"
+      crossOrigin="anonymous"
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2882939249270622"
     />
   );
 }
