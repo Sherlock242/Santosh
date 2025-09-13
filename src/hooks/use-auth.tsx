@@ -55,8 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             setUser(null);
         } else {
-            // Check for Gold Member expiration
-            const isGold = profile.gold_member_expires_at ? new Date(profile.gold_member_expires_at) > new Date() : false;
+            // Check for Gold Member status.
+            // A user is Gold if the expiration date is in the future,
+            // OR if they have the legacy `is_gold_member` flag and no expiration date.
+            const hasFutureExpiration = profile.gold_member_expires_at ? new Date(profile.gold_member_expires_at) > new Date() : false;
+            const isLegacyGold = profile.is_gold_member && !profile.gold_member_expires_at;
+            const isGold = hasFutureExpiration || isLegacyGold;
 
             const userProfile: UserProfile = {
                 id: profile.id,

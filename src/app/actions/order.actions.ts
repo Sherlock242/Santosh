@@ -31,7 +31,7 @@ export async function createRazorpayOrder() {
   // Check if user is already a gold member
   const { data: profile, error: profileError } = await supabase
     .from('users')
-    .select('gold_member_expires_at')
+    .select('is_gold_member, gold_member_expires_at')
     .eq('id', user.id)
     .single();
 
@@ -39,8 +39,10 @@ export async function createRazorpayOrder() {
     console.error('Error fetching user profile:', profileError);
     throw new Error('Could not retrieve user profile.');
   }
+  
+  const isGold = profile.is_gold_member || (profile.gold_member_expires_at && new Date(profile.gold_member_expires_at) > new Date());
 
-  if (profile.gold_member_expires_at && new Date(profile.gold_member_expires_at) > new Date()) {
+  if (isGold) {
     throw new Error('You are already a Gold Member.');
   }
 
@@ -115,7 +117,7 @@ export async function verifyPayment(data: {
     const { error: updateError } = await supabaseAdmin
         .from('users')
         .update({ 
-            is_gold_member: true, // Keep this for immediate UI feedback if needed
+            is_gold_member: true,
             gold_member_expires_at: expirationDate.toISOString() 
         })
         .eq('id', supabaseUserId);
