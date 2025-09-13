@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, useMotionValue, useTransform, useSpring, animate, MotionValue } from 'framer-motion';
 import { Heart } from 'lucide-react';
 import type { Expression, ShapeType, FeatureStyle, AnimationType } from '@/app/design/page';
@@ -151,25 +151,27 @@ export const Face = ({
     love: { y: 2, scaleY: 1 },
   };
 
-  const mouthVariants: Record<FeatureStyle, any> = {
-    default: { d: "M 30 50 Q 50 60 70 50" },
-    'male-1': { d: "M 30 55 H 70" },
-    'male-2': { d: "M 30 50 Q 50 40 70 50" },
-    'male-3': { d: "M 30 60 Q 50 70 70 60" },
-    'female-1': { d: "M 30 55 Q 50 70 70 55" },
-    'female-2': { d: "M 25 50 C 35 60, 65 60, 75 50" },
-    'female-3': { d: "M 40 55 A 10 5 0 0 0 60 55" },
-  };
+  const expressionMouthVariants = useMemo(() => {
+    const mouthVariants: Record<FeatureStyle, any> = {
+        default: { d: "M 30 50 Q 50 60 70 50" },
+        'male-1': { d: "M 30 55 H 70" },
+        'male-2': { d: "M 30 50 Q 50 40 70 50" },
+        'male-3': { d: "M 30 60 Q 50 70 70 60" },
+        'female-1': { d: "M 30 55 Q 50 70 70 55" },
+        'female-2': { d: "M 25 50 C 35 60, 65 60, 75 50" },
+        'female-3': { d: "M 40 55 A 10 5 0 0 0 60 55" },
+      };
 
-  const expressionMouthVariants = {
-    neutral: { d: mouthVariants[mouth_style]?.d || mouthVariants.default.d, fill: "transparent" },
-    happy: { d: "M 30 50 Q 50 75 70 50", fill: "transparent" },
-    angry: { d: "M 25 60 Q 50 35 75 60", fill: "transparent" },
-    sad: { d: "M 30 60 Q 50 50 70 60", fill: "transparent" },
-    surprised: { d: "M 40 55 Q 50 70 60 55 A 10 10 0 0 1 40 55", fill: "transparent" },
-    scared: { d: "M 35 50 Q 50 65 65 50 A 15 15 0 0 1 35 50", fill: "transparent" },
-    love: { d: "M 30 50 Q 50 75 70 50", fill: "transparent" },
-  };
+    return {
+        neutral: { d: mouthVariants[mouth_style]?.d || mouthVariants.default.d, fill: "transparent" },
+        happy: { d: "M 30 50 Q 50 75 70 50", fill: "transparent" },
+        angry: { d: "M 25 60 Q 50 35 75 60", fill: "transparent" },
+        sad: { d: "M 30 60 Q 50 50 70 60", fill: "transparent" },
+        surprised: { d: "M 40 55 Q 50 70 60 55 A 10 10 0 0 1 40 55", fill: "transparent" },
+        scared: { d: "M 35 50 Q 50 65 65 50 A 15 15 0 0 1 35 50", fill: "transparent" },
+        love: { d: "M 30 50 Q 50 75 70 50", fill: "transparent" },
+      };
+  }, [mouth_style]);
   
   const eyebrowVariants = {
     neutral: { y: 0, rotate: 0 },
