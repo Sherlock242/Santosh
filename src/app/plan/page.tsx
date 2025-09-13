@@ -46,7 +46,7 @@ export default function PlanPage() {
             amount: orderDetails.amount,
             currency: orderDetails.currency,
             name: "Edengram",
-            description: "Gold Plan Membership",
+            description: "Gold Plan Membership (30 Days)",
             image: "/icon.png",
             order_id: orderDetails.orderId,
             handler: async function (response: any) {
@@ -100,6 +100,9 @@ export default function PlanPage() {
     });
   };
 
+  const isGoldMember = user?.is_gold_member;
+  const expirationDate = user?.gold_member_expires_at ? new Date(user.gold_member_expires_at).toLocaleDateString() : null;
+
   return (
     <>
       <Script
@@ -141,16 +144,19 @@ export default function PlanPage() {
             </ul>
 
             <div className="text-center mt-10">
-                <p className="text-4xl font-bold">₹99 <span className="text-base font-normal text-muted-foreground">one-time</span></p>
+                <p className="text-4xl font-bold">₹99 <span className="text-base font-normal text-muted-foreground">/ 30 days</span></p>
             </div>
 
-            {user?.is_gold_member ? (
-              <Button size="lg" className="w-full mt-8 bg-gradient-to-r from-yellow-500 to-amber-500 text-white" disabled>
-                You are a Gold Member
-              </Button>
+            {isGoldMember ? (
+              <div className="text-center">
+                  <Button size="lg" className="w-full mt-8 bg-gradient-to-r from-yellow-500 to-amber-500 text-white" disabled>
+                    You are a Gold Member
+                  </Button>
+                  {expirationDate && <p className="text-sm text-muted-foreground mt-2">Your plan is valid until {expirationDate}</p>}
+              </div>
             ) : (
               <Button size="lg" className="w-full mt-8 bg-gradient-to-r from-yellow-500 to-amber-500 text-white hover:from-yellow-600 hover:to-amber-600" onClick={handleUpgradeClick} disabled={isPending}>
-                {isPending ? <Loader2 className="animate-spin" /> : 'Upgrade to Gold'}
+                {isPending ? <Loader2 className="animate-spin" /> : 'Upgrade for 30 Days'}
               </Button>
             )}
           </div>

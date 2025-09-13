@@ -31,7 +31,7 @@ export async function createRazorpayOrder() {
   // Check if user is already a gold member
   const { data: profile, error: profileError } = await supabase
     .from('users')
-    .select('is_gold_member')
+    .select('gold_member_expires_at')
     .eq('id', user.id)
     .single();
 
@@ -40,7 +40,7 @@ export async function createRazorpayOrder() {
     throw new Error('Could not retrieve user profile.');
   }
 
-  if (profile.is_gold_member) {
+  if (profile.gold_member_expires_at && new Date(profile.gold_member_expires_at) > new Date()) {
     throw new Error('You are already a Gold Member.');
   }
 
@@ -106,11 +106,18 @@ export async function verifyPayment(data: {
         throw new Error('Could not find user ID for this order.');
     }
 
+    // Calculate the expiration date (30 days from now)
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + 30);
+
     // Now, create an admin Supabase client to update the user's status
     const supabaseAdmin = createSupabaseServerClient(true);
     const { error: updateError } = await supabaseAdmin
         .from('users')
-        .update({ is_gold_member: true })
+        .update({ 
+            is_gold_member: true, // Keep this for immediate UI feedback if needed
+            gold_member_expires_at: expirationDate.toISOString() 
+        })
         .eq('id', supabaseUserId);
 
     if (updateError) {
@@ -118,6 +125,6 @@ export async function verifyPayment(data: {
         throw new Error('Failed to update user status in the database.');
     }
 
-    console.log(`Successfully upgraded user ${supabaseUserId} to Gold Member.`);
+    console.log(`Successfully upgraded user ${supabaseUserId} to Gold Member until ${expirationDate.toISOString()}.`);
     return { success: true, message: "Payment verified and user upgraded." };
 }

@@ -16,6 +16,7 @@ interface UserProfile {
     is_private: boolean;
     is_gold_member: boolean;
     deleted_at?: string | null;
+    gold_member_expires_at?: string | null;
 }
 
 interface AuthContextType {
@@ -54,14 +55,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             setUser(null);
         } else {
+            // Check for Gold Member expiration
+            const isGold = profile.gold_member_expires_at ? new Date(profile.gold_member_expires_at) > new Date() : false;
+
             const userProfile: UserProfile = {
                 id: profile.id,
                 name: profile.name,
                 email: profile.email,
                 picture: profile.picture,
                 is_private: profile.is_private,
-                is_gold_member: profile.is_gold_member,
+                is_gold_member: isGold,
                 deleted_at: profile.deleted_at,
+                gold_member_expires_at: profile.gold_member_expires_at,
             };
             setUser(userProfile);
         }
