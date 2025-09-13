@@ -46,7 +46,7 @@ export async function createRazorpayOrder() {
 
 
   const options = {
-    amount: 500, // amount in the smallest currency unit (5 * 100)
+    amount: 9900, // amount in the smallest currency unit (99 * 100)
     currency: "INR",
     receipt: `receipt_order_${randomBytes(8).toString('hex')}`,
     notes: {

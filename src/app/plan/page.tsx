@@ -141,7 +141,7 @@ export default function PlanPage() {
             </ul>
 
             <div className="text-center mt-10">
-                <p className="text-4xl font-bold">₹5 <span className="text-base font-normal text-muted-foreground">one-time</span></p>
+                <p className="text-4xl font-bold">₹99 <span className="text-base font-normal text-muted-foreground">one-time</span></p>
             </div>
 
             {user?.is_gold_member ? (
