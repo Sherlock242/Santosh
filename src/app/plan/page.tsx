@@ -101,7 +101,15 @@ export default function PlanPage() {
   };
 
   const isGoldMember = user?.is_gold_member;
-  const expirationDate = user?.gold_member_expires_at ? new Date(user.gold_member_expires_at).toLocaleDateString() : null;
+  
+  let daysLeft = null;
+  if (isGoldMember && user?.gold_member_expires_at) {
+    const expirationDate = new Date(user.gold_member_expires_at);
+    const today = new Date();
+    const timeDiff = expirationDate.getTime() - today.getTime();
+    daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
+  }
+
 
   return (
     <>
@@ -152,7 +160,11 @@ export default function PlanPage() {
                   <Button size="lg" className="w-full mt-8 bg-gradient-to-r from-yellow-500 to-amber-500 text-white" disabled>
                     You are a Gold Member
                   </Button>
-                  {expirationDate && <p className="text-sm text-muted-foreground mt-2">Your plan is valid until {expirationDate}</p>}
+                  {daysLeft !== null && daysLeft > 0 && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {daysLeft} {daysLeft === 1 ? 'day' : 'days'} left to expire gold plan
+                    </p>
+                  )}
               </div>
             ) : (
               <Button size="lg" className="w-full mt-8 bg-gradient-to-r from-yellow-500 to-amber-500 text-white hover:from-yellow-600 hover:to-amber-600" onClick={handleUpgradeClick} disabled={isPending}>
