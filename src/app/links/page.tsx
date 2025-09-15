@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Share2, Palette, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addLink, getLinks, deleteLink, incrementLinkClick } from '../actions/link.actions';
+import { addLink, getLinks, deleteLink } from '../actions/link.actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -134,10 +134,21 @@ export default function LinksPage() {
           )
       );
 
-      // Await the database update before navigating.
-      await incrementLinkClick(link.id);
+      // Fire-and-forget the API call. We won't block navigation.
+      // This is generally safe. If it fails, the count will be off by one, but the user experience is smooth.
+      fetch('/api/links/increment', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ linkId: link.id }),
+          keepalive: true, // This is important! It allows the request to continue even if the page unloads.
+      }).catch(err => {
+        // Log the error, but don't bother the user. The click still worked.
+        console.error("Failed to increment link click:", err);
+      });
       
-      // Open the link in a new tab.
+      // Open the link in a new tab immediately.
       window.open(link.url, '_blank', 'noopener,noreferrer');
     };
 

@@ -114,16 +114,3 @@ export async function deleteLink(linkId: string) {
 
     revalidatePath('/links');
 }
-
-
-export async function incrementLinkClick(linkId: string) {
-    // This action uses a dedicated RPC function with `security definer` 
-    // to bypass RLS for a safe, atomic update.
-    const supabase = createSupabaseServerClient();
-    const { error } = await supabase.rpc('increment_link_clicks', { link_id_arg: linkId });
-
-    if (error) {
-        console.error('Error incrementing link click via RPC:', error);
-        // Don't re-throw, just log, to ensure navigation is not blocked.
-    }
-}
