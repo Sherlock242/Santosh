@@ -278,8 +278,6 @@ export default function MoodPage() {
       
       return (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4 text-muted-foreground">
-              <Smile className="h-16 w-16" />
-              <Link href="/explore" className="text-primary font-semibold">Explore users to follow</Link>
           </div>
       );
   }
