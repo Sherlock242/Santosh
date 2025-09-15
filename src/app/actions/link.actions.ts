@@ -31,6 +31,7 @@ export async function addLink(payload: LinkPayload) {
         title: payload.title,
         url: payload.url,
         color: payload.color,
+        clicks: 0,
     });
 
     if (error) {
@@ -116,12 +117,13 @@ export async function deleteLink(linkId: string) {
 
 
 export async function incrementLinkClick(linkId: string) {
-    // This action uses the service_role key to bypass RLS for a safe, atomic update.
-    const supabase = createSupabaseServerClient(true);
-    const { error } = await supabase.rpc('increment_link_clicks', { link_id: linkId });
+    // This action uses a dedicated RPC function with `security definer` 
+    // to bypass RLS for a safe, atomic update.
+    const supabase = createSupabaseServerClient();
+    const { error } = await supabase.rpc('increment_link_clicks', { link_id_arg: linkId });
 
     if (error) {
-        console.error('Error incrementing link click:', error);
+        console.error('Error incrementing link click via RPC:', error);
         // Don't re-throw, just log, to ensure navigation is not blocked.
     }
 }
