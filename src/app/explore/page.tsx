@@ -246,7 +246,7 @@ export default function ExplorePage() {
            )}
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
+      <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
         {isLoading ? (
             <div className="flex h-full w-full flex-col items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
