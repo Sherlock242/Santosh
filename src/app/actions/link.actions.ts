@@ -5,8 +5,8 @@ import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 interface LinkPayload {
-    title: string;
-    url: string;
+    titlePrefix: string;
+    urls: string[];
     color: string;
 }
 
@@ -18,24 +18,36 @@ export async function addLink(payload: LinkPayload) {
         throw new Error('You must be logged in to add a link.');
     }
 
-    if (!payload.title || !payload.url) {
-        throw new Error('Title and URL are required.');
+    if (!payload.urls || payload.urls.length === 0) {
+        throw new Error('At least one URL is required.');
     }
 
-    if (!payload.url.startsWith('https://')) {
-        throw new Error('Link must start with https://');
-    }
+    const linksToInsert = payload.urls.map((url, index) => {
+        if (!url.startsWith('https://')) {
+            throw new Error('All links must start with https://');
+        }
+        
+        let title = payload.titlePrefix 
+            ? `${payload.titlePrefix} ${index + 1}` 
+            : url;
+        
+        if (title.length > 50) {
+            title = title.substring(0, 47) + '...';
+        }
 
-    const { error } = await supabase.from('links').insert({
-        user_id: user.id,
-        title: payload.title,
-        url: payload.url,
-        color: payload.color,
-        clicks: 0,
+        return {
+            user_id: user.id,
+            title: title,
+            url: url,
+            color: payload.color,
+            clicks: 0,
+        };
     });
 
+    const { error } = await supabase.from('links').insert(linksToInsert);
+
     if (error) {
-        console.error('Error adding link:', error);
+        console.error('Error adding links:', error);
         throw new Error(error.message);
     }
 

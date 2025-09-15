@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 interface UserProfile {
     id: string;
@@ -64,8 +66,8 @@ export default function LinksPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isPending, startTransition] = useTransition();
 
-    const [title, setTitle] = useState('');
-    const [url, setUrl] = useState('');
+    const [titlePrefix, setTitlePrefix] = useState('');
+    const [urls, setUrls] = useState('');
     const [color, setColor] = useState('#8A2BE2');
     const colorInputRef = useRef<HTMLInputElement>(null);
 
@@ -90,26 +92,28 @@ export default function LinksPage() {
 
     const handleAddLink = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title || !url) {
-            toast({ title: 'Please fill both title and URL', variant: 'destructive' });
+        const urlList = urls.split('\n').map(u => u.trim()).filter(u => u);
+
+        if (urlList.length === 0) {
+            toast({ title: 'Please enter at least one URL', variant: 'destructive' });
             return;
         }
 
-        if (!url.startsWith('https://')) {
-            toast({ title: 'Invalid URL', description: 'Link must start with https://', variant: 'destructive' });
+        const invalidUrls = urlList.filter(u => !u.startsWith('https://'));
+        if (invalidUrls.length > 0) {
+            toast({ title: 'Invalid URL(s)', description: 'All links must start with https://', variant: 'destructive' });
             return;
         }
 
         startTransition(async () => {
             try {
-                await addLink({ title, url, color });
-                setTitle('');
-                setUrl('');
-                // We keep the color for the next link
-                toast({ title: 'Link added successfully!', variant: 'success' });
+                await addLink({ titlePrefix, urls: urlList, color });
+                setTitlePrefix('');
+                setUrls('');
+                toast({ title: 'Links added successfully!', variant: 'success' });
                 fetchLinks(debouncedSearchQuery); // Refresh the list
             } catch (error: any) {
-                toast({ title: 'Error adding link', description: error.message, variant: 'destructive' });
+                toast({ title: 'Error adding links', description: error.message, variant: 'destructive' });
             }
         });
     };
@@ -183,48 +187,49 @@ export default function LinksPage() {
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
                 {user && (
                     <form onSubmit={handleAddLink} className="space-y-4">
-                         <div className="relative">
+                        <div>
+                            <Label htmlFor="title-prefix" className="text-xs text-muted-foreground">Title Prefix (Optional)</Label>
                             <Input 
-                                placeholder="Link Title"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
+                                id="title-prefix"
+                                placeholder="e.g., Wednesday S01E"
+                                value={titlePrefix}
+                                onChange={(e) => setTitlePrefix(e.target.value)}
                                 disabled={isPending}
-                                required
                                 maxLength={30}
-                                className="pr-12"
                             />
-                            <div className="absolute bottom-2 right-3 text-xs text-muted-foreground">
-                                {title.length}/30
+                        </div>
+                         <div>
+                            <Label htmlFor="urls" className="text-xs text-muted-foreground">Links (one per line)</Label>
+                            <div className="relative">
+                               <Textarea 
+                                    id="urls"
+                                    placeholder="https://example.com/episode-1&#10;https://example.com/episode-2"
+                                    value={urls}
+                                    onChange={(e) => setUrls(e.target.value)}
+                                    disabled={isPending}
+                                    required
+                                    className="pr-10"
+                                    rows={4}
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-foreground"
+                                    onClick={() => colorInputRef.current?.click()}
+                                >
+                                    <Palette className="h-5 w-5" style={{ color: color }}/>
+                                    <span className="sr-only">Choose color</span>
+                                </button>
+                                <input
+                                    ref={colorInputRef}
+                                    type="color"
+                                    value={color}
+                                    onChange={(e) => setColor(e.target.value)}
+                                    className="absolute -z-10 w-0 h-0 opacity-0"
+                                />
                             </div>
                         </div>
-                        <div className="relative">
-                           <Input 
-                                type="url"
-                                placeholder="https://example.com"
-                                value={url}
-                                onChange={(e) => setUrl(e.target.value)}
-                                disabled={isPending}
-                                required
-                                className="pr-10"
-                            />
-                            <button
-                                type="button"
-                                className="absolute top-1/2 right-2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
-                                onClick={() => colorInputRef.current?.click()}
-                            >
-                                <Palette className="h-5 w-5" style={{ color: color }}/>
-                                <span className="sr-only">Choose color</span>
-                            </button>
-                            <input
-                                ref={colorInputRef}
-                                type="color"
-                                value={color}
-                                onChange={(e) => setColor(e.target.value)}
-                                className="absolute -z-10 w-0 h-0 opacity-0"
-                            />
-                        </div>
                         <Button type="submit" className="w-full" disabled={isPending}>
-                            {isPending ? <Loader2 className="animate-spin" /> : <><Plus className="mr-2 h-4 w-4" /> Add Link</>}
+                            {isPending ? <Loader2 className="animate-spin" /> : <><Plus className="mr-2 h-4 w-4" /> Add Links</>}
                         </Button>
                     </form>
                 )}
@@ -294,25 +299,18 @@ export default function LinksPage() {
                                         </div>
                                     </div>
                                     
-                                    <div className="flex items-end justify-between gap-4">
-                                        <button
-                                            onClick={() => handleLinkClick(link)}
-                                            className="overflow-hidden text-left w-full group"
+                                    <button
+                                        onClick={() => handleLinkClick(link)}
+                                        className="overflow-hidden text-left w-full group"
+                                    >
+                                        <p className="font-semibold truncate">{link.title}</p>
+                                        <p
+                                            className="text-sm truncate"
+                                            style={{ color: link.color }}
                                         >
-                                            <p className="font-semibold truncate">{link.title}</p>
-                                            <p
-                                                className="text-sm truncate"
-                                                style={{ color: link.color }}
-                                            >
-                                                {link.url}
-                                            </p>
-                                        </button>
-                                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground flex-shrink-0">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleShare(link);}}>
-                                                <Share2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
+                                            {link.url}
+                                        </p>
+                                    </button>
                                 </div>
                             ))
                         ) : (
@@ -328,5 +326,3 @@ export default function LinksPage() {
         </div>
     );
 }
-
-    
