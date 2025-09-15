@@ -86,7 +86,7 @@ export default function LinksPage() {
     
     useEffect(() => {
         fetchLinks(debouncedSearchQuery);
-    }, [debouncedSearchQuery]);
+    }, [debouncedSearchQuery, toast]);
 
     const handleAddLink = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -134,9 +134,9 @@ export default function LinksPage() {
           )
       );
 
-      // Await the database update.
+      // Await the database update before navigating.
       await incrementLinkClick(link.id);
-
+      
       // Open the link in a new tab.
       window.open(link.url, '_blank', 'noopener,noreferrer');
     };
