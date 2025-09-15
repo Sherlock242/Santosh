@@ -207,7 +207,7 @@ export default function LinksPage() {
                                 />
                                 <button
                                     type="button"
-                                    className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-foreground"
+                                    className="absolute bottom-2 right-2 p-1 text-muted-foreground hover:text-foreground"
                                     onClick={() => colorInputRef.current?.click()}
                                 >
                                     <Palette className="h-5 w-5" style={{ color: color }}/>
