@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Link {
     id: string;
@@ -118,8 +119,14 @@ export default function LinksPage() {
 
     return (
         <div className="flex h-full w-full flex-col">
-            <header className="flex h-16 items-center border-b border-border/40 bg-background px-4 md:px-6">
-                <h1 className="text-xl font-bold">My Links</h1>
+            <header className="flex h-16 items-center justify-between border-b border-border/40 bg-background px-4 md:px-6">
+                <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9">
+                        <AvatarImage src={user?.picture} alt={user?.name} />
+                        <AvatarFallback>{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <h1 className="text-xl font-bold">My Links</h1>
+                </div>
             </header>
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
                 <form onSubmit={handleAddLink} className="space-y-4">
