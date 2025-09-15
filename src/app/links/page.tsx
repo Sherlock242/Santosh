@@ -263,7 +263,7 @@ export default function LinksPage() {
                                             </a>
                                         </div>
                                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground flex-shrink-0">
-                                            <span>{link.clicks} views</span>
+                                            <span>{link.clicks} clicks</span>
                                         </div>
                                     </div>
                                 </div>
