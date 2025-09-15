@@ -46,7 +46,7 @@ export async function getLinks(query: string) {
     
     let linksQuery = supabase
         .from('links')
-        .select(`*`)
+        .select(`*, user:users (id, name, picture)`)
         .order('created_at', { ascending: false });
 
     if (query) {
