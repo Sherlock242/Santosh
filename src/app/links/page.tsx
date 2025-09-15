@@ -188,7 +188,7 @@ export default function LinksPage() {
                 {user && (
                     <form onSubmit={handleAddLink} className="space-y-4">
                         <div>
-                            <Label htmlFor="title-prefix" className="text-xs text-muted-foreground">Title Prefix (Optional)</Label>
+                            <Label htmlFor="title-prefix" className="text-xs text-muted-foreground">Title Prefix</Label>
                             <Input 
                                 id="title-prefix"
                                 placeholder="e.g., Wednesday S01E"
@@ -203,7 +203,7 @@ export default function LinksPage() {
                             <div className="relative">
                                <Textarea 
                                     id="urls"
-                                    placeholder="https://example.com/episode-1&#10;https://example.com/episode-2"
+                                    placeholder="https://example.com/episode-1\nhttps://example.com/episode-2"
                                     value={urls}
                                     onChange={(e) => setUrls(e.target.value)}
                                     disabled={isPending}
