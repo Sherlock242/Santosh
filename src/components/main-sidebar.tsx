@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
-import { Home, Search, PlusSquare, Bell, User } from 'lucide-react';
+import { Home, Search, PlusSquare, Bell, User, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
@@ -63,6 +63,7 @@ export function MainSidebar() {
     { href: '/mood', segment: 'mood', label: 'Home', icon: Home },
     { href: '/explore', segment: 'explore', label: 'Search', icon: Search },
     { href: '/design', segment: 'design', label: 'Create', icon: PlusSquare },
+    { href: '/links', segment: 'links', label: 'Links', icon: Link2 },
     { href: '/notifications', segment: 'notifications', label: 'Notifications', icon: Bell, hasIndicator: hasNewNotifications },
     { href: '/gallery', segment: 'gallery', label: 'Profile', icon: User, isProfile: true },
   ];
