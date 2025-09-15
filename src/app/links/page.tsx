@@ -5,7 +5,7 @@ import React, { useState, useEffect, useTransition, useMemo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Plus, Search, Trash2, Link as LinkIcon, ExternalLink, Pointer } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, Link as LinkIcon, ExternalLink, Pointer, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addLink, getLinks, deleteLink, incrementLinkClick } from '../actions/link.actions';
 import {
@@ -117,18 +117,34 @@ export default function LinksPage() {
         });
     }
 
-    const handleLinkClick = (link: LinkEntry) => {
+    const handleShareClick = (link: LinkEntry) => {
         // Optimistically update the UI
         setLinks(prevLinks =>
           prevLinks.map(l =>
             l.id === link.id ? { ...l, clicks: l.clicks + 1 } : l
           )
         );
+        
         // Call the server action to increment the count in the database
         incrementLinkClick(link.id);
-        // Open the link in a new tab
-        window.open(link.url, '_blank', 'noopener,noreferrer');
+
+        const shareData = {
+            title: link.title,
+            text: `Check out this link: ${link.title}`,
+            url: link.url,
+        };
+
+        if (navigator.share) {
+            navigator.share(shareData).catch(() => {
+                // If share fails, open the link as a fallback
+                window.open(link.url, '_blank', 'noopener,noreferrer');
+            });
+        } else {
+            // Fallback for browsers that don't support the Share API
+            window.open(link.url, '_blank', 'noopener,noreferrer');
+        }
     };
+
 
     return (
         <div className="flex h-full w-full flex-col">
@@ -187,68 +203,70 @@ export default function LinksPage() {
                     <div className="space-y-3">
                         {links.length > 0 ? (
                             links.map(link => (
-                                <div key={link.id} className="rounded-lg border bg-card p-3">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        {link.user && (
-                                            <Link href={`/gallery?userId=${link.user.id}`}>
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarImage src={link.user.picture} alt={link.user.name} />
-                                                    <AvatarFallback>{link.user.name?.charAt(0).toUpperCase()}</AvatarFallback>
-                                                </Avatar>
-                                            </Link>
-                                        )}
-                                        <div className="text-sm overflow-hidden">
-                                           <p className="font-semibold truncate">{link.user?.name || 'Anonymous'}</p>
+                                <div key={link.id} className="rounded-lg border bg-card p-3 space-y-2">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-3 overflow-hidden">
+                                            {link.user && (
+                                                <Link href={`/gallery?userId=${link.user.id}`}>
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage src={link.user.picture} alt={link.user.name} />
+                                                        <AvatarFallback>{link.user.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                                                    </Avatar>
+                                                </Link>
+                                            )}
+                                            <p className="text-sm font-semibold truncate">{link.user?.name || 'Anonymous'}</p>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleShareClick(link)}>
+                                                <Share2 className="h-4 w-4" />
+                                            </Button>
+                                            {user && user.id === link.user_id && (
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This will permanently delete the link titled &quot;{link.title}&quot;.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                onClick={() => handleDeleteLink(link.id)}
+                                                                className="bg-destructive hover:bg-destructive/90"
+                                                            >
+                                                                Delete
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            )}
                                         </div>
                                     </div>
-                                    <div className="flex items-start gap-4">
-                                      <div className="flex-1 overflow-hidden">
-                                          <p className="font-semibold truncate">{link.title}</p>
-                                          <button
-                                              onClick={() => handleLinkClick(link)}
-                                              className="text-sm text-primary hover:underline truncate block text-left w-full"
-                                          >
-                                              {link.url}
-                                          </button>
-                                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                                              <Pointer className="h-3 w-3"/>
-                                              <span>{link.clicks}</span>
-                                          </div>
-                                      </div>
-                                      <button
-                                        onClick={() => handleLinkClick(link)}
-                                        className="p-2 text-muted-foreground hover:text-foreground"
-                                        aria-label="Open link in new tab"
-                                      >
-                                        <ExternalLink className="h-5 w-5" />
-                                      </button>
-                                      {user && user.id === link.user_id && (
-                                          <AlertDialog>
-                                              <AlertDialogTrigger asChild>
-                                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                                      <Trash2 className="h-5 w-5" />
-                                                  </Button>
-                                              </AlertDialogTrigger>
-                                              <AlertDialogContent>
-                                                  <AlertDialogHeader>
-                                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                      <AlertDialogDescription>
-                                                          This will permanently delete the link titled &quot;{link.title}&quot;.
-                                                      </AlertDialogDescription>
-                                                  </AlertDialogHeader>
-                                                  <AlertDialogFooter>
-                                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                      <AlertDialogAction
-                                                          onClick={() => handleDeleteLink(link.id)}
-                                                          className="bg-destructive hover:bg-destructive/90"
-                                                      >
-                                                          Delete
-                                                      </AlertDialogAction>
-                                                  </AlertDialogFooter>
-                                              </AlertDialogContent>
-                                          </AlertDialog>
-                                      )}
-                                  </div>
+                                    
+                                    <div className="flex items-end justify-between gap-4">
+                                        <div className="overflow-hidden">
+                                            <p className="font-semibold truncate">{link.title}</p>
+                                            <a
+                                                href={link.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={() => incrementLinkClick(link.id)}
+                                                className="text-sm text-primary hover:underline truncate block text-left w-full"
+                                            >
+                                                {link.url}
+                                            </a>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground flex-shrink-0">
+                                            <Pointer className="h-4 w-4"/>
+                                            <span>{link.clicks}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             ))
                         ) : (
