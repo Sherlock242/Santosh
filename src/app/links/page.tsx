@@ -215,8 +215,6 @@ export default function LinksPage() {
                                 value={color}
                                 onChange={(e) => setColor(e.target.value)}
                                 className="absolute w-0 h-0 opacity-0"
-                                tabIndex={-1}
-                                aria-hidden="true"
                             />
                         </div>
                         <Button type="submit" className="w-full" disabled={isPending}>
