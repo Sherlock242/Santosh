@@ -105,7 +105,7 @@ export default function LinksPage() {
                 await addLink({ title, url, color });
                 setTitle('');
                 setUrl('');
-                setColor('#8A2BE2');
+                // We keep the color for the next link
                 toast({ title: 'Link added successfully!', variant: 'success' });
                 fetchLinks(debouncedSearchQuery); // Refresh the list
             } catch (error: any) {
@@ -135,20 +135,17 @@ export default function LinksPage() {
       );
 
       // Fire-and-forget the API call. We won't block navigation.
-      // This is generally safe. If it fails, the count will be off by one, but the user experience is smooth.
       fetch('/api/links/increment', {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
           },
           body: JSON.stringify({ linkId: link.id }),
-          keepalive: true, // This is important! It allows the request to continue even if the page unloads.
+          keepalive: true,
       }).catch(err => {
-        // Log the error, but don't bother the user. The click still worked.
         console.error("Failed to increment link click:", err);
       });
       
-      // Open the link in a new tab immediately.
       window.open(link.url, '_blank', 'noopener,noreferrer');
     };
 
@@ -166,7 +163,6 @@ export default function LinksPage() {
                 }
             });
         } else {
-             // Fallback for browsers that don't support the Share API
             navigator.clipboard.writeText(link.url).then(() => {
                 toast({ title: 'Link copied to clipboard!' });
             }).catch(err => {
@@ -303,7 +299,7 @@ export default function LinksPage() {
                                             onClick={() => handleLinkClick(link)}
                                             className="overflow-hidden text-left w-full group"
                                         >
-                                            <p className="font-semibold truncate group-hover:underline">{link.title}</p>
+                                            <p className="font-semibold truncate">{link.title}</p>
                                             <p
                                                 className="text-sm truncate"
                                                 style={{ color: link.color }}
@@ -332,3 +328,5 @@ export default function LinksPage() {
         </div>
     );
 }
+
+    
