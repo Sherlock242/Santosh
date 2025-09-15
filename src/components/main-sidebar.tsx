@@ -15,7 +15,6 @@ import Image from 'next/image';
 export function MainSidebar() {
   const segment = useSelectedLayoutSegment();
   const { user, supabase } = useAuth();
-  const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const [pendingSegment, setPendingSegment] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,56 +22,19 @@ export function MainSidebar() {
     if (segment !== pendingSegment) {
       setPendingSegment(null);
     }
-     // If we navigate to the notifications page, clear the indicator immediately
-    if (segment === 'notifications') {
-      setHasNewNotifications(false);
-    }
   }, [segment, pendingSegment]);
 
-
-  useEffect(() => {
-    if (!user) return;
-
-    // This subscription listens for new notifications in real-time.
-    // The initial check for unread notifications has been removed to prevent the dot from reappearing incorrectly.
-    const channel = supabase
-      .channel('realtime-notifications-sidebar')
-      .on(
-        'postgres_changes', 
-        { 
-            event: 'INSERT', 
-            schema: 'public', 
-            table: 'notifications', 
-            filter: `recipient_id=eq.${user.id}` 
-        }, 
-        (payload) => {
-          // Only show the dot for genuinely new, unread notifications.
-          if (payload.new && !(payload.new as any).is_read) {
-            setHasNewNotifications(true);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-        supabase.removeChannel(channel);
-    }
-  }, [user, supabase]);
 
   const navItems = [
     { href: '/mood', segment: 'mood', label: 'Home', icon: Home },
     { href: '/explore', segment: 'explore', label: 'Search', icon: Search },
     { href: '/design', segment: 'design', label: 'Create', icon: PlusSquare },
     { href: '/links', segment: 'links', label: 'Links', icon: Link2 },
-    { href: '/notifications', segment: 'notifications', label: 'Notifications', icon: Bell, hasIndicator: hasNewNotifications },
     { href: '/gallery', segment: 'gallery', label: 'Profile', icon: User, isProfile: true },
   ];
   
   const handleNavClick = (itemSegment: string) => {
     setPendingSegment(itemSegment);
-    if (itemSegment === 'notifications') {
-      setHasNewNotifications(false);
-    }
   }
 
   return (
@@ -104,9 +66,6 @@ export function MainSidebar() {
                       </Avatar>
                     ) : (
                       <Icon className="h-6 w-6" />
-                    )}
-                    {item.hasIndicator && (
-                      <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-primary" />
                     )}
                   </Link>
                 </TooltipTrigger>
