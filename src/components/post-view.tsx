@@ -703,7 +703,7 @@ export function PostView({
           }
 
           <div 
-              className="flex-1 flex flex-col overflow-y-auto"
+              className="flex-1 flex flex-col overflow-y-auto no-scrollbar"
               ref={containerRef}
           >
               {localEmojis.map((emoji) => {
