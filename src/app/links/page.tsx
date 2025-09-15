@@ -283,10 +283,11 @@ export default function LinksPage() {
                                     
                                     <div className="flex items-end justify-between gap-4">
                                         <div className="overflow-hidden">
-                                            <p className="font-semibold truncate" style={{ color: link.color }}>{link.title}</p>
+                                            <p className="font-semibold truncate">{link.title}</p>
                                             <button
                                                 onClick={() => handleLinkClick(link)}
-                                                className="text-sm hover:underline truncate block text-left w-full text-muted-foreground"
+                                                className="text-sm hover:underline truncate block text-left w-full"
+                                                style={{ color: link.color }}
                                             >
                                                 {link.url}
                                             </button>
