@@ -85,7 +85,7 @@ export default function LinksPage() {
     
     useEffect(() => {
         fetchLinks(debouncedSearchQuery);
-    }, [debouncedSearchQuery, toast]);
+    }, [debouncedSearchQuery]);
 
     const handleAddLink = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -108,7 +108,7 @@ export default function LinksPage() {
         });
     };
     
-    const handleDeleteLink = async (linkId: string) => {
+    const handleDeleteLink = (linkId: string) => {
         startTransition(async () => {
              try {
                 await deleteLink(linkId);
@@ -200,7 +200,7 @@ export default function LinksPage() {
                                     type="color"
                                     value={color}
                                     onChange={(e) => setColor(e.target.value)}
-                                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer -z-10"
                                     disabled={isPending}
                                 />
                             </div>
@@ -243,9 +243,6 @@ export default function LinksPage() {
                                             <p className="text-sm font-semibold truncate">{link.user?.name || 'Anonymous'}</p>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleShare(link)}>
-                                                <Share2 className="h-4 w-4" />
-                                            </Button>
                                             {user && user.id === link.user_id && (
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
@@ -284,12 +281,14 @@ export default function LinksPage() {
                                                 rel="noopener noreferrer"
                                                 onClick={() => handleLinkClick(link.id)}
                                                 className="text-sm hover:underline truncate block text-left w-full"
-                                                style={{ color: link.color }}
                                             >
                                                 {link.url}
                                             </a>
                                         </div>
                                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground flex-shrink-0">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleShare(link)}>
+                                                <Share2 className="h-4 w-4" />
+                                            </Button>
                                             <span>{link.clicks} clicks</span>
                                         </div>
                                     </div>
