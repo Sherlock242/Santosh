@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabaseServer';
 interface LinkPayload {
     title: string;
     url: string;
+    color: string;
 }
 
 export async function addLink(payload: LinkPayload) {
@@ -21,10 +22,15 @@ export async function addLink(payload: LinkPayload) {
         throw new Error('Title and URL are required.');
     }
 
+    if (!payload.url.startsWith('https://')) {
+        throw new Error('Link must start with https://');
+    }
+
     const { error } = await supabase.from('links').insert({
         user_id: user.id,
         title: payload.title,
         url: payload.url,
+        color: payload.color,
     });
 
     if (error) {
@@ -38,10 +44,18 @@ export async function addLink(payload: LinkPayload) {
 export async function getLinks(query: string) {
     const supabase = createSupabaseServerClient();
     
-    // Step 1: Fetch the links, with or without a search query.
+    // Step 1: Fetch the links, including the 'clicks' column, with or without a search query.
     let linksQuery = supabase
         .from('links')
-        .select('*, clicks')
+        .select(`
+            id,
+            title,
+            url,
+            color,
+            created_at,
+            user_id,
+            clicks
+        `)
         .order('created_at', { ascending: false });
 
     if (query) {
