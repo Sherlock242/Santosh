@@ -5,7 +5,7 @@ import React, { useState, useEffect, useTransition, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Share2, Palette, Eye } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Share2, Palette, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addLink, getLinks, deleteLink } from '../actions/link.actions';
 import {
@@ -41,6 +41,8 @@ interface LinkEntry {
     clicks: number;
 }
 
+const LINKS_PER_PAGE = 10;
+
 function useDebounce(value: string, delay: number) {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -74,11 +76,15 @@ export default function LinksPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-    const fetchLinks = async (query: string) => {
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+
+    const fetchLinks = async (query: string, pageNum: number) => {
         setIsLoading(true);
         try {
-            const userLinks = await getLinks(query);
+            const userLinks = await getLinks({ query, page: pageNum, limit: LINKS_PER_PAGE });
             setLinks(userLinks as LinkEntry[]);
+            setHasMore(userLinks.length === LINKS_PER_PAGE);
         } catch (error: any) {
             toast({ title: 'Error fetching links', description: error.message, variant: 'destructive' });
         } finally {
@@ -87,8 +93,8 @@ export default function LinksPage() {
     };
     
     useEffect(() => {
-        fetchLinks(debouncedSearchQuery);
-    }, [debouncedSearchQuery, toast]);
+        fetchLinks(debouncedSearchQuery, page);
+    }, [debouncedSearchQuery, page, toast]);
 
     const handleAddLink = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -105,7 +111,8 @@ export default function LinksPage() {
                 setTitlePrefix('');
                 setUrls('');
                 toast({ title: 'Links added successfully!', variant: 'success' });
-                fetchLinks(debouncedSearchQuery); // Refresh the list
+                setPage(1); // Reset to first page after adding
+                fetchLinks(debouncedSearchQuery, 1); // Refresh the list
             } catch (error: any) {
                 toast({ title: 'Error adding links', description: error.message, variant: 'destructive' });
             }
@@ -234,7 +241,10 @@ export default function LinksPage() {
                         placeholder="Search links..."
                         className="pl-10 h-11"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value)
+                          setPage(1); // Reset to page 1 on new search
+                        }}
                     />
                 </div>
 
@@ -311,9 +321,36 @@ export default function LinksPage() {
                            <div className="text-center py-10 text-muted-foreground">
                                 <LinkIcon className="mx-auto h-12 w-12" />
                                 <p className="mt-4 font-semibold">No links found</p>
-                                <p className="text-sm">Be the first to add a link!</p>
+                                {searchQuery ? (
+                                    <p className="text-sm">Try a different search term.</p>
+                                ) : (
+                                    <p className="text-sm">Be the first to add a link!</p>
+                                )}
                             </div>
                         )}
+                    </div>
+                )}
+                 {links.length > 0 && (
+                    <div className="flex items-center justify-between pt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                        >
+                            <ChevronLeft className="mr-2 h-4 w-4" />
+                            Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                            Page {page}
+                        </span>
+                        <Button
+                            variant="outline"
+                            onClick={() => setPage(p => p + 1)}
+                            disabled={!hasMore}
+                        >
+                            Next
+                            <ChevronRight className="ml-2 h-4 w-4" />
+                        </Button>
                     </div>
                 )}
             </div>

@@ -50,13 +50,17 @@ export async function addLink(payload: LinkPayload) {
     revalidatePath('/links');
 }
 
-export async function getLinks(query: string) {
+export async function getLinks({ query, page = 1, limit = 10 }: { query: string; page: number; limit: number; }) {
     const supabase = createSupabaseServerClient();
     
+    const from = (page - 1) * limit;
+    const to = page * limit - 1;
+
     let linksQuery = supabase
         .from('links')
         .select(`id, title, url, created_at, user_id, color, clicks`)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
     if (query) {
         linksQuery = linksQuery.or(`title.ilike.%${query}%,url.ilike.%${query}%`);
