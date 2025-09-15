@@ -123,13 +123,20 @@ export default function LinksPage() {
             </header>
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
                 <form onSubmit={handleAddLink} className="space-y-4">
-                    <Input 
-                        placeholder="Link Title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        disabled={isPending}
-                        required
-                    />
+                    <div className="relative">
+                        <Input 
+                            placeholder="Link Title"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            disabled={isPending}
+                            required
+                            maxLength={30}
+                            className="pr-12"
+                        />
+                        <div className="absolute bottom-2 right-3 text-xs text-muted-foreground">
+                            {title.length}/30
+                        </div>
+                    </div>
                     <Input 
                         type="url"
                         placeholder="https://example.com"
