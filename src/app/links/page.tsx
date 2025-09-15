@@ -95,6 +95,11 @@ export default function LinksPage() {
             return;
         }
 
+        if (!url.startsWith('https://')) {
+            toast({ title: 'Invalid URL', description: 'Link must start with https://', variant: 'destructive' });
+            return;
+        }
+
         startTransition(async () => {
             try {
                 await addLink({ title, url, color });
