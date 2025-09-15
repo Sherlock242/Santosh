@@ -117,17 +117,19 @@ export default function LinksPage() {
         });
     }
 
-    const handleShareClick = (link: LinkEntry) => {
+    const handleLinkClick = (linkId: string) => {
         // Optimistically update the UI
         setLinks(prevLinks =>
           prevLinks.map(l =>
-            l.id === link.id ? { ...l, clicks: l.clicks + 1 } : l
+            l.id === linkId ? { ...l, clicks: l.clicks + 1 } : l
           )
         );
         
         // Call the server action to increment the count in the database
-        incrementLinkClick(link.id);
+        incrementLinkClick(linkId);
+    };
 
+    const handleShare = (link: LinkEntry) => {
         const shareData = {
             title: link.title,
             text: `Check out this link: ${link.title}`,
@@ -135,13 +137,18 @@ export default function LinksPage() {
         };
 
         if (navigator.share) {
-            navigator.share(shareData).catch(() => {
-                // If share fails, open the link as a fallback
-                window.open(link.url, '_blank', 'noopener,noreferrer');
+            navigator.share(shareData).catch((error) => {
+                if (error.name !== 'AbortError') {
+                    console.error('Share failed:', error);
+                }
             });
         } else {
-            // Fallback for browsers that don't support the Share API
-            window.open(link.url, '_blank', 'noopener,noreferrer');
+             // Fallback for browsers that don't support the Share API
+            navigator.clipboard.writeText(link.url).then(() => {
+                toast({ title: 'Link copied to clipboard!' });
+            }).catch(err => {
+                toast({ title: 'Failed to copy link', variant: 'destructive' });
+            });
         }
     };
 
@@ -217,7 +224,7 @@ export default function LinksPage() {
                                             <p className="text-sm font-semibold truncate">{link.user?.name || 'Anonymous'}</p>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleShareClick(link)}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleShare(link)}>
                                                 <Share2 className="h-4 w-4" />
                                             </Button>
                                             {user && user.id === link.user_id && (
@@ -256,7 +263,7 @@ export default function LinksPage() {
                                                 href={link.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                onClick={() => incrementLinkClick(link.id)}
+                                                onClick={() => handleLinkClick(link.id)}
                                                 className="text-sm text-primary hover:underline truncate block text-left w-full"
                                             >
                                                 {link.url}
