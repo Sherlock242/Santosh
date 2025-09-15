@@ -279,8 +279,6 @@ export default function MoodPage() {
       return (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4 text-muted-foreground">
               <Smile className="h-16 w-16" />
-              <h2 className="text-2xl font-bold text-foreground">Welcome to your Feed</h2>
-              <p>When you follow people, their posts and moods will appear here.</p>
               <Link href="/explore" className="text-primary font-semibold">Explore users to follow</Link>
           </div>
       );
