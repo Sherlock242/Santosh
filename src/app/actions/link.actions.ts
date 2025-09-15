@@ -43,7 +43,7 @@ export async function getLinks(query: string) {
     // Step 1: Fetch the links, with or without a search query.
     let linksQuery = supabase
         .from('links')
-        .select('*')
+        .select('*, clicks')
         .order('created_at', { ascending: false });
 
     if (query) {
