@@ -200,7 +200,7 @@ export default function LinksPage() {
                                     type="color"
                                     value={color}
                                     onChange={(e) => setColor(e.target.value)}
-                                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer -z-10"
+                                    className="absolute -top-96 -left-96 h-1 w-1 opacity-0 cursor-pointer"
                                     disabled={isPending}
                                 />
                             </div>
