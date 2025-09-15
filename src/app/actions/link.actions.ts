@@ -46,16 +46,7 @@ export async function getLinks(query: string) {
     
     let linksQuery = supabase
         .from('links')
-        .select(`
-            id,
-            title,
-            url,
-            color,
-            created_at,
-            user_id,
-            clicks,
-            user:users (id, name, picture)
-        `)
+        .select(`*`)
         .order('created_at', { ascending: false });
 
     if (query) {
@@ -69,7 +60,34 @@ export async function getLinks(query: string) {
         throw new Error(linksError.message);
     }
     
-    return links || [];
+    if (!links || links.length === 0) {
+        return [];
+    }
+
+    // Extract user IDs to fetch user profiles in a single batch
+    const userIds = [...new Set(links.map(link => link.user_id))];
+
+    const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id, name, picture')
+        .in('id', userIds);
+
+    if (usersError) {
+        console.error('Error fetching users for links:', usersError);
+        // Return links without user info if this fails
+        return links.map(link => ({ ...link, user: null }));
+    }
+
+    // Create a map for easy lookup
+    const usersMap = new Map(users.map(user => [user.id, user]));
+
+    // Combine links with their user profiles
+    const combinedLinks = links.map(link => ({
+        ...link,
+        user: usersMap.get(link.user_id) || null
+    }));
+
+    return combinedLinks;
 }
 
 
