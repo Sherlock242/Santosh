@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Share2, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addLink, getLinks, deleteLink, incrementLinkClick } from '../actions/link.actions';
+import { addLink, getLinks, deleteLink } from '../actions/link.actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,7 +35,6 @@ interface LinkEntry {
     created_at: string;
     user_id: string;
     user: UserProfile | null;
-    clicks: number;
     color: string;
 }
 
@@ -126,19 +125,8 @@ export default function LinksPage() {
         });
     }
 
-    const handleLinkClick = async (link: LinkEntry) => {
-        // Optimistically update the UI
-        setLinks(prevLinks =>
-          prevLinks.map(l =>
-            l.id === link.id ? { ...l, clicks: l.clicks + 1 } : l
-          )
-        );
-        
-        // Call the server action and wait for it to complete
-        await incrementLinkClick(link.id);
-        
-        // Open the link in a new tab
-        window.open(link.url, '_blank', 'noopener,noreferrer');
+    const handleLinkClick = (linkUrl: string) => {
+      window.open(linkUrl, '_blank', 'noopener,noreferrer');
     };
 
     const handleShare = (link: LinkEntry) => {
@@ -287,7 +275,7 @@ export default function LinksPage() {
                                         <div className="overflow-hidden">
                                             <p className="font-semibold truncate">{link.title}</p>
                                             <button
-                                                onClick={() => handleLinkClick(link)}
+                                                onClick={() => handleLinkClick(link.url)}
                                                 className="text-sm hover:underline truncate block text-left w-full"
                                                 style={{ color: link.color }}
                                             >
@@ -298,7 +286,6 @@ export default function LinksPage() {
                                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleShare(link)}>
                                                 <Share2 className="h-4 w-4" />
                                             </Button>
-                                            <span>{link.clicks} clicks</span>
                                         </div>
                                     </div>
                                 </div>

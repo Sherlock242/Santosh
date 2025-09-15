@@ -46,7 +46,7 @@ export async function getLinks(query: string) {
     
     let linksQuery = supabase
         .from('links')
-        .select(`id, title, url, created_at, user_id, clicks, color`)
+        .select(`id, title, url, created_at, user_id, color`)
         .order('created_at', { ascending: false });
 
     if (query) {
@@ -112,15 +112,4 @@ export async function deleteLink(linkId: string) {
     }
 
     revalidatePath('/links');
-}
-
-export async function incrementLinkClick(linkId: string) {
-    const supabase = createSupabaseServerClient(true);
-    
-    const { error } = await supabase.rpc('increment_link_clicks', { link_id_arg: linkId });
-
-    if (error) {
-        console.error('Error incrementing link click via RPC:', error);
-        // Do not throw an error, as it's not critical for the user experience.
-    }
 }
