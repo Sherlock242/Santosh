@@ -37,16 +37,10 @@ export async function addLink(payload: LinkPayload) {
 
 export async function getLinks(query: string) {
     const supabase = createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        return [];
-    }
-
+    
     let queryBuilder = supabase
         .from('links')
-        .select('*')
-        .eq('user_id', user.id)
+        .select('*, user:users(id, name, picture)')
         .order('created_at', { ascending: false });
 
     if (query) {
@@ -71,6 +65,7 @@ export async function deleteLink(linkId: string) {
         throw new Error('You must be logged in to delete a link.');
     }
 
+    // Only allow users to delete their own links
     const { error } = await supabase
         .from('links')
         .delete()

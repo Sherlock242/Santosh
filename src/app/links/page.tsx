@@ -20,15 +20,23 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Link from 'next/link';
 
-interface Link {
+interface UserProfile {
+    id: string;
+    name: string;
+    picture: string;
+}
+
+interface LinkEntry {
     id: string;
     title: string;
     url: string;
     created_at: string;
+    user_id: string;
+    user: UserProfile | null;
 }
 
-// Debounce function
 function useDebounce(value: string, delay: number) {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -50,7 +58,7 @@ export default function LinksPage() {
     const { user } = useAuth();
     const { toast } = useToast();
     
-    const [links, setLinks] = useState<Link[]>([]);
+    const [links, setLinks] = useState<LinkEntry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isPending, startTransition] = useTransition();
 
@@ -61,11 +69,10 @@ export default function LinksPage() {
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
     const fetchLinks = async (query: string) => {
-        if (!user) return;
         setIsLoading(true);
         try {
             const userLinks = await getLinks(query);
-            setLinks(userLinks);
+            setLinks(userLinks as LinkEntry[]);
         } catch (error: any) {
             toast({ title: 'Error fetching links', description: error.message, variant: 'destructive' });
         } finally {
@@ -75,7 +82,7 @@ export default function LinksPage() {
     
     useEffect(() => {
         fetchLinks(debouncedSearchQuery);
-    }, [debouncedSearchQuery, user]);
+    }, [debouncedSearchQuery]);
 
     const handleAddLink = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -109,53 +116,44 @@ export default function LinksPage() {
         });
     }
 
-    const filteredLinks = useMemo(() => {
-        if (!debouncedSearchQuery) return links;
-        return links.filter(link => 
-            link.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-            link.url.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
-        );
-    }, [debouncedSearchQuery, links]);
-
     return (
         <div className="flex h-full w-full flex-col">
             <header className="flex h-16 items-center justify-between border-b border-border/40 bg-background px-4 md:px-6">
                 <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                        <AvatarImage src={user?.picture} alt={user?.name} />
-                        <AvatarFallback>{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <h1 className="text-xl font-bold">My Links</h1>
+                    <LinkIcon className="h-6 w-6" />
+                    <h1 className="text-xl font-bold">Public Links</h1>
                 </div>
             </header>
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-                <form onSubmit={handleAddLink} className="space-y-4">
-                    <div className="relative">
+                {user && (
+                    <form onSubmit={handleAddLink} className="space-y-4">
+                        <div className="relative">
+                            <Input 
+                                placeholder="Link Title"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                disabled={isPending}
+                                required
+                                maxLength={30}
+                                className="pr-12"
+                            />
+                            <div className="absolute bottom-2 right-3 text-xs text-muted-foreground">
+                                {title.length}/30
+                            </div>
+                        </div>
                         <Input 
-                            placeholder="Link Title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
+                            type="url"
+                            placeholder="https://example.com"
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
                             disabled={isPending}
                             required
-                            maxLength={30}
-                            className="pr-12"
                         />
-                        <div className="absolute bottom-2 right-3 text-xs text-muted-foreground">
-                            {title.length}/30
-                        </div>
-                    </div>
-                    <Input 
-                        type="url"
-                        placeholder="https://example.com"
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                        disabled={isPending}
-                        required
-                    />
-                    <Button type="submit" className="w-full" disabled={isPending}>
-                        {isPending ? <Loader2 className="animate-spin" /> : <><Plus className="mr-2 h-4 w-4" /> Add Link</>}
-                    </Button>
-                </form>
+                        <Button type="submit" className="w-full" disabled={isPending}>
+                            {isPending ? <Loader2 className="animate-spin" /> : <><Plus className="mr-2 h-4 w-4" /> Add Link</>}
+                        </Button>
+                    </form>
+                )}
 
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -173,60 +171,77 @@ export default function LinksPage() {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {filteredLinks.length > 0 ? (
-                            filteredLinks.map(link => (
-                                <div key={link.id} className="flex items-center gap-4 rounded-lg border bg-card p-3">
-                                    <div className="flex-1 overflow-hidden">
-                                        <p className="font-semibold truncate">{link.title}</p>
-                                        <a 
-                                            href={link.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-sm text-primary hover:underline truncate block"
-                                        >
-                                            {link.url}
-                                        </a>
+                        {links.length > 0 ? (
+                            links.map(link => (
+                                <div key={link.id} className="rounded-lg border bg-card p-3">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        {link.user && (
+                                            <Link href={`/gallery?userId=${link.user.id}`}>
+                                                <Avatar className="h-8 w-8">
+                                                    <AvatarImage src={link.user.picture} alt={link.user.name} />
+                                                    <AvatarFallback>{link.user.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                                                </Avatar>
+                                            </Link>
+                                        )}
+                                        <div className="text-sm overflow-hidden">
+                                           <p className="font-semibold truncate">{link.user?.name || 'Anonymous'}</p>
+                                        </div>
                                     </div>
-                                    <a
-                                      href={link.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="p-2 text-muted-foreground hover:text-foreground"
-                                      aria-label="Open link in new tab"
-                                    >
-                                      <ExternalLink className="h-5 w-5" />
-                                    </a>
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                                <Trash2 className="h-5 w-5" />
-                                            </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This will permanently delete the link titled &quot;{link.title}&quot;.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction
-                                                    onClick={() => handleDeleteLink(link.id)}
-                                                    className="bg-destructive hover:bg-destructive/90"
-                                                >
-                                                    Delete
-                                                </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
+                                    <div className="flex items-center gap-4">
+                                      <div className="flex-1 overflow-hidden">
+                                          <p className="font-semibold truncate">{link.title}</p>
+                                          <a 
+                                              href={link.url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-sm text-primary hover:underline truncate block"
+                                          >
+                                              {link.url}
+                                          </a>
+                                      </div>
+                                      <a
+                                        href={link.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-2 text-muted-foreground hover:text-foreground"
+                                        aria-label="Open link in new tab"
+                                      >
+                                        <ExternalLink className="h-5 w-5" />
+                                      </a>
+                                      {user && user.id === link.user_id && (
+                                          <AlertDialog>
+                                              <AlertDialogTrigger asChild>
+                                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                                      <Trash2 className="h-5 w-5" />
+                                                  </Button>
+                                              </AlertDialogTrigger>
+                                              <AlertDialogContent>
+                                                  <AlertDialogHeader>
+                                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                      <AlertDialogDescription>
+                                                          This will permanently delete the link titled &quot;{link.title}&quot;.
+                                                      </AlertDialogDescription>
+                                                  </AlertDialogHeader>
+                                                  <AlertDialogFooter>
+                                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                      <AlertDialogAction
+                                                          onClick={() => handleDeleteLink(link.id)}
+                                                          className="bg-destructive hover:bg-destructive/90"
+                                                      >
+                                                          Delete
+                                                      </AlertDialogAction>
+                                                  </AlertDialogFooter>
+                                              </AlertDialogContent>
+                                          </AlertDialog>
+                                      )}
+                                  </div>
                                 </div>
                             ))
                         ) : (
                            <div className="text-center py-10 text-muted-foreground">
                                 <LinkIcon className="mx-auto h-12 w-12" />
                                 <p className="mt-4 font-semibold">No links found</p>
-                                <p className="text-sm">Add a new link to get started.</p>
+                                <p className="text-sm">Be the first to add a link!</p>
                             </div>
                         )}
                     </div>
