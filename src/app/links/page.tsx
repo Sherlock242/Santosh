@@ -86,7 +86,7 @@ export default function LinksPage() {
     
     useEffect(() => {
         fetchLinks(debouncedSearchQuery);
-    }, [debouncedSearchQuery, toast]);
+    }, [debouncedSearchQuery]);
 
     const handleAddLink = async (e: React.FormEvent) => {
         e.preventDefault();
