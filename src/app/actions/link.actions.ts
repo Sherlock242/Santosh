@@ -38,24 +38,55 @@ export async function addLink(payload: LinkPayload) {
 export async function getLinks(query: string) {
     const supabase = createSupabaseServerClient();
     
-    let queryBuilder = supabase
+    // Step 1: Fetch the links, with or without a search query.
+    let linksQuery = supabase
         .from('links')
-        .select('*, user:users(id, name, picture)')
+        .select('*')
         .order('created_at', { ascending: false });
 
     if (query) {
-        queryBuilder = queryBuilder.or(`title.ilike.%${query}%,url.ilike.%${query}%`);
+        linksQuery = linksQuery.or(`title.ilike.%${query}%,url.ilike.%${query}%`);
     }
 
-    const { data, error } = await queryBuilder;
+    const { data: links, error: linksError } = await linksQuery;
 
-    if (error) {
-        console.error('Error fetching links:', error);
-        throw new Error(error.message);
+    if (linksError) {
+        console.error('Error fetching links:', linksError);
+        throw new Error(linksError.message);
+    }
+    if (!links || links.length === 0) {
+        return [];
     }
 
-    return data || [];
+    // Step 2: Collect all unique user IDs from the fetched links.
+    const userIds = [...new Set(links.map(link => link.user_id))];
+    if (userIds.length === 0) {
+        // This case shouldn't happen if there are links, but as a safeguard:
+        return links.map(link => ({ ...link, user: null }));
+    }
+
+    // Step 3: Fetch all the user profiles for those IDs in a single query.
+    const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id, name, picture')
+        .in('id', userIds);
+
+    if (usersError) {
+        console.error('Error fetching users for links:', usersError);
+        // Return links without user info if this fails
+        return links.map(link => ({ ...link, user: null }));
+    }
+
+    // Step 4: Create a map of users by their ID for easy lookup.
+    const userMap = new Map(users.map(user => [user.id, user]));
+
+    // Step 5: Manually combine the links with their user data.
+    return links.map(link => ({
+        ...link,
+        user: userMap.get(link.user_id) || null
+    }));
 }
+
 
 export async function deleteLink(linkId: string) {
     const supabase = createSupabaseServerClient();
