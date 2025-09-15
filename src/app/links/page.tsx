@@ -99,12 +99,6 @@ export default function LinksPage() {
             return;
         }
 
-        const invalidUrls = urlList.filter(u => !u.startsWith('https://'));
-        if (invalidUrls.length > 0) {
-            toast({ title: 'Invalid URL(s)', description: 'All links must start with https://', variant: 'destructive' });
-            return;
-        }
-
         startTransition(async () => {
             try {
                 await addLink({ titlePrefix, urls: urlList, color });
@@ -203,7 +197,7 @@ export default function LinksPage() {
                             <div className="relative">
                                <Textarea 
                                     id="urls"
-                                    placeholder="https://example.com/episode-1\nhttps://example.com/episode-2"
+                                    placeholder="https://example.com/episode-1"
                                     value={urls}
                                     onChange={(e) => setUrls(e.target.value)}
                                     disabled={isPending}
