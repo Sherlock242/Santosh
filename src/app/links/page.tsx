@@ -5,7 +5,7 @@ import React, { useState, useEffect, useTransition, useMemo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Plus, Search, Trash2, Link as LinkIcon, ExternalLink, Pointer, Share2 } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, Link as LinkIcon, ExternalLink, Share2, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addLink, getLinks, deleteLink, incrementLinkClick } from '../actions/link.actions';
 import {
@@ -36,6 +36,7 @@ interface LinkEntry {
     user_id: string;
     user: UserProfile | null;
     clicks: number;
+    color: string;
 }
 
 function useDebounce(value: string, delay: number) {
@@ -65,6 +66,7 @@ export default function LinksPage() {
 
     const [title, setTitle] = useState('');
     const [url, setUrl] = useState('');
+    const [color, setColor] = useState('#8A2BE2');
 
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -83,7 +85,7 @@ export default function LinksPage() {
     
     useEffect(() => {
         fetchLinks(debouncedSearchQuery);
-    }, [debouncedSearchQuery]);
+    }, [debouncedSearchQuery, toast]);
 
     const handleAddLink = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -94,9 +96,10 @@ export default function LinksPage() {
 
         startTransition(async () => {
             try {
-                await addLink({ title, url });
+                await addLink({ title, url, color });
                 setTitle('');
                 setUrl('');
+                setColor('#8A2BE2');
                 toast({ title: 'Link added successfully!', variant: 'success' });
                 fetchLinks(debouncedSearchQuery); // Refresh the list
             } catch (error: any) {
@@ -164,7 +167,7 @@ export default function LinksPage() {
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
                 {user && (
                     <form onSubmit={handleAddLink} className="space-y-4">
-                        <div className="relative">
+                         <div className="relative">
                             <Input 
                                 placeholder="Link Title"
                                 value={title}
@@ -178,14 +181,30 @@ export default function LinksPage() {
                                 {title.length}/30
                             </div>
                         </div>
-                        <Input 
-                            type="url"
-                            placeholder="https://example.com"
-                            value={url}
-                            onChange={(e) => setUrl(e.target.value)}
-                            disabled={isPending}
-                            required
-                        />
+                        <div className="flex items-center gap-2">
+                            <Input 
+                                type="url"
+                                placeholder="https://example.com"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                disabled={isPending}
+                                required
+                                className="flex-1"
+                            />
+                            <div className="relative">
+                                <label htmlFor="color-picker" className="cursor-pointer p-2 rounded-md border" style={{ backgroundColor: color }}>
+                                    <Palette className="h-5 w-5 text-white mix-blend-difference" />
+                                </label>
+                                <Input 
+                                    id="color-picker"
+                                    type="color"
+                                    value={color}
+                                    onChange={(e) => setColor(e.target.value)}
+                                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                                    disabled={isPending}
+                                />
+                            </div>
+                        </div>
                         <Button type="submit" className="w-full" disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin" /> : <><Plus className="mr-2 h-4 w-4" /> Add Link</>}
                         </Button>
@@ -258,13 +277,14 @@ export default function LinksPage() {
                                     
                                     <div className="flex items-end justify-between gap-4">
                                         <div className="overflow-hidden">
-                                            <p className="font-semibold truncate">{link.title}</p>
+                                            <p className="font-semibold truncate" style={{ color: link.color }}>{link.title}</p>
                                             <a
                                                 href={link.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 onClick={() => handleLinkClick(link.id)}
-                                                className="text-sm text-primary hover:underline truncate block text-left w-full"
+                                                className="text-sm hover:underline truncate block text-left w-full"
+                                                style={{ color: link.color }}
                                             >
                                                 {link.url}
                                             </a>
