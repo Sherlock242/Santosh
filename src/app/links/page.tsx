@@ -66,7 +66,6 @@ export default function LinksPage() {
 
     const [title, setTitle] = useState('');
     const [url, setUrl] = useState('');
-    const [color, setColor] = useState('#8A2BE2');
 
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -85,7 +84,7 @@ export default function LinksPage() {
     
     useEffect(() => {
         fetchLinks(debouncedSearchQuery);
-    }, [debouncedSearchQuery]);
+    }, [debouncedSearchQuery, toast]);
 
     const handleAddLink = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -96,10 +95,9 @@ export default function LinksPage() {
 
         startTransition(async () => {
             try {
-                await addLink({ title, url, color });
+                await addLink({ title, url });
                 setTitle('');
                 setUrl('');
-                setColor('#8A2BE2');
                 toast({ title: 'Link added successfully!', variant: 'success' });
                 fetchLinks(debouncedSearchQuery); // Refresh the list
             } catch (error: any) {
@@ -120,16 +118,19 @@ export default function LinksPage() {
         });
     }
 
-    const handleLinkClick = (linkId: string) => {
+    const handleLinkClick = (link: LinkEntry) => {
         // Optimistically update the UI
         setLinks(prevLinks =>
           prevLinks.map(l =>
-            l.id === linkId ? { ...l, clicks: l.clicks + 1 } : l
+            l.id === link.id ? { ...l, clicks: l.clicks + 1 } : l
           )
         );
         
         // Call the server action to increment the count in the database
-        incrementLinkClick(linkId);
+        incrementLinkClick(link.id);
+        
+        // Open the link
+        window.open(link.url, '_blank', 'noopener,noreferrer');
     };
 
     const handleShare = (link: LinkEntry) => {
@@ -189,21 +190,7 @@ export default function LinksPage() {
                                 onChange={(e) => setUrl(e.target.value)}
                                 disabled={isPending}
                                 required
-                                className="pr-14"
                             />
-                            <div className="absolute top-1/2 right-2 -translate-y-1/2">
-                                <label htmlFor="color-picker" className="cursor-pointer p-1.5 rounded-md border" style={{ backgroundColor: color }}>
-                                    <Palette className="h-5 w-5 text-white mix-blend-difference" />
-                                </label>
-                                <Input 
-                                    id="color-picker"
-                                    type="color"
-                                    value={color}
-                                    onChange={(e) => setColor(e.target.value)}
-                                    className="absolute -top-96 -left-96 h-1 w-1 opacity-0 cursor-pointer"
-                                    disabled={isPending}
-                                />
-                            </div>
                         </div>
                         <Button type="submit" className="w-full" disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin" /> : <><Plus className="mr-2 h-4 w-4" /> Add Link</>}
@@ -274,16 +261,13 @@ export default function LinksPage() {
                                     
                                     <div className="flex items-end justify-between gap-4">
                                         <div className="overflow-hidden">
-                                            <p className="font-semibold truncate" style={{ color: link.color }}>{link.title}</p>
-                                            <a
-                                                href={link.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                onClick={() => handleLinkClick(link.id)}
-                                                className="text-sm hover:underline truncate block text-left w-full"
+                                            <p className="font-semibold truncate text-primary">{link.title}</p>
+                                            <button
+                                                onClick={() => handleLinkClick(link)}
+                                                className="text-sm hover:underline truncate block text-left w-full text-muted-foreground"
                                             >
                                                 {link.url}
-                                            </a>
+                                            </button>
                                         </div>
                                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground flex-shrink-0">
                                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleShare(link)}>

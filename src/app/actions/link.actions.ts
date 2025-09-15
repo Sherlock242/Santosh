@@ -7,7 +7,6 @@ import { createSupabaseServerClient } from '@/lib/supabaseServer';
 interface LinkPayload {
     title: string;
     url: string;
-    color: string;
 }
 
 export async function addLink(payload: LinkPayload) {
@@ -26,7 +25,6 @@ export async function addLink(payload: LinkPayload) {
         user_id: user.id,
         title: payload.title,
         url: payload.url,
-        color: payload.color || '#8A2BE2',
     });
 
     if (error) {
