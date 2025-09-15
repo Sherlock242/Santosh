@@ -127,21 +127,18 @@ export default function LinksPage() {
     }
 
     const handleLinkClick = async (link: LinkEntry) => {
-      // Optimistically update the UI
+      // Optimistically update UI
       setLinks(prevLinks => 
           prevLinks.map(l => 
               l.id === link.id ? { ...l, clicks: (l.clicks || 0) + 1 } : l
           )
       );
-      
-      // Fire-and-forget the server action. 
-      // We don't await it to make the navigation feel instant.
-      incrementLinkClick(link.id);
 
-      // Give a tiny delay for the server action to be sent before navigating.
-      setTimeout(() => {
-          window.open(link.url, '_blank', 'noopener,noreferrer');
-      }, 100);
+      // Await the database update.
+      await incrementLinkClick(link.id);
+
+      // Open the link in a new tab.
+      window.open(link.url, '_blank', 'noopener,noreferrer');
     };
 
     const handleShare = (link: LinkEntry) => {

@@ -116,11 +116,14 @@ export async function deleteLink(linkId: string) {
 
 
 export async function incrementLinkClick(linkId: string) {
-    const supabase = createSupabaseServerClient(true); // Use admin client to bypass RLS for this internal operation
-    const { error } = await supabase.rpc('increment', { row_id: linkId, table_name: 'links', field_name: 'clicks' });
+    // Use the admin client to call the RPC function.
+    // The function itself is safe due to `security definer`.
+    const supabase = createSupabaseServerClient(true);
+    const { error } = await supabase.rpc('increment_link_clicks', { link_id: linkId });
 
     if (error) {
         console.error('Error incrementing link click:', error);
         // We don't throw here to avoid breaking the client link navigation
+        // but the error will be logged on the server.
     }
 }
