@@ -5,9 +5,9 @@ import React, { useState, useEffect, useTransition, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Share2, Palette } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Share2, Palette, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addLink, getLinks, deleteLink } from '../actions/link.actions';
+import { addLink, getLinks, deleteLink, incrementLinkClick } from '../actions/link.actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +36,7 @@ interface LinkEntry {
     user_id: string;
     user: UserProfile | null;
     color: string;
+    clicks: number;
 }
 
 function useDebounce(value: string, delay: number) {
@@ -125,8 +126,22 @@ export default function LinksPage() {
         });
     }
 
-    const handleLinkClick = (linkUrl: string) => {
-      window.open(linkUrl, '_blank', 'noopener,noreferrer');
+    const handleLinkClick = async (link: LinkEntry) => {
+      // Optimistically update the UI
+      setLinks(prevLinks => 
+          prevLinks.map(l => 
+              l.id === link.id ? { ...l, clicks: (l.clicks || 0) + 1 } : l
+          )
+      );
+      
+      // Fire-and-forget the server action. 
+      // We don't await it to make the navigation feel instant.
+      incrementLinkClick(link.id);
+
+      // Give a tiny delay for the server action to be sent before navigating.
+      setTimeout(() => {
+          window.open(link.url, '_blank', 'noopener,noreferrer');
+      }, 100);
     };
 
     const handleShare = (link: LinkEntry) => {
@@ -242,6 +257,10 @@ export default function LinksPage() {
                                             <p className="text-sm font-semibold truncate">{link.user?.name || 'Anonymous'}</p>
                                         </div>
                                         <div className="flex items-center gap-1">
+                                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground flex-shrink-0">
+                                                <Eye className="h-4 w-4" />
+                                                <span>{link.clicks || 0}</span>
+                                            </div>
                                             {user && user.id === link.user_id && (
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
@@ -272,18 +291,20 @@ export default function LinksPage() {
                                     </div>
                                     
                                     <div className="flex items-end justify-between gap-4">
-                                        <div className="overflow-hidden">
-                                            <p className="font-semibold truncate">{link.title}</p>
-                                            <button
-                                                onClick={() => handleLinkClick(link.url)}
-                                                className="text-sm hover:underline truncate block text-left w-full"
+                                        <button
+                                            onClick={() => handleLinkClick(link)}
+                                            className="overflow-hidden text-left w-full group"
+                                        >
+                                            <p className="font-semibold truncate group-hover:underline">{link.title}</p>
+                                            <p
+                                                className="text-sm truncate"
                                                 style={{ color: link.color }}
                                             >
                                                 {link.url}
-                                            </button>
-                                        </div>
+                                            </p>
+                                        </button>
                                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground flex-shrink-0">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleShare(link)}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleShare(link);}}>
                                                 <Share2 className="h-4 w-4" />
                                             </Button>
                                         </div>

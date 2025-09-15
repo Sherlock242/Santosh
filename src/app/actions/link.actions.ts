@@ -46,7 +46,7 @@ export async function getLinks(query: string) {
     
     let linksQuery = supabase
         .from('links')
-        .select(`id, title, url, created_at, user_id, color`)
+        .select(`id, title, url, created_at, user_id, color, clicks`)
         .order('created_at', { ascending: false });
 
     if (query) {
@@ -112,4 +112,15 @@ export async function deleteLink(linkId: string) {
     }
 
     revalidatePath('/links');
+}
+
+
+export async function incrementLinkClick(linkId: string) {
+    const supabase = createSupabaseServerClient(true); // Use admin client to bypass RLS for this internal operation
+    const { error } = await supabase.rpc('increment', { row_id: linkId, table_name: 'links', field_name: 'clicks' });
+
+    if (error) {
+        console.error('Error incrementing link click:', error);
+        // We don't throw here to avoid breaking the client link navigation
+    }
 }
