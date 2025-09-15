@@ -1,11 +1,11 @@
 
 'use client';
 
-import React, { useState, useEffect, useTransition, useMemo } from 'react';
+import React, { useState, useEffect, useTransition, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Plus, Search, Trash2, Link as LinkIcon, ExternalLink, Share2, Palette } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Share2, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addLink, getLinks, deleteLink, incrementLinkClick } from '../actions/link.actions';
 import {
@@ -66,6 +66,8 @@ export default function LinksPage() {
 
     const [title, setTitle] = useState('');
     const [url, setUrl] = useState('');
+    const [color, setColor] = useState('#8A2BE2');
+    const colorInputRef = useRef<HTMLInputElement>(null);
 
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -95,9 +97,10 @@ export default function LinksPage() {
 
         startTransition(async () => {
             try {
-                await addLink({ title, url });
+                await addLink({ title, url, color });
                 setTitle('');
                 setUrl('');
+                setColor('#8A2BE2');
                 toast({ title: 'Link added successfully!', variant: 'success' });
                 fetchLinks(debouncedSearchQuery); // Refresh the list
             } catch (error: any) {
@@ -183,13 +186,32 @@ export default function LinksPage() {
                             </div>
                         </div>
                         <div className="relative">
-                            <Input 
+                           <Input 
                                 type="url"
                                 placeholder="https://example.com"
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                                 disabled={isPending}
                                 required
+                                className="pr-10"
+                            />
+                            <button
+                                type="button"
+                                className="absolute top-1/2 right-2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                                onClick={() => colorInputRef.current?.click()}
+                                style={{ color: color }}
+                            >
+                                <Palette className="h-5 w-5" />
+                                <span className="sr-only">Choose color</span>
+                            </button>
+                            <input
+                                ref={colorInputRef}
+                                type="color"
+                                value={color}
+                                onChange={(e) => setColor(e.target.value)}
+                                className="absolute w-0 h-0 opacity-0"
+                                tabIndex={-1}
+                                aria-hidden="true"
                             />
                         </div>
                         <Button type="submit" className="w-full" disabled={isPending}>
@@ -261,7 +283,7 @@ export default function LinksPage() {
                                     
                                     <div className="flex items-end justify-between gap-4">
                                         <div className="overflow-hidden">
-                                            <p className="font-semibold truncate text-primary">{link.title}</p>
+                                            <p className="font-semibold truncate" style={{ color: link.color }}>{link.title}</p>
                                             <button
                                                 onClick={() => handleLinkClick(link)}
                                                 className="text-sm hover:underline truncate block text-left w-full text-muted-foreground"
