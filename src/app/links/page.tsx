@@ -5,9 +5,9 @@ import React, { useState, useEffect, useTransition, useMemo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Plus, Search, Trash2, Link as LinkIcon, ExternalLink } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, Link as LinkIcon, ExternalLink, Pointer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addLink, getLinks, deleteLink } from '../actions/link.actions';
+import { addLink, getLinks, deleteLink, incrementLinkClick } from '../actions/link.actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +35,7 @@ interface LinkEntry {
     created_at: string;
     user_id: string;
     user: UserProfile | null;
+    clicks: number;
 }
 
 function useDebounce(value: string, delay: number) {
@@ -116,6 +117,19 @@ export default function LinksPage() {
         });
     }
 
+    const handleLinkClick = (link: LinkEntry) => {
+        // Optimistically update the UI
+        setLinks(prevLinks =>
+          prevLinks.map(l =>
+            l.id === link.id ? { ...l, clicks: l.clicks + 1 } : l
+          )
+        );
+        // Call the server action to increment the count in the database
+        incrementLinkClick(link.id);
+        // Open the link in a new tab
+        window.open(link.url, '_blank', 'noopener,noreferrer');
+    };
+
     return (
         <div className="flex h-full w-full flex-col">
             <header className="flex h-16 items-center justify-between border-b border-border/40 bg-background px-4 md:px-6">
@@ -187,27 +201,27 @@ export default function LinksPage() {
                                            <p className="font-semibold truncate">{link.user?.name || 'Anonymous'}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-start gap-4">
                                       <div className="flex-1 overflow-hidden">
                                           <p className="font-semibold truncate">{link.title}</p>
-                                          <a 
-                                              href={link.url}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="text-sm text-primary hover:underline truncate block"
+                                          <button
+                                              onClick={() => handleLinkClick(link)}
+                                              className="text-sm text-primary hover:underline truncate block text-left w-full"
                                           >
                                               {link.url}
-                                          </a>
+                                          </button>
+                                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                                              <Pointer className="h-3 w-3"/>
+                                              <span>{link.clicks}</span>
+                                          </div>
                                       </div>
-                                      <a
-                                        href={link.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                      <button
+                                        onClick={() => handleLinkClick(link)}
                                         className="p-2 text-muted-foreground hover:text-foreground"
                                         aria-label="Open link in new tab"
                                       >
                                         <ExternalLink className="h-5 w-5" />
-                                      </a>
+                                      </button>
                                       {user && user.id === link.user_id && (
                                           <AlertDialog>
                                               <AlertDialogTrigger asChild>

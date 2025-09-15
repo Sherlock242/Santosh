@@ -7,3 +7,4 @@ export * from './actions/notification.actions';
 export * from './actions/feed.actions';
 export * from './actions/order.actions';
 export * from './actions/link.actions';
+export * from './actions/payment.actions';

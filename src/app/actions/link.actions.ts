@@ -110,3 +110,12 @@ export async function deleteLink(linkId: string) {
 
     revalidatePath('/links');
 }
+
+export async function incrementLinkClick(linkId: string) {
+    const supabase = createSupabaseServerClient();
+    const { error } = await supabase.rpc('increment_link_clicks', { link_id: linkId });
+    if (error) {
+        console.error('Error incrementing link click:', error);
+        // We don't throw an error here, as it's not critical for the user experience if the count fails to update
+    }
+}
