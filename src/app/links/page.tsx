@@ -126,7 +126,7 @@ export default function LinksPage() {
         });
     }
 
-    const handleLinkClick = (link: LinkEntry) => {
+    const handleLinkClick = async (link: LinkEntry) => {
         // Optimistically update the UI
         setLinks(prevLinks =>
           prevLinks.map(l =>
@@ -134,13 +134,11 @@ export default function LinksPage() {
           )
         );
         
-        // Call the server action to increment the count
-        incrementLinkClick(link.id);
+        // Call the server action and wait for it to complete
+        await incrementLinkClick(link.id);
         
-        // Open the link after a short delay to allow the server action to complete
-        setTimeout(() => {
-          window.open(link.url, '_blank', 'noopener,noreferrer');
-        }, 150);
+        // Open the link in a new tab
+        window.open(link.url, '_blank', 'noopener,noreferrer');
     };
 
     const handleShare = (link: LinkEntry) => {
