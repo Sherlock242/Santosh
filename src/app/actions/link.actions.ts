@@ -23,10 +23,6 @@ export async function addLink(payload: LinkPayload) {
     }
 
     const linksToInsert = payload.urls.map((url, index) => {
-        if (!url.startsWith('https://')) {
-            throw new Error('All links must start with https://');
-        }
-        
         let title = payload.titlePrefix 
             ? `${payload.titlePrefix} ${index + 1}` 
             : url;
