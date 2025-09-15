@@ -134,11 +134,13 @@ export default function LinksPage() {
           )
         );
         
-        // Call the server action to increment the count in the database
+        // Call the server action to increment the count
         incrementLinkClick(link.id);
         
-        // Open the link
-        window.open(link.url, '_blank', 'noopener,noreferrer');
+        // Open the link after a short delay to allow the server action to complete
+        setTimeout(() => {
+          window.open(link.url, '_blank', 'noopener,noreferrer');
+        }, 150);
     };
 
     const handleShare = (link: LinkEntry) => {
@@ -204,9 +206,8 @@ export default function LinksPage() {
                                 type="button"
                                 className="absolute top-1/2 right-2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
                                 onClick={() => colorInputRef.current?.click()}
-                                style={{ color: color }}
                             >
-                                <Palette className="h-5 w-5" />
+                                <Palette className="h-5 w-5" style={{ color: color }}/>
                                 <span className="sr-only">Choose color</span>
                             </button>
                             <input
@@ -214,7 +215,7 @@ export default function LinksPage() {
                                 type="color"
                                 value={color}
                                 onChange={(e) => setColor(e.target.value)}
-                                className="absolute w-0 h-0 opacity-0"
+                                className="absolute -z-10 w-0 h-0 opacity-0"
                             />
                         </div>
                         <Button type="submit" className="w-full" disabled={isPending}>
