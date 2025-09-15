@@ -199,7 +199,7 @@ export default function LinksPage() {
                             />
                         </div>
                          <div>
-                            <Label htmlFor="urls" className="text-xs text-muted-foreground">Links (one per line)</Label>
+                            <Label htmlFor="urls" className="text-xs text-muted-foreground">Links</Label>
                             <div className="relative">
                                <Textarea 
                                     id="urls"
