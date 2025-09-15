@@ -315,13 +315,13 @@ export function PostView({
 
   // Scroll to initial post on mount
   useEffect(() => {
-    if (containerRef.current && initialIndex > 0) {
+    if (containerRef.current && initialIndex > 0 && !isMoodView) {
       const element = containerRef.current.children[initialIndex] as HTMLElement;
       if(element) {
         element.scrollIntoView({ behavior: 'auto', block: 'start' });
       }
     }
-  }, [initialIndex]);
+  }, [initialIndex, isMoodView]);
 
   useEffect(() => {
     if (!currentEmojiState) {
@@ -703,14 +703,14 @@ export function PostView({
           }
 
           <div 
-              className="flex-1 flex flex-col overflow-y-auto snap-y snap-mandatory no-scrollbar"
+              className="flex-1 flex flex-col overflow-y-auto"
               ref={containerRef}
           >
               {localEmojis.map((emoji) => {
                   if (isCurrentEmojiMood(emoji)) return null;
                   const isOwner = user?.id === emoji.user_id;
                   return (
-                    <div key={emoji.id} className="h-full w-full snap-start flex-shrink-0">
+                    <div key={emoji.id} className="w-full flex-shrink-0">
                       <PostContent 
                           emoji={emoji as PostViewEmoji} 
                           onDelete={isOwner ? handleDeleteClick : undefined}
