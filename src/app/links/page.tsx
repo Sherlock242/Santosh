@@ -181,7 +181,7 @@ export default function LinksPage() {
                                 {title.length}/30
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="relative">
                             <Input 
                                 type="url"
                                 placeholder="https://example.com"
@@ -189,10 +189,10 @@ export default function LinksPage() {
                                 onChange={(e) => setUrl(e.target.value)}
                                 disabled={isPending}
                                 required
-                                className="flex-1"
+                                className="pr-14"
                             />
-                            <div className="relative">
-                                <label htmlFor="color-picker" className="cursor-pointer p-2 rounded-md border" style={{ backgroundColor: color }}>
+                            <div className="absolute top-1/2 right-2 -translate-y-1/2">
+                                <label htmlFor="color-picker" className="cursor-pointer p-1.5 rounded-md border" style={{ backgroundColor: color }}>
                                     <Palette className="h-5 w-5 text-white mix-blend-difference" />
                                 </label>
                                 <Input 
