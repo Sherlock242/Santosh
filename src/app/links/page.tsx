@@ -5,7 +5,7 @@ import React, { useState, useEffect, useTransition, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Share2, Palette, Eye, ChevronLeft, ChevronRight, MessageSquarePlus, Send } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Share2, Palette, Eye, ChevronLeft, ChevronRight, MessageSquarePlus, Send, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addLink, getLinks, deleteLink, createLinkRequest, getLinkRequests, addLinkResponse, deleteLinkRequest, deleteLinkResponse } from '../actions/link.actions';
 import {
@@ -230,7 +230,11 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
                                 </div>
                                 {(user?.id === response.user.id || user?.id === request.user.id) && (
                                      <AlertDialog>
-                                        <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-destructive"><Trash2 className="h-3 w-3" /></Button></AlertDialogTrigger>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive">
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        </AlertDialogTrigger>
                                         <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Response?</AlertDialogTitle></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteResponse(response.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
                                     </AlertDialog>
                                 )}
