@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, UserPlus, Heart, Check } from 'lucide-react';
+import { Loader2, UserPlus, Heart, Check, MessageSquareReply } from 'lucide-react';
 import { getNotifications, markNotificationsAsRead, respondToSupportRequest } from '../actions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GalleryThumbnail } from '@/components/gallery-thumbnail';
@@ -29,9 +30,10 @@ interface Actor {
 
 interface Notification {
   id: number;
-  type: 'new_supporter' | 'new_like' | 'new_support_request' | 'support_request_approved';
+  type: 'new_supporter' | 'new_like' | 'new_support_request' | 'support_request_approved' | 'new_link_response';
   created_at: string;
   emoji_id: string | null;
+  link_request_id: string | null;
   actor: Actor;
   emoji: EmojiState | null;
   actor_support_status: 'approved' | 'pending' | null;
@@ -58,17 +60,19 @@ const NotificationItemWrapper = ({
     emoji,
     icon,
     text,
-    action
+    action,
+    mainAction
 }: { 
     actor: Actor, 
     onPostClick?: () => void, 
     emoji?: EmojiState | null,
     icon: React.ReactNode,
     text: React.ReactNode,
-    action?: React.ReactNode
+    action?: React.ReactNode,
+    mainAction?: () => void
 }) => (
-    <div className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50">
-        <Link href={`/gallery?userId=${actor.id}`} className="relative flex-shrink-0 cursor-pointer">
+    <div onClick={mainAction} className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 cursor-pointer">
+        <Link href={`/gallery?userId=${actor.id}`} onClick={(e) => e.stopPropagation()} className="relative flex-shrink-0 cursor-pointer">
             <Avatar className="h-10 w-10">
                 <AvatarImage src={actor.picture} alt={actor.name} data-ai-hint="profile picture" className="rounded-full" />
                 <AvatarFallback>{actor.name ? actor.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
@@ -79,7 +83,7 @@ const NotificationItemWrapper = ({
             {text}
         </div>
         {emoji ? (
-             <button className="w-12 h-12 flex-shrink-0" onClick={onPostClick}>
+             <button className="w-12 h-12 flex-shrink-0" onClick={(e) => { e.stopPropagation(); onPostClick?.(); }}>
                 <GalleryThumbnail emoji={emoji} onSelect={() => {}} />
             </button>
         ) : action}
@@ -105,7 +109,7 @@ const SupportNotification = React.memo(({ notification }: { notification: Notifi
             }
             text={
                 <p>
-                    <Link href={`/gallery?userId=${actor.id}`} className="font-semibold">{actor.name}</Link>
+                    <Link href={`/gallery?userId=${actor.id}`} onClick={(e) => e.stopPropagation()} className="font-semibold">{actor.name}</Link>
                     {' started supporting you. '}
                     <span className="text-muted-foreground">{timeSince(new Date(created_at))}</span>
                 </p>
@@ -158,17 +162,17 @@ const SupportRequestNotification = React.memo(({ notification, onRespond }: { no
             icon={<></>}
             text={
                 <p>
-                    <Link href={`/gallery?userId=${actor.id}`} className="font-semibold">{actor.name}</Link>
+                    <Link href={`/gallery?userId=${actor.id}`} onClick={(e) => e.stopPropagation()} className="font-semibold">{actor.name}</Link>
                     {' wants to support you. '}
                     <span className="text-muted-foreground">{timeSince(new Date(created_at))}</span>
                 </p>
             }
             action={
                 <div className="flex gap-2">
-                    <Button size="sm" onClick={() => handleResponse('approve')} disabled={!!isLoading}>
+                    <Button size="sm" onClick={(e) => {e.stopPropagation(); handleResponse('approve')}} disabled={!!isLoading}>
                         {isLoading === 'approve' ? <Loader2 className="h-4 w-4 animate-spin"/> : 'Approve'}
                     </Button>
-                    <Button size="sm" variant="secondary" onClick={() => handleResponse('decline')} disabled={!!isLoading}>
+                    <Button size="sm" variant="secondary" onClick={(e) => {e.stopPropagation(); handleResponse('decline')}} disabled={!!isLoading}>
                         {isLoading === 'decline' ? <Loader2 className="h-4 w-4 animate-spin"/> : 'Decline'}
                     </Button>
                 </div>
@@ -280,6 +284,7 @@ export default function NotificationsPage() {
                 <NotificationItemWrapper 
                     key={notification.id} 
                     actor={actor}
+                    mainAction={() => router.push(`/gallery?userId=${actor.id}`)}
                     icon={
                         <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5">
                             <Check className="h-3 w-3 text-white"/>
@@ -303,6 +308,7 @@ export default function NotificationsPage() {
                     key={notification.id} 
                     actor={actor} 
                     emoji={emoji} 
+                    mainAction={() => router.push(`/gallery?userId=${emoji.user_id}`)}
                     onPostClick={() => router.push(`/gallery?userId=${emoji.user_id}`)}
                     icon={
                          <div className="absolute -bottom-1 -right-1 bg-red-500 rounded-full p-0.5">
@@ -311,7 +317,7 @@ export default function NotificationsPage() {
                     }
                     text={
                         <p>
-                            <Link href={`/gallery?userId=${actor.id}`} className="font-semibold">{actor.name}</Link>
+                            <Link href={`/gallery?userId=${actor.id}`} onClick={(e) => e.stopPropagation()} className="font-semibold">{actor.name}</Link>
                             {' reacted to your post.'}
                             <span className="text-muted-foreground ml-2">{timeSince(new Date(created_at))}</span>
                         </p>
@@ -319,6 +325,28 @@ export default function NotificationsPage() {
                 />
             );
         
+        case 'new_link_response':
+            return (
+                <NotificationItemWrapper 
+                    key={notification.id} 
+                    actor={actor}
+                    mainAction={() => router.push('/links')}
+                    icon={
+                        <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-0.5">
+                            <MessageSquareReply className="h-3 w-3 text-white"/>
+                        </div>
+                    }
+                    text={
+                        <p>
+                            <Link href={`/gallery?userId=${actor.id}`} onClick={(e) => e.stopPropagation()} className="font-semibold">{actor.name}</Link>
+                            {' replied to your link request.'}
+                            <span className="text-muted-foreground ml-2">{timeSince(new Date(created_at))}</span>
+                        </p>
+                    }
+                    action={<div className="w-12 h-12" />}
+                />
+            );
+
         default:
             return null;
     }

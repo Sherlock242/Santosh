@@ -3,6 +3,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { createNotification } from './notification.actions';
 
 interface LinkPayload {
     titlePrefix: string;
@@ -199,17 +200,41 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
     if (!urls || urls.length === 0 || urls.length > 5) {
         throw new Error('You can add between 1 and 5 links.');
     }
+    
+    // 1. Get the original request to find the owner
+    const { data: request, error: requestError } = await supabase
+        .from('link_requests')
+        .select('user_id')
+        .eq('id', requestId)
+        .single();
+    
+    if (requestError || !request) {
+        console.error('Error finding link request owner:', requestError);
+        throw new Error('Could not find the original request.');
+    }
 
-    const { error } = await supabase.from('link_request_responses').insert({
+    // 2. Insert the response
+    const { error: responseError } = await supabase.from('link_request_responses').insert({
         request_id: requestId,
         user_id: user.id,
         urls: urls,
     });
 
-    if (error) {
-        console.error('Error adding link response:', error);
-        throw new Error(error.message);
+    if (responseError) {
+        console.error('Error adding link response:', responseError);
+        throw new Error(responseError.message);
     }
+
+    // 3. Create a notification for the original requestor
+    if (user.id !== request.user_id) {
+        await createNotification({
+            recipient_id: request.user_id,
+            actor_id: user.id,
+            type: 'new_link_response',
+            link_request_id: requestId,
+        });
+    }
+
     revalidatePath('/links');
 }
 

@@ -8,8 +8,9 @@ import type { EmojiState } from '@/app/design/page';
 type NotificationPayload = {
     recipient_id: string;
     actor_id: string;
-    type: 'new_supporter' | 'new_like' | 'new_support_request' | 'support_request_approved';
+    type: 'new_supporter' | 'new_like' | 'new_support_request' | 'support_request_approved' | 'new_link_response';
     emoji_id?: string;
+    link_request_id?: string;
 }
 
 interface Actor {
@@ -21,9 +22,10 @@ interface Actor {
 
 interface FullNotification {
     id: number;
-    type: 'new_supporter' | 'new_like' | 'new_support_request' | 'support_request_approved';
+    type: 'new_supporter' | 'new_like' | 'new_support_request' | 'support_request_approved' | 'new_link_response';
     created_at: string;
     emoji_id: string | null;
+    link_request_id: string | null;
     actor: Actor;
     emoji: EmojiState | null;
     actor_support_status: 'approved' | 'pending' | null;
