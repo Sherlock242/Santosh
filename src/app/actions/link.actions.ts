@@ -268,7 +268,7 @@ export async function deleteLinkResponse(responseId: string) {
         .from('link_request_responses')
         .select(`
             user_id,
-            request:link_requests ( user_id )
+            request:link_requests!inner ( user_id )
         `)
         .eq('id', responseId)
         .single();
@@ -279,7 +279,7 @@ export async function deleteLinkResponse(responseId: string) {
     }
     
     const isResponseOwner = responseData.user_id === user.id;
-    const isRequestOwner = responseData.request?.user_id === user.id;
+    const isRequestOwner = responseData.request.user_id === user.id;
 
     if (!isResponseOwner && !isRequestOwner) {
         throw new Error('You do not have permission to delete this response.');
