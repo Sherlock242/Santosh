@@ -48,14 +48,14 @@ interface LinkResponse {
     id: string;
     urls: string[];
     created_at: string;
-    user: UserProfile[] | UserProfile;
+    user: UserProfile[];
 }
 
 interface LinkRequest {
     id: string;
     request_text: string;
     created_at: string;
-    user: UserProfile[] | UserProfile; 
+    user: UserProfile[]; 
     responses: LinkResponse[];
 }
 
@@ -400,7 +400,7 @@ export default function LinksPage() {
                     <TabsContent value="links" className="m-0">
                          {user && (
                             <form onSubmit={handleAddLink} className="space-y-4">
-                                <Input id="title-prefix" placeholder="Title (e.g., Wednesday S01E)" value={titlePrefix} onChange={(e) => setTitlePrefix(e.target.value)} disabled={isPending} maxLength={30} />
+                                <Input id="title-prefix" placeholder="Title (e.g., Wednesday S01E)" value={titlePrefix} onChange={(e) => setTitlePrefix(e.target.value)} disabled={isPending} maxLength={200} />
                                 <div className="relative">
                                 <Textarea id="urls" placeholder="https://example.com/episode-1" value={urls} onChange={(e) => setUrls(e.target.value)} disabled={isPending} required className="pr-10" rows={4} />
                                     <button type="button" className="absolute bottom-2 right-2 p-1 text-muted-foreground hover:text-foreground" onClick={() => colorInputRef.current?.click()}><Palette className="h-5 w-5" style={{ color: color }} /><span className="sr-only">Choose color</span></button>
@@ -413,7 +413,7 @@ export default function LinksPage() {
                     <TabsContent value="requests" className="m-0">
                         {user && (
                             <form onSubmit={handleCreateRequest} className="flex items-center gap-2">
-                                <Input placeholder="Request something... (max 40 chars)" value={requestText} onChange={(e) => setRequestText(e.target.value)} maxLength={40} disabled={isPending} required />
+                                <Input placeholder="Request something..." value={requestText} onChange={(e) => setRequestText(e.target.value)} maxLength={200} disabled={isPending} required />
                                 <Button type="submit" size="icon" disabled={isPending}>{isPending ? <Loader2 className="animate-spin"/> : <Send />}</Button>
                             </form>
                         )}

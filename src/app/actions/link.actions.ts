@@ -28,8 +28,8 @@ export async function addLink(payload: LinkPayload) {
             ? `${payload.titlePrefix} ${index + 1}` 
             : url;
         
-        if (title.length > 50) {
-            title = title.substring(0, 47) + '...';
+        if (title.length > 200) {
+            title = title.substring(0, 197) + '...';
         }
 
         return {
@@ -138,8 +138,8 @@ export async function createLinkRequest(requestText: string) {
     if (!user) {
         throw new Error('You must be logged in to create a request.');
     }
-    if (!requestText || requestText.trim().length === 0 || requestText.length > 40) {
-        throw new Error('Request text must be between 1 and 40 characters.');
+    if (!requestText || requestText.trim().length === 0 || requestText.length > 200) {
+        throw new Error('Request text must be between 1 and 200 characters.');
     }
 
     const { error } = await supabase.from('link_requests').insert({
