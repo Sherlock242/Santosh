@@ -278,8 +278,12 @@ export async function deleteLinkResponse(responseId: string) {
         throw new Error('Could not find the response to delete.');
     }
     
+    // The 'request' property might be null if the join fails, or an object if it succeeds.
+    // TypeScript might infer it as an array if not specified as a one-to-one join, hence the check.
+    const requestObject = Array.isArray(responseData.request) ? responseData.request[0] : responseData.request;
+
     const isResponseOwner = responseData.user_id === user.id;
-    const isRequestOwner = responseData.request.user_id === user.id;
+    const isRequestOwner = requestObject && requestObject.user_id === user.id;
 
     if (!isResponseOwner && !isRequestOwner) {
         throw new Error('You do not have permission to delete this response.');
