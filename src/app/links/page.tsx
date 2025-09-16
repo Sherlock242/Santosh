@@ -228,7 +228,7 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
                                     <Link href={`/gallery?userId=${response.user.id}`}><Avatar className="h-6 w-6"><AvatarImage src={response.user.picture} alt={response.user.name} /><AvatarFallback>{response.user.name?.charAt(0).toUpperCase()}</AvatarFallback></Avatar></Link>
                                     <p className="text-xs font-semibold">{response.user.name}</p>
                                 </div>
-                                {user?.id === response.user.id && (
+                                {(user?.id === response.user.id || user?.id === request.user.id) && (
                                      <AlertDialog>
                                         <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 text-destructive"><Trash2 className="h-3 w-3" /></Button></AlertDialogTrigger>
                                         <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Response?</AlertDialogTitle></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteResponse(response.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
@@ -359,12 +359,11 @@ export default function LinksPage() {
         });
     }
 
-    const handleLinkClick = (url: string) => {
-        // For link clicks, we only need the url, not the whole entry
+    const handleLinkClick = (linkId: string, url: string) => {
          fetch('/api/links/increment', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ url: url }), // This needs adjustment if tracking by URL
+          body: JSON.stringify({ linkId }),
           keepalive: true,
       }).catch(err => console.error("Failed to increment link click:", err));
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -410,13 +409,13 @@ export default function LinksPage() {
                 <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3">
                     <TabsContent value="links" className="m-0 space-y-3">
                         {isLinksLoading && links.length === 0 ? <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin" /></div> : links.length > 0 ? (
-                            links.map(link => <LinkPost key={link.id} link={link} user={user} handleDeleteLink={handleDeleteLink} handleLinkClick={(l) => handleLinkClick(l.url)} />)
+                            links.map(link => <LinkPost key={link.id} link={link} user={user} handleDeleteLink={handleDeleteLink} handleLinkClick={(l) => handleLinkClick(l.id, l.url)} />)
                         ) : <div className="text-center py-10 text-muted-foreground"><LinkIcon className="mx-auto h-12 w-12" /><p className="mt-4 font-semibold">No links found</p>{searchQuery ? <p className="text-sm">Try a different search term.</p> : <p className="text-sm">Be the first to add a link!</p>}</div>}
                         {!isLinksLoading && hasMoreLinks && <Button variant="outline" className="w-full" onClick={() => fetchLinks(debouncedSearchQuery, linksPage + 1)}>Load More</Button>}
                     </TabsContent>
                     <TabsContent value="requests" className="m-0 space-y-3">
                         {isRequestsLoading && requests.length === 0 ? <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin" /></div> : requests.length > 0 ? (
-                            requests.map(request => <RequestPost key={request.id} request={request} user={user} refreshRequests={() => fetchRequests(debouncedSearchQuery, 1)} handleLinkClick={(url) => handleLinkClick(url)} />)
+                            requests.map(request => <RequestPost key={request.id} request={request} user={user} refreshRequests={() => fetchRequests(debouncedSearchQuery, 1)} handleLinkClick={(url) => { /* Clicks in responses don't have an ID, so we can't track them yet */ window.open(url, '_blank', 'noopener,noreferrer'); }} />)
                         ) : <div className="text-center py-10 text-muted-foreground"><MessageSquarePlus className="mx-auto h-12 w-12" /><p className="mt-4 font-semibold">No requests found</p>{searchQuery ? <p className="text-sm">Try a different search term.</p> : <p className="text-sm">Be the first to request a link!</p>}</div>}
                         {!isRequestsLoading && hasMoreRequests && <Button variant="outline" className="w-full" onClick={() => fetchRequests(debouncedSearchQuery, requestsPage + 1)}>Load More</Button>}
                     </TabsContent>

@@ -259,13 +259,42 @@ export async function deleteLinkResponse(responseId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated.');
 
-    const { error } = await supabase.from('link_request_responses').delete()
+    // This action must use an admin client to bypass RLS,
+    // because we need to check ownership of the parent request.
+    const supabaseAdmin = createSupabaseServerClient(true);
+    
+    // 1. Fetch the response and its parent request's author
+    const { data: responseData, error: fetchError } = await supabaseAdmin
+        .from('link_request_responses')
+        .select(`
+            user_id,
+            request:link_requests ( user_id )
+        `)
         .eq('id', responseId)
-        .eq('user_id', user.id);
-
-    if (error) {
-        console.error('Error deleting link response:', error);
-        throw new Error(error.message);
+        .single();
+        
+    if (fetchError || !responseData) {
+        console.error('Error fetching response to delete:', fetchError);
+        throw new Error('Could not find the response to delete.');
     }
+    
+    const isResponseOwner = responseData.user_id === user.id;
+    const isRequestOwner = responseData.request?.user_id === user.id;
+
+    if (!isResponseOwner && !isRequestOwner) {
+        throw new Error('You do not have permission to delete this response.');
+    }
+
+    // 2. Perform the deletion with admin client
+    const { error: deleteError } = await supabaseAdmin
+        .from('link_request_responses')
+        .delete()
+        .eq('id', responseId);
+
+    if (deleteError) {
+        console.error('Error deleting link response:', deleteError);
+        throw new Error(deleteError.message);
+    }
+
     revalidatePath('/links');
 }
