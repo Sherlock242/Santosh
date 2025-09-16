@@ -137,7 +137,7 @@ export async function createLinkRequest(requestText: string) {
     if (!user) {
         throw new Error('You must be logged in to create a request.');
     }
-    if (!requestText || requestText.length > 40) {
+    if (!requestText || requestText.trim().length === 0 || requestText.length > 40) {
         throw new Error('Request text must be between 1 and 40 characters.');
     }
 
@@ -148,7 +148,7 @@ export async function createLinkRequest(requestText: string) {
 
     if (error) {
         console.error('Error creating link request:', error);
-        throw new Error(error.message);
+        throw new Error(error.message || 'An unknown error occurred while creating the request.');
     }
     revalidatePath('/links');
 }
