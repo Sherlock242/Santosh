@@ -48,14 +48,14 @@ interface LinkResponse {
     id: string;
     urls: string[];
     created_at: string;
-    user: UserProfile;
+    user: UserProfile[] | UserProfile;
 }
 
 interface LinkRequest {
     id: string;
     request_text: string;
     created_at: string;
-    user: UserProfile[] | UserProfile; // Can be object or array from Supabase
+    user: UserProfile[] | UserProfile; 
     responses: LinkResponse[];
 }
 
@@ -227,31 +227,36 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
             
             {request.responses.length > 0 && (
                 <div className="space-y-3 pt-2 border-t border-border/50">
-                    {request.responses.map(response => (
-                        <div key={response.id} className="pl-4 border-l-2 border-primary/20 space-y-2">
-                             <div className="flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-2">
-                                    <Link href={`/gallery?userId=${response.user.id}`}><Avatar className="h-6 w-6"><AvatarImage src={response.user.picture} alt={response.user.name} /><AvatarFallback>{response.user.name?.charAt(0).toUpperCase()}</AvatarFallback></Avatar></Link>
-                                    <p className="text-xs font-semibold">{response.user.name}</p>
+                    {request.responses.map(response => {
+                        const responseUser = Array.isArray(response.user) ? response.user[0] : response.user;
+                        if (!responseUser) return null;
+
+                        return (
+                            <div key={response.id} className="pl-4 border-l-2 border-primary/20 space-y-2">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2">
+                                        <Link href={`/gallery?userId=${responseUser.id}`}><Avatar className="h-6 w-6"><AvatarImage src={responseUser.picture} alt={responseUser.name} /><AvatarFallback>{responseUser.name?.charAt(0).toUpperCase()}</AvatarFallback></Avatar></Link>
+                                        <p className="text-xs font-semibold">{responseUser.name}</p>
+                                    </div>
+                                    {(user?.id === responseUser.id || user?.id === requestUser.id) && (
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive">
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Response?</AlertDialogTitle></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteResponse(response.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+                                        </AlertDialog>
+                                    )}
                                 </div>
-                                {(user?.id === response.user.id || user?.id === requestUser.id) && (
-                                     <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive">
-                                                <X className="h-4 w-4" />
-                                            </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Response?</AlertDialogTitle></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteResponse(response.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
-                                    </AlertDialog>
-                                )}
+                                <div className="space-y-1">
+                                    {response.urls.map((url, i) => (
+                                        <button key={i} onClick={() => handleLinkClick(url)} className="text-sm text-primary block truncate hover:underline text-left">{url}</button>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="space-y-1">
-                                {response.urls.map((url, i) => (
-                                    <button key={i} onClick={() => handleLinkClick(url)} className="text-sm text-primary block truncate hover:underline text-left">{url}</button>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>
