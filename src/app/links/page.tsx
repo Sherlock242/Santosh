@@ -55,7 +55,7 @@ interface LinkRequest {
     id: string;
     request_text: string;
     created_at: string;
-    user: UserProfile;
+    user: UserProfile[] | UserProfile; // Can be object or array from Supabase
     responses: LinkResponse[];
 }
 
@@ -165,6 +165,8 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
 
+    const requestUser = Array.isArray(request.user) ? request.user[0] : request.user;
+
     const handleDeleteRequest = async () => {
         startTransition(async () => {
             try {
@@ -189,19 +191,23 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
         });
     }
 
+    if (!requestUser) {
+        return null; // Don't render if user is missing
+    }
+
     return (
         <div className="rounded-lg border bg-card p-3 space-y-3">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <Link href={`/gallery?userId=${request.user.id}`}>
-                        <Avatar className="h-8 w-8"><AvatarImage src={request.user.picture} alt={request.user.name} /><AvatarFallback>{request.user.name?.charAt(0).toUpperCase()}</AvatarFallback></Avatar>
+                    <Link href={`/gallery?userId=${requestUser.id}`}>
+                        <Avatar className="h-8 w-8"><AvatarImage src={requestUser.picture} alt={requestUser.name} /><AvatarFallback>{requestUser.name?.charAt(0).toUpperCase()}</AvatarFallback></Avatar>
                     </Link>
                     <div>
-                        <p className="text-sm font-semibold">{request.user.name}</p>
+                        <p className="text-sm font-semibold">{requestUser.name}</p>
                         <p className="text-sm">{request.request_text}</p>
                     </div>
                 </div>
-                {user?.id === request.user.id ? (
+                {user?.id === requestUser.id ? (
                      <AlertDialog>
                         <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
                         <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Request?</AlertDialogTitle><AlertDialogDescription>This will delete your request and all its responses.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDeleteRequest} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
@@ -228,7 +234,7 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
                                     <Link href={`/gallery?userId=${response.user.id}`}><Avatar className="h-6 w-6"><AvatarImage src={response.user.picture} alt={response.user.name} /><AvatarFallback>{response.user.name?.charAt(0).toUpperCase()}</AvatarFallback></Avatar></Link>
                                     <p className="text-xs font-semibold">{response.user.name}</p>
                                 </div>
-                                {(user?.id === response.user.id || user?.id === request.user.id) && (
+                                {(user?.id === response.user.id || user?.id === requestUser.id) && (
                                      <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive">
@@ -318,6 +324,7 @@ export default function LinksPage() {
             setRequestsPage(1);
             fetchRequests(debouncedSearchQuery, 1);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debouncedSearchQuery, activeTab]);
 
     const handleAddLink = (e: React.FormEvent) => {
