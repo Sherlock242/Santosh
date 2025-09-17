@@ -259,10 +259,18 @@ function GalleryPageContent() {
     
     const handleDelete = async (emojiId: string) => {
         try {
+            // First, call the server action to delete the post from the database.
             await deletePost(emojiId);
-            toast({ title: 'Post deleted', variant: 'success' });
+            
+            // After successful deletion, close the post view.
             setSelectedEmojiId(null);
+            
+            // Then, show a success message.
+            toast({ title: 'Post deleted', variant: 'success' });
+            
+            // Finally, refetch the posts to update the gallery grid.
             await fetchPosts();
+
         } catch (error: any) {
             console.error("Failed to delete post", error);
             toast({ title: 'Error deleting post', description: error.message, variant: 'destructive' })
