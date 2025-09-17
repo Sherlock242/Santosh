@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -194,7 +195,6 @@ export const PostCard = ({ post, onSelect, onDelete }: PostCardProps) => {
                     backgroundColor: post.background_color,
                     filter: activeFilterCss,
                 }}
-                onClick={onSelect}
                 onDoubleClick={() => likeButtonRef.current?.triggerLike()}
             >
                 {renderEmojiFace(post)}
