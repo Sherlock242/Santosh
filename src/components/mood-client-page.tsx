@@ -291,16 +291,16 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div className="h-full w-full flex flex-col no-scrollbar">
-            <div className="overflow-y-auto no-scrollbar">
-                <MoodHeader />
+        <div className="h-full w-full flex flex-col">
+            <MoodHeader />
+            <div className="flex-1 overflow-y-auto no-scrollbar overscroll-behavior-y-contain" ref={scrollContainerRef}>
                 <MoodStories 
                     user={user}
                     moods={moods}
                     isLoading={isLoading}
                     onSelectMood={(index) => handleSelectMood(moods[index])}
                 />
-                <div ref={scrollContainerRef}>
+                <div>
                     {renderContent()}
                     {!isLoading && hasMore && (
                         <div ref={loaderRef} className="flex justify-center p-4">
