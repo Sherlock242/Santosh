@@ -260,14 +260,12 @@ function GalleryPageContent() {
     const handleDelete = async (emojiId: string) => {
         try {
             await deletePost(emojiId);
-
-            const updatedEmojis = savedEmojis.filter(emoji => emoji.id !== emojiId);
-            setSavedEmojis(updatedEmojis);
-            updatePostCache(updatedEmojis);
-            setPostCount(updatedEmojis.length); // Update count after deletion
-
-            setSelectedEmojiId(null);
-            toast({ title: 'Post deleted', variant: 'success' })
+            toast({ title: 'Post deleted', variant: 'success' });
+            setSelectedEmojiId(null); // Close the PostView
+            // The server action revalidates the path, so Next.js will refetch the data.
+            // We just need to trigger a state update or navigation to see the change.
+            // For now, we manually refetch to ensure the UI updates without a full reload.
+            await fetchPosts();
         } catch (error: any) {
             console.error("Failed to delete post", error);
             toast({ title: 'Error deleting post', description: error.message, variant: 'destructive' })
