@@ -125,7 +125,6 @@ const MoodContent = memo(({ emoji }: { emoji: Mood }) => {
     const renderEmojiFace = (emoji: EmojiState) => {
         const props = {
           ...emoji,
-          animation_type: emoji.animation_type,
           color: emoji.emoji_color,
           isDragging: false,
           isInteractive: false,
@@ -167,11 +166,13 @@ MoodContent.displayName = 'MoodContent';
 const PostContent = memo(({ 
     emoji, 
     onClose,
-    onSetMood
+    onSetMood,
+    onDelete,
 }: { 
     emoji: PostViewEmoji,
     onClose: () => void,
     onSetMood: (id: string) => void,
+    onDelete: (id: string) => void,
 }) => {
     const { user } = useAuth();
     const { toast } = useToast();
@@ -198,6 +199,7 @@ const PostContent = memo(({
                 description: 'Your post has been permanently removed.',
                 variant: 'success',
             });
+            onDelete(id);
             onClose();
         } catch (error: any) {
              toast({
@@ -218,7 +220,6 @@ const PostContent = memo(({
     const renderEmojiFace = (emoji: EmojiState) => {
         const props = {
           ...emoji,
-          animation_type: emoji.animation_type,
           color: emoji.emoji_color,
           isDragging: false,
           isInteractive: false,
@@ -688,6 +689,7 @@ export function PostView({
                         emoji={currentEmojiState as PostViewEmoji}
                         onClose={() => onClose()}
                         onSetMood={handleSetMoodClick}
+                        onDelete={onDelete || (() => {})}
                     />
                 </motion.div>
             </AnimatePresence>

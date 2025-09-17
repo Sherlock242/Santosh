@@ -29,6 +29,7 @@ interface PostCardProps {
     post: PostViewEmoji;
     onSelect: () => void;
     onDelete: (id: string) => void;
+    onMoodChange?: () => void;
 }
 
 interface PostViewEmoji extends EmojiState {
@@ -56,7 +57,7 @@ const filters = [
     { name: 'Warm', css: 'sepia(0.3) saturate(1.2) brightness(1.1)' },
 ];
 
-export const PostCard = ({ post, onSelect, onDelete }: PostCardProps) => {
+export const PostCard = ({ post, onSelect, onDelete, onMoodChange }: PostCardProps) => {
     const { user } = useAuth();
     const { toast } = useToast();
     const [localLikeCount, setLocalLikeCount] = useState(post.like_count);
@@ -103,6 +104,7 @@ export const PostCard = ({ post, onSelect, onDelete }: PostCardProps) => {
                 description: "Your new mood has been set.",
                 variant: "success",
             });
+            onMoodChange?.();
         } catch (error: any) {
             toast({
                 title: "Error setting mood",
@@ -190,7 +192,7 @@ export const PostCard = ({ post, onSelect, onDelete }: PostCardProps) => {
             </div>
             
             <div 
-                className="aspect-square flex items-center justify-center min-h-0 relative cursor-pointer"
+                className="aspect-square flex items-center justify-center min-h-0 relative"
                 style={{ 
                     backgroundColor: post.background_color,
                     filter: activeFilterCss,

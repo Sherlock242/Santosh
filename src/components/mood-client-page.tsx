@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -197,6 +198,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                 initialIndex={selectedPostIndex}
                 onClose={() => setSelectedPostId(null)}
                 onDelete={handleDeletePost}
+                onMoodChange={handleRefresh}
             />
         )
     }
@@ -229,7 +231,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             return (
                 <div>
                     {feedPosts.map((post) => (
-                        <PostCard key={post.id} post={post} onSelect={() => setSelectedPostId(post.id)} onDelete={handleDeletePost} />
+                        <PostCard key={post.id} post={post} onSelect={() => setSelectedPostId(post.id)} onDelete={handleDeletePost} onMoodChange={handleRefresh} />
                     ))}
                 </div>
             );
