@@ -1,11 +1,11 @@
 
 'use client';
 
-import React, { useState, useEffect, useTransition, useRef } from 'react';
+import React, { useState, useEffect, useTransition, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Share2, Palette, Eye, ChevronLeft, ChevronRight, MessageSquarePlus, Send, X } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Share2, Palette, Eye, ChevronLeft, ChevronRight, MessageSquarePlus, Send, X, ChevronsUpDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addLink, getLinks, deleteLink, createLinkRequest, getLinkRequests, addLinkResponse, deleteLinkRequest, deleteLinkResponse } from '../actions/link.actions';
 import {
@@ -25,6 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 // --- Types ---
 interface UserProfile {
@@ -42,6 +43,14 @@ interface LinkEntry {
     user: UserProfile | null;
     color: string;
     clicks: number;
+}
+
+interface LinkPack {
+    id: string; // Use the title as a unique ID for the pack
+    title: string;
+    links: LinkEntry[];
+    user: UserProfile | null;
+    created_at: string;
 }
 
 interface LinkResponse {
@@ -119,6 +128,71 @@ const LinkPost = ({ link, user, handleDeleteLink, handleLinkClick }: { link: Lin
         </button>
     </div>
 );
+
+const LinkPackPost = ({ pack, user, handleDeleteLink, handleLinkClick }: { pack: LinkPack, user: any, handleDeleteLink: (id: string) => void, handleLinkClick: (link: LinkEntry) => void }) => {
+    return (
+        <Collapsible defaultOpen={true} className="rounded-lg border bg-card p-3 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+                 <div className="flex items-center gap-3 overflow-hidden">
+                    {pack.user && (
+                        <Link href={`/gallery?userId=${pack.user.id}`}>
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage src={pack.user.picture} alt={pack.user.name} />
+                                <AvatarFallback>{pack.user.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                        </Link>
+                    )}
+                    <p className="text-sm font-semibold truncate">{pack.user?.name || 'Anonymous'}</p>
+                </div>
+                <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                        <ChevronsUpDown className="h-4 w-4" />
+                        <span className="sr-only">Toggle pack</span>
+                    </Button>
+                </CollapsibleTrigger>
+            </div>
+             <h3 className="font-semibold text-lg">{pack.title}</h3>
+
+            <CollapsibleContent className="space-y-2">
+                {pack.links.map(link => (
+                     <div key={link.id} className="rounded-md border bg-background/50 p-2 space-y-1">
+                        <div className="flex items-center justify-between">
+                            <button onClick={() => handleLinkClick(link)} className="overflow-hidden text-left w-full group flex-1">
+                                <p className="text-sm font-medium truncate">{link.title}</p>
+                                <p className="text-xs truncate" style={{ color: link.color }}>{link.url}</p>
+                            </button>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Eye className="h-3 w-3" />
+                                    <span>{link.clicks || 0}</span>
+                                </div>
+                                {user && user.id === link.user_id && (
+                                     <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>This will permanently delete the link titled &quot;{link.title}&quot;.</AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDeleteLink(link.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </CollapsibleContent>
+        </Collapsible>
+    )
+}
 
 const ResponseForm = ({ requestId, onResponseAdded }: { requestId: string, onResponseAdded: () => void }) => {
     const { toast } = useToast();
@@ -375,15 +449,46 @@ export default function LinksPage() {
         });
     }
 
-    const handleLinkClick = (linkId: string, url: string) => {
+    const handleLinkClick = (link: LinkEntry) => {
          fetch('/api/links/increment', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ linkId }),
+          body: JSON.stringify({ linkId: link.id }),
           keepalive: true,
       }).catch(err => console.error("Failed to increment link click:", err));
-      window.open(url, '_blank', 'noopener,noreferrer');
+      window.open(link.url, '_blank', 'noopener,noreferrer');
     };
+
+    // Group links into packs
+    const linkPacks = useMemo(() => {
+        const packs = new Map<string, LinkPack>();
+        const singleLinks: LinkEntry[] = [];
+        const packRegex = /^(.*)\s+\d+$/;
+
+        links.forEach(link => {
+            const match = link.title.match(packRegex);
+            if (match) {
+                const packTitle = match[1];
+                if (packs.has(packTitle)) {
+                    packs.get(packTitle)!.links.push(link);
+                } else {
+                    packs.set(packTitle, {
+                        id: packTitle,
+                        title: packTitle,
+                        links: [link],
+                        user: link.user,
+                        created_at: link.created_at,
+                    });
+                }
+            } else {
+                singleLinks.push(link);
+            }
+        });
+        
+        return [...Array.from(packs.values()), ...singleLinks].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    }, [links]);
+
 
     return (
         <div className="flex h-full w-full flex-col">
@@ -400,9 +505,9 @@ export default function LinksPage() {
                     <TabsContent value="links" className="m-0">
                          {user && (
                             <form onSubmit={handleAddLink} className="space-y-4">
-                                <Input id="title-prefix" placeholder="Title" value={titlePrefix} onChange={(e) => setTitlePrefix(e.target.value)} disabled={isPending} maxLength={200} />
+                                <Input id="title-prefix" placeholder="Title or Series Name" value={titlePrefix} onChange={(e) => setTitlePrefix(e.target.value)} disabled={isPending} maxLength={200} />
                                 <div className="relative">
-                                <Textarea id="urls" placeholder="https://example.com/episode-1" value={urls} onChange={(e) => setUrls(e.target.value)} disabled={isPending} required className="pr-10" rows={4} />
+                                <Textarea id="urls" placeholder="https://example.com/episode-1&#10;https://example.com/episode-2" value={urls} onChange={(e) => setUrls(e.target.value)} disabled={isPending} required className="pr-10" rows={4} />
                                     <button type="button" className="absolute bottom-2 right-2 p-1 text-muted-foreground hover:text-foreground" onClick={() => colorInputRef.current?.click()}><Palette className="h-5 w-5" style={{ color: color }} /><span className="sr-only">Choose color</span></button>
                                     <input ref={colorInputRef} type="color" value={color} onChange={(e) => setColor(e.target.value)} className="absolute -z-10 w-0 h-0 opacity-0" />
                                 </div>
@@ -424,8 +529,11 @@ export default function LinksPage() {
 
                 <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3">
                     <TabsContent value="links" className="m-0 space-y-3">
-                        {isLinksLoading && links.length === 0 ? <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin" /></div> : links.length > 0 ? (
-                            links.map(link => <LinkPost key={link.id} link={link} user={user} handleDeleteLink={handleDeleteLink} handleLinkClick={(l) => handleLinkClick(l.id, l.url)} />)
+                        {isLinksLoading && links.length === 0 ? <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin" /></div> : linkPacks.length > 0 ? (
+                            linkPacks.map(item => 'links' in item 
+                                ? <LinkPackPost key={item.id} pack={item} user={user} handleDeleteLink={handleDeleteLink} handleLinkClick={handleLinkClick} />
+                                : <LinkPost key={item.id} link={item as LinkEntry} user={user} handleDeleteLink={handleDeleteLink} handleLinkClick={handleLinkClick} />
+                            )
                         ) : <div className="text-center py-10 text-muted-foreground"><LinkIcon className="mx-auto h-12 w-12" /><p className="mt-4 font-semibold">No links found</p>{searchQuery ? <p className="text-sm">Try a different search term.</p> : <p className="text-sm">Be the first to add a link!</p>}</div>}
                         {!isLinksLoading && hasMoreLinks && <Button variant="outline" className="w-full" onClick={() => fetchLinks(debouncedSearchQuery, linksPage + 1)}>Load More</Button>}
                     </TabsContent>

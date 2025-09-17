@@ -24,9 +24,11 @@ export async function addLink(payload: LinkPayload) {
     }
 
     const linksToInsert = payload.urls.map((url, index) => {
-        let title = payload.titlePrefix 
+        // If there's only one URL and a prefix is given, use the prefix as the full title.
+        // Otherwise, append an index for multiple URLs.
+        let title = payload.urls.length > 1 
             ? `${payload.titlePrefix} ${index + 1}` 
-            : url;
+            : payload.titlePrefix || url;
         
         if (title.length > 200) {
             title = title.substring(0, 197) + '...';
