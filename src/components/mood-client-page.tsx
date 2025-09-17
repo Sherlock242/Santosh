@@ -106,7 +106,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                     fetchPosts(page);
                 }
             },
-            { root: scrollContainerRef.current, rootMargin: '200px' }
+            { root: null, rootMargin: '400px' } // Observe from the main window
         );
 
         const currentLoader = loaderRef.current;
@@ -236,32 +236,30 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div className="h-full w-full flex flex-col" >
+        <div className="h-full w-full overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
             <MoodHeader />
-            <div className="flex-1 overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
-                <MoodStories 
-                    user={user}
-                    moods={moods}
-                    onSelectMood={(index) => {
-                        const allMoodsFromUser = moods.filter(m => m.mood_user_id === moods[index].mood_user_id);
-                        const selectedMoodInUserGroup = allMoodsFromUser.findIndex(m => m.mood_id === moods[index].mood_id);
-                        
-                        const reorderedMoods = [
-                            ...allMoodsFromUser.slice(selectedMoodInUserGroup),
-                            ...allMoodsFromUser.slice(0, selectedMoodInUserGroup)
-                        ];
+            <MoodStories 
+                user={user}
+                moods={moods}
+                onSelectMood={(index) => {
+                    const allMoodsFromUser = moods.filter(m => m.mood_user_id === moods[index].mood_user_id);
+                    const selectedMoodInUserGroup = allMoodsFromUser.findIndex(m => m.mood_id === moods[index].mood_id);
+                    
+                    const reorderedMoods = [
+                        ...allMoodsFromUser.slice(selectedMoodInUserGroup),
+                        ...allMoodsFromUser.slice(0, selectedMoodInUserGroup)
+                    ];
 
-                        setViewingStoryFromFeed(reorderedMoods);
-                    }}
-                />
-                <div>
-                    {renderContent()}
-                    {!isLoading && hasMore && (
-                        <div ref={loaderRef} className="flex justify-center p-4">
-                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                        </div>
-                    )}
-                </div>
+                    setViewingStoryFromFeed(reorderedMoods);
+                }}
+            />
+            <div>
+                {renderContent()}
+                {!isLoading && hasMore && (
+                    <div ref={loaderRef} className="flex justify-center p-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                )}
             </div>
         </div>
     );
