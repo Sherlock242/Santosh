@@ -21,9 +21,10 @@ interface MoodStoriesProps {
     user: UserProfile | null;
     moods: Mood[];
     onSelectMood: (index: number) => void;
+    isLoading: boolean;
 }
 
-const MoodStories = memo(({ user, moods, onSelectMood }: MoodStoriesProps) => {
+const MoodStories = memo(({ user, moods, onSelectMood, isLoading }: MoodStoriesProps) => {
     
     const ownMood = moods.find(m => m.mood_user_id === user?.id);
     const userHasMood = !!ownMood;
@@ -31,8 +32,6 @@ const MoodStories = memo(({ user, moods, onSelectMood }: MoodStoriesProps) => {
     
     // Create a combined list for rendering, with user's own mood first.
     const displayMoods = ownMood ? [ownMood, ...otherMoods] : otherMoods;
-    const isLoading = moods.length === 0 && !user;
-
 
     return (
         <div className="border-b border-border/40">

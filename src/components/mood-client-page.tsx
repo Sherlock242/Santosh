@@ -53,26 +53,6 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     const loaderRef = useRef(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     
-    const fetchMoods = useCallback(async () => {
-        if (!user) return;
-        try {
-            const moodsData = await getFeedMoods();
-            if (!moodsData) return;
-            const formattedMoods = moodsData.map(m => ({
-                ...m,
-                like_count: 0,
-                is_liked: false,
-                mood_user: {
-                    ...m.mood_user,
-                    has_mood: true 
-                }
-            })) as Mood[];
-            setMoods(formattedMoods);
-        } catch (error) {
-            console.error("Failed to fetch moods", error);
-        }
-    }, [user]);
-
     const fetchPosts = useCallback(async (pageNum: number) => {
         if (isFetchingMore || !hasMore) return;
         setIsFetchingMore(true);
@@ -165,8 +145,8 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }, [user]);
     
     const handleRefresh = useCallback(async () => {
-        window.location.reload();
-    }, []);
+        await loadInitialData(true);
+    }, [loadInitialData]);
 
     const handleDeletePost = (postId: string) => {
         setFeedPosts(prev => prev.filter(p => p.id !== postId));
@@ -222,7 +202,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     const renderContent = () => {
         if (isLoading && feedPosts.length === 0) {
             return (
-                <div className="flex h-full w-full flex-col items-center justify-center p-10">
+                <div className="flex h-full w-full flex-col items-center justify-center p-10 mt-20">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             );
@@ -250,11 +230,12 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div className="h-full w-full overflow-y-auto no-scrollbar pb-14" ref={scrollContainerRef}>
+        <div className="h-full w-full overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
             <MoodHeader />
             <MoodStories 
                 user={user}
                 moods={moods}
+                isLoading={isLoading}
                 onSelectMood={(index) => {
                     const allMoodsFromUser = moods.filter(m => m.mood_user_id === moods[index].mood_user_id);
                     const selectedMoodInUserGroup = allMoodsFromUser.findIndex(m => m.mood_id === moods[index].mood_id);
