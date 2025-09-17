@@ -56,15 +56,16 @@ export default async function GalleryPage({ searchParams }: { searchParams: { us
     // Fetch posts only if the user has permission to view them
     const initialPosts = canViewContent ? await getGalleryPosts({ userId }) : [];
 
-    const [supporterCount, supportingCount] = await Promise.all([
+    const [supporterCount, supportingCount, posts] = await Promise.all([
         getSupporterCount(userId),
-        getSupportingCount(userId)
+        getSupportingCount(userId),
+        getGalleryPosts({ userId })
     ]);
     
     return (
         <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
             <GalleryClientPage
-                initialPosts={initialPosts}
+                initialPosts={posts}
                 initialProfileUser={profileUser}
                 initialSupporterCount={supporterCount}
                 initialSupportingCount={supportingCount}
