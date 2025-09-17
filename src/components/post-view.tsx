@@ -323,7 +323,7 @@ export function PostView({
   const { toast } = useToast();
   
   const loaderRef = useRef<HTMLDivElement | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   
   const progressWidth = useMotionValue('0%');
   const animationControlsRef = useRef<ReturnType<typeof animate> | null>(null);
@@ -364,7 +364,7 @@ export function PostView({
   const goToPrev = () => {
     if (currentIndex > 0) {
       setDirection(-1);
-      setCurrentIndex((prev) => prev - 1);
+      setCurrentIndex((prev) => prev + 1);
     }
   };
 
