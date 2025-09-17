@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { getGalleryPosts, getSupportStatus, getSupporterCount, getSupportingCount, deleteUserAccount, deletePost } from '@/app/actions';
+import { getGalleryPosts, getSupportStatus, getSupporterCount, getSupportingCount, deleteUserAccount } from '@/app/actions';
 import { supabase } from '@/lib/supabaseClient';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSupport } from '@/hooks/use-support';
@@ -257,21 +257,6 @@ function GalleryPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [viewingUserId, authLoading]);
     
-    const handleDelete = async (emojiId: string) => {
-        try {
-            await deletePost(emojiId);
-            toast({ title: 'Post deleted', variant: 'success' });
-        } catch (error: any) {
-            console.error("Failed to delete post", error);
-            toast({ title: 'Error deleting post', description: error.message, variant: 'destructive' });
-        } finally {
-            // Refetch posts from the server to ensure UI is in sync.
-            await fetchPosts();
-            // Close the post view after deletion is complete.
-            setSelectedEmojiId(null);
-        }
-    };
-    
     const handleSignOut = async () => {
         setShowSignOutConfirm(false);
         if (!supabase) return;
@@ -426,7 +411,6 @@ function GalleryPageContent() {
                         emojis={postsForView}
                         initialIndex={selectedEmojiIndex}
                         onClose={() => setSelectedEmojiId(null)}
-                        onDelete={isOwnProfile ? handleDelete : undefined}
                     />
             ) : (
                 <>

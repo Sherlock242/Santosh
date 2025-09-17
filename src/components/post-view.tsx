@@ -188,7 +188,6 @@ const PostContent = memo(({
                 {emoji.created_at && (
                     <TimeRemaining createdAt={emoji.created_at} className="text-xs text-muted-foreground ml-2" />
                 )}
-                {onDelete && (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="ml-auto h-8 w-8">
@@ -206,14 +205,8 @@ const PostContent = memo(({
                                 <span>Edit</span>
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => onDelete(emoji.id)}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Delete</span>
-                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                )}
             </div>
 
             <div 
@@ -291,7 +284,6 @@ export function PostView({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [localEmojis, setLocalEmojis] = useState(emojis);
   const [direction, setDirection] = useState(0);
-  const [emojiToDelete, setEmojiToDelete] = React.useState<string | null>(null);
   const [emojiToSetMood, setEmojiToSetMood] = useState<string | null>(null);
   const [viewers, setViewers] = useState<Viewer[]>([]);
   const [isViewersSheetOpen, setIsViewersSheetOpen] = useState(false);
@@ -418,19 +410,7 @@ export function PostView({
     };
   }, [fetchMore, hasMore, isMoodView]);
 
-
-  const handleDeleteClick = (id: string) => {
-    if (!onDelete) return;
-    setEmojiToDelete(id);
-  };
   
-  const confirmDelete = () => {
-    if (emojiToDelete && onDelete) {
-      onDelete(emojiToDelete);
-      setEmojiToDelete(null);
-    }
-  };
-
   const handleShowViewers = async () => {
       if (!currentEmojiState || !isCurrentEmojiMood(currentEmojiState)) return;
       setIsFetchingViewers(true);
@@ -713,7 +693,7 @@ export function PostView({
                     <div key={emoji.id} className="w-full flex-shrink-0">
                       <PostContent 
                           emoji={emoji as PostViewEmoji} 
-                          onDelete={isOwner ? handleDeleteClick : undefined}
+                          onDelete={isOwner ? onDelete : undefined}
                           onSetMood={handleSetMoodClick}
                       />
                     </div>
@@ -742,20 +722,7 @@ export function PostView({
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
-      <AlertDialog open={!!emojiToDelete} onOpenChange={(isOpen) => !isOpen && setEmojiToDelete(null)}>
-          <AlertDialogContent>
-              <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                      Do you want to delete this post? This action cannot be undone.
-                  </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setEmojiToDelete(null)}>No</AlertDialogCancel>
-                  <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, delete it</AlertDialogAction>
-              </AlertDialogFooter>
-          </AlertDialogContent>
-      </AlertDialog>
+
       {likerListEmojiId && (
           <Suspense fallback={null}>
               <LikerListSheet
