@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
-import { getFeedPosts, getFeedMoods } from '../actions';
+import { getFeedPosts, getFeedMoods, deletePost } from '../actions';
 import MoodStories from '@/components/mood-stories';
 import type { Mood, PostViewEmoji } from '@/components/post-view';
 import { updatePostCache } from '@/lib/post-cache';
@@ -211,6 +211,26 @@ export default function MoodPage() {
         setSelectedMood(null);
         setViewingStoryFromFeed(null);
     }
+
+    const handleDelete = async (emojiId: string) => {
+        try {
+            await deletePost(emojiId);
+            toast({
+                title: 'Post Deleted',
+                description: 'The post has been removed from your feed.',
+                variant: 'success',
+            });
+            const newPosts = feedPosts.filter(p => p.id !== emojiId);
+            setFeedPosts(newPosts);
+            moodPageCache.feedPosts = newPosts;
+        } catch (error: any) {
+            toast({
+                title: 'Error Deleting Post',
+                description: error.message,
+                variant: 'destructive',
+            });
+        }
+    };
     
     if (selectedMood) {
         const userMoods = moods.filter(m => m.mood_user_id === selectedMood.mood_user_id);
@@ -265,11 +285,7 @@ export default function MoodPage() {
                 onClose={() => {}}
                 showNav={false}
                 onMoodChange={handleRefresh}
-                onDelete={(deletedId) => {
-                    const newPosts = feedPosts.filter(p => p.id !== deletedId);
-                    setFeedPosts(newPosts);
-                    moodPageCache.feedPosts = newPosts;
-                }}
+                onDelete={handleDelete}
                 fetchMore={fetchPosts}
                 hasMore={hasMore}
             />

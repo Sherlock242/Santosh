@@ -11,7 +11,7 @@ import { GalleryThumbnail } from '@/components/gallery-thumbnail';
 import type { EmojiState } from '@/app/design/page';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { getExplorePosts, searchUsers as searchUsersAction } from '../actions';
+import { getExplorePosts, searchUsers as searchUsersAction, deletePost } from '../actions';
 import Image from 'next/image';
 import { updatePostCache } from '@/lib/post-cache';
 import { GoldTick } from '@/components/gold-tick';
@@ -204,15 +204,27 @@ export default function ExplorePage() {
 
 
   const handleDelete = async (emojiId: string) => {
-    // This function is passed to PostView, but explore page posts can't be deleted from here.
-    // The check below will prevent deletion.
-    const emojiToDelete = allEmojis.find(e => e.id === emojiId);
-    if (!emojiToDelete || emojiToDelete.user_id !== authUser?.id) {
-        toast({ title: "Cannot delete", description: "You can only delete your own posts from your gallery.", variant: "destructive" });
-        return;
-    }
-    // Deletion logic won't be executed, but kept for structure consistency if needed later.
-    setSelectedEmojiId(null);
+      const emojiToDelete = allEmojis.find(e => e.id === emojiId);
+      if (!emojiToDelete || emojiToDelete.user_id !== authUser?.id) {
+          toast({ title: "Cannot delete", description: "You can only delete your own posts.", variant: "destructive" });
+          return;
+      }
+      
+      try {
+          await deletePost(emojiId);
+          toast({ title: 'Post Deleted', variant: 'success' });
+          
+          setAllEmojis(prev => {
+              const updatedPosts = prev.filter(p => p.id !== emojiId);
+              exploreCache.posts = updatedPosts;
+              return updatedPosts;
+          });
+
+          setSelectedEmojiId(null);
+          
+      } catch (error: any) {
+          toast({ title: 'Error Deleting Post', description: error.message, variant: 'destructive' });
+      }
   };
   
   const showSearchResults = searchQuery.length > 0;
