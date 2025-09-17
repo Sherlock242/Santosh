@@ -2,16 +2,17 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MoodHeader } from '@/components/mood-header';
-import { Loader2 } from 'lucide-react';
+import { Loader2, UserPlus } from 'lucide-react';
 import type { EmojiState } from '@/app/design/page';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
 import { getFeedPosts, getFeedMoods } from '../app/actions';
 import MoodStories from '@/components/mood-stories';
-import type { Mood, PostViewEmoji } from '@/components/post-view';
+import type { Mood } from '@/components/post-view';
 import { updatePostCache } from '@/lib/post-cache';
 import { PostCard } from './post-card';
+import Link from 'next/link';
 
 const PostView = dynamic(
   () => import('@/components/post-view').then(mod => mod.PostView),
@@ -106,7 +107,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                     fetchPosts(page);
                 }
             },
-            { root: null, rootMargin: '400px' } // Observe from the main window
+            { root: null, rootMargin: '400px' }
         );
 
         const currentLoader = loaderRef.current;
@@ -165,6 +166,10 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         setHasMore(true);
         await loadInitialData(true);
     }, [loadInitialData]);
+
+    const handleDeletePost = (postId: string) => {
+        setFeedPosts(prev => prev.filter(p => p.id !== postId));
+    };
     
     const handleOnCloseMood = (updatedMoods?: Mood[]) => {
         if (updatedMoods) {
@@ -191,6 +196,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                 emojis={postsForView}
                 initialIndex={selectedPostIndex}
                 onClose={() => setSelectedPostId(null)}
+                onDelete={handleDeletePost}
             />
         )
     }
@@ -221,16 +227,22 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         }
         if (feedPosts.length > 0) {
             return (
-                <div className="divide-y divide-border">
+                <div>
                     {feedPosts.map((post) => (
-                        <PostCard key={post.id} post={post} onSelect={() => setSelectedPostId(post.id)} />
+                        <PostCard key={post.id} post={post} onSelect={() => setSelectedPostId(post.id)} onDelete={handleDeletePost} />
                     ))}
                 </div>
             );
         }
         
         return (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4 text-muted-foreground">
+             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4 text-muted-foreground mt-20">
+                <UserPlus className="h-16 w-16 text-muted-foreground/50" />
+                <h2 className="text-xl font-bold text-foreground">Welcome to Edengram</h2>
+                <p>Your feed is empty. Find users to support on the explore page.</p>
+                <Link href="/explore">
+                    <button className="bg-primary text-primary-foreground px-4 py-2 rounded-md">Explore</button>
+                </Link>
             </div>
         );
     }

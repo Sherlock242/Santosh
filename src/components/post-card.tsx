@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { setMood, deletePost } from '@/app/actions';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from './ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import { Edit, Smile, Trash2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { GoldTick } from './gold-tick';
@@ -27,6 +27,7 @@ const LikerListSheet = dynamic(() => import('@/components/liker-list-sheet'), { 
 interface PostCardProps {
     post: PostViewEmoji;
     onSelect: () => void;
+    onDelete: (id: string) => void;
 }
 
 interface PostViewEmoji extends EmojiState {
@@ -54,7 +55,7 @@ const filters = [
     { name: 'Warm', css: 'sepia(0.3) saturate(1.2) brightness(1.1)' },
 ];
 
-export const PostCard = ({ post, onSelect }: PostCardProps) => {
+export const PostCard = ({ post, onSelect, onDelete }: PostCardProps) => {
     const { user } = useAuth();
     const { toast } = useToast();
     const [localLikeCount, setLocalLikeCount] = useState(post.like_count);
@@ -62,6 +63,7 @@ export const PostCard = ({ post, onSelect }: PostCardProps) => {
     const [showHeartIcon, setShowHeartIcon] = useState(false);
     const [likersEmojiId, setLikersEmojiId] = useState<string | null>(null);
     const [emojiToSetMood, setEmojiToSetMood] = useState<string | null>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const likeButtonRef = useRef<{ triggerLike: () => void }>(null);
 
@@ -111,6 +113,17 @@ export const PostCard = ({ post, onSelect }: PostCardProps) => {
         }
     };
 
+    const handleDeletePost = async () => {
+        setShowDeleteConfirm(false);
+        try {
+            await deletePost(post.id);
+            toast({ title: 'Post Deleted', variant: 'success' });
+            onDelete(post.id);
+        } catch (error: any) {
+             toast({ title: 'Error deleting post', description: error.message, variant: 'destructive' });
+        }
+    }
+
     const renderEmojiFace = (emoji: EmojiState) => {
         const props = {
           ...emoji,
@@ -132,7 +145,7 @@ export const PostCard = ({ post, onSelect }: PostCardProps) => {
     };
     
     return (
-        <div className="w-full flex-shrink-0 flex flex-col">
+        <div className="w-full flex-shrink-0 flex flex-col py-2">
             <div className="flex items-center px-4 py-2">
                 <Avatar className="h-8 w-8">
                     {post.user?.picture && <AvatarImage src={post.user.picture} alt={post.user.name || 'User'} data-ai-hint="profile picture" className="rounded-full" />}
@@ -156,6 +169,21 @@ export const PostCard = ({ post, onSelect }: PostCardProps) => {
                             <Smile className="mr-2 h-4 w-4" />
                             <span>Set as Mood</span>
                         </DropdownMenuItem>
+                         {user?.id === post.user_id && (
+                            <>
+                                <DropdownMenuItem asChild>
+                                    <Link href={`/design?emojiId=${post.id}`} className="w-full">
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        <span>Edit</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>Delete</span>
+                                </DropdownMenuItem>
+                            </>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
@@ -185,7 +213,7 @@ export const PostCard = ({ post, onSelect }: PostCardProps) => {
                 </AnimatePresence>
             </div>
 
-            <div className="px-4 pt-3 pb-4">
+            <div className="px-4 pt-3 pb-2">
                 <div className="flex items-center gap-4">
                      <LikeButton 
                         ref={likeButtonRef}
@@ -228,6 +256,18 @@ export const PostCard = ({ post, onSelect }: PostCardProps) => {
                         <AlertDialogAction onClick={confirmSetMood}>
                             Yes, Set Mood
                         </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Post?</AlertDialogTitle>
+                        <AlertDialogDescription>This action cannot be undone. This will permanently delete your post.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeletePost} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
