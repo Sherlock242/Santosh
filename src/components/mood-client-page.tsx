@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { MoodHeader } from '@/components/mood-header';
 import { Loader2, UserPlus } from 'lucide-react';
 import type { EmojiState } from '@/app/design/page';
@@ -36,6 +37,7 @@ interface MoodClientPageProps {
 
 export default function MoodClientPage({ initialMoods, initialPosts }: MoodClientPageProps) {
     const { user } = useAuth();
+    const router = useRouter();
     const { toast } = useToast();
     const [moods, setMoods] = useState<Mood[]>(initialMoods);
     const [feedPosts, setFeedPosts] = useState<FeedPostType[]>(initialPosts);
@@ -163,10 +165,8 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }, [user]);
     
     const handleRefresh = useCallback(async () => {
-        setPage(1);
-        setHasMore(true);
-        await loadInitialData(true);
-    }, [loadInitialData]);
+        router.refresh();
+    }, [router]);
 
     const handleDeletePost = (postId: string) => {
         setFeedPosts(prev => prev.filter(p => p.id !== postId));
