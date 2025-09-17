@@ -49,7 +49,7 @@ const MoodStories = memo(({ user, moods, isLoading, onSelectMood }: MoodStoriesP
                     </Link>
                 )}
 
-                {isLoading && moods.length === 0 ? (
+                {isLoading ? (
                     Array.from({length: 5}).map((_, i) => (
                         <div key={i} className="flex flex-col items-center gap-2">
                             <div className="h-16 w-16 rounded-full bg-muted animate-pulse"></div>

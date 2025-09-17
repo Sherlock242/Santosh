@@ -254,7 +254,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
   
     const renderContent = () => {
-        if (isLoading && feedPosts.length === 0) {
+        if (isLoading) {
             return (
                 <div className="flex h-full w-full flex-col items-center justify-center p-10">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -291,8 +291,8 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div className="h-full w-full flex flex-col">
-            <div className="flex-shrink-0">
+        <div className="h-full w-full flex flex-col no-scrollbar">
+            <div className="overflow-y-auto no-scrollbar">
                 <MoodHeader />
                 <MoodStories 
                     user={user}
@@ -300,15 +300,14 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                     isLoading={isLoading}
                     onSelectMood={(index) => handleSelectMood(moods[index])}
                 />
-            </div>
-        
-            <div className="flex-1 relative overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
-                {renderContent()}
-                {hasMore && (
-                    <div ref={loaderRef} className="flex justify-center p-4">
-                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    </div>
-                )}
+                <div ref={scrollContainerRef}>
+                    {renderContent()}
+                    {!isLoading && hasMore && (
+                        <div ref={loaderRef} className="flex justify-center p-4">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
