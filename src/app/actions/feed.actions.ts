@@ -3,6 +3,9 @@
 
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import type { EmojiState } from '@/app/design/page';
+import { unstable_cache as cache } from 'next/cache';
+import { supabase as supabaseAdmin } from '@/lib/supabaseClient'; // A client that doesn't use cookies
+
 
 // --- Feed & Gallery & Explore Actions ---
 
@@ -150,97 +153,153 @@ export async function getFeedPosts({ page = 1, limit = 5 }: { page: number, limi
     }));
 }
 
+// Caches public post data (post + user + like count) for 60 seconds
+const getCachedGalleryPosts = (userId: string) => cache(
+    async () => {
+        const { data: posts, error: postsError } = await supabaseAdmin
+            .from('emojis')
+            .select('*, user:users!inner(id, name, picture, is_gold_member)')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+        
+        if (postsError) {
+            console.error('Error fetching gallery posts for cache:', postsError);
+            throw postsError;
+        }
+        if (!posts) return [];
 
-export async function getGalleryPosts({ userId }: { userId: string }) {
-    const supabase = createSupabaseServerClient();
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
+        const emojiIds = posts.map(p => p.id);
+        if (emojiIds.length === 0) return posts.map(p => ({ ...p, like_count: 0 }));
+        
+        const { data: likeCounts, error: likesError } = await supabaseAdmin
+            .rpc('get_like_counts_for_emojis', { p_emoji_ids: emojiIds });
+        
+        if (likesError) {
+            console.error('Error fetching like counts for cache:', likesError);
+            // Return posts without counts if this fails
+            return posts.map(p => ({ ...p, like_count: 0 }));
+        }
 
-    const { data: posts, error: postsError } = await supabase
-        .from('emojis')
-        .select('*, user:users!inner(id, name, picture, is_gold_member)')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-    
-    if (postsError) {
-        console.error('Error fetching gallery posts:', postsError);
-        throw postsError;
-    }
-    if (!posts) return [];
+        const likeCountsMap = new Map(likeCounts.map((l: any) => [l.emoji_id, l.like_count]));
 
-    const emojiIds = posts.map(p => p.id);
-    if (emojiIds.length === 0) {
         return posts.map(post => ({
             ...(post as unknown as EmojiState),
             user: post.user as any,
-            like_count: 0,
-            is_liked: false,
+            like_count: likeCountsMap.get(post.id) || 0,
         }));
+    },
+    [`gallery-posts-${userId}`],
+    { revalidate: 60, tags: [`gallery:${userId}`] }
+);
+
+
+export async function getGalleryPosts({ userId }: { userId: string }) {
+    // 1. Fetch cached public data (posts, user info, like counts)
+    const publicPosts = await getCachedGalleryPosts(userId)();
+    if (!publicPosts || publicPosts.length === 0) return [];
+    
+    // 2. Fetch dynamic, user-specific data (is_liked status)
+    const supabase = createSupabaseServerClient();
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+    if (!currentUser) {
+        return publicPosts.map(post => ({ ...post, is_liked: false }));
     }
 
-    // Fetch like counts and liked status in parallel
-    const [likeCountsResult, likedStatusesResult] = await Promise.all([
-        supabase.rpc('get_like_counts_for_emojis', { p_emoji_ids: emojiIds }),
-        currentUser ? supabase.from('likes').select('emoji_id').eq('user_id', currentUser.id).in('emoji_id', emojiIds) : Promise.resolve({ data: [], error: null })
-    ]);
+    const emojiIds = publicPosts.map(p => p.id);
+    const { data: likedStatuses, error: likedError } = await supabase
+        .from('likes')
+        .select('emoji_id')
+        .eq('user_id', currentUser.id)
+        .in('emoji_id', emojiIds);
+
+    if (likedError) {
+        console.error('Error fetching liked statuses for gallery:', likedError);
+        // Return with is_liked as false if this fails
+        return publicPosts.map(post => ({ ...post, is_liked: false }));
+    }
     
-    if (likeCountsResult.error) console.error("Error getting like counts:", likeCountsResult.error);
-    if (likedStatusesResult.error) console.error("Error getting liked status:", likedStatusesResult.error);
+    const likedSet = new Set(likedStatuses.map(l => l.emoji_id));
 
-    const likeCountsMap = new Map(likeCountsResult.data?.map((l: any) => [l.emoji_id, l.like_count]) || []);
-    const likedSet = new Set(likedStatusesResult.data?.map(l => l.emoji_id) || []);
-
-    return posts.map(post => ({
-        ...(post as unknown as EmojiState),
-        user: post.user as any,
-        like_count: likeCountsMap.get(post.id) || 0,
+    // 3. Combine cached public data with dynamic user data
+    return publicPosts.map(post => ({
+        ...post,
         is_liked: likedSet.has(post.id)
     }));
 }
 
 
+// Caches public post data (post + user + like count) for 60 seconds
+const getCachedExplorePosts = (page: number, limit: number) => cache(
+    async () => {
+        const { data: posts, error: postsError } = await supabaseAdmin
+            .from('emojis')
+            .select('*, user:users!inner(id, name, picture, is_private, is_gold_member, moods(user_id))')
+            .eq('user.is_private', false)
+            .order('created_at', { ascending: false })
+            .range((page - 1) * limit, page * limit - 1);
+        
+        if (postsError) {
+            console.error('Error fetching explore posts for cache:', postsError);
+            throw postsError;
+        }
+        if (!posts) return [];
+
+        const emojiIds = posts.map(p => p.id);
+        if (emojiIds.length === 0) return [];
+
+        const { data: likeCounts, error: likesError } = await supabaseAdmin
+            .rpc('get_like_counts_for_emojis', { p_emoji_ids: emojiIds });
+
+        if (likesError) {
+            console.error('Error fetching like counts for cache:', likesError);
+            return posts.map(p => ({ ...p, like_count: 0, user: { ...p.user, has_mood: p.user?.moods?.length > 0 } }));
+        }
+
+        const likeCountsMap = new Map(likeCounts.map((l: any) => [l.emoji_id, l.like_count]));
+
+        return posts.map(post => ({
+            ...(post as unknown as EmojiState),
+            like_count: likeCountsMap.get(post.id) || 0,
+            user: { ...post.user, has_mood: post.user?.moods?.length > 0 } as any,
+        }));
+    },
+    [`explore-posts-${page}-${limit}`],
+    { revalidate: 60, tags: ['explore'] }
+);
+
 export async function getExplorePosts({ page = 1, limit = 12 }: { page: number, limit: number }) {
+    // 1. Fetch cached public data
+    const publicPosts = await getCachedExplorePosts(page, limit)();
+    if (!publicPosts || publicPosts.length === 0) return [];
+
+    // 2. Fetch dynamic user data
     const supabase = createSupabaseServerClient();
     const { data: { user: currentUser } } = await supabase.auth.getUser();
 
-    // Directly query public posts and join user data
-    const { data: posts, error: postsError } = await supabase
-        .from('emojis')
-        .select('*, user:users!inner(id, name, picture, is_private, is_gold_member, moods(user_id))')
-        .eq('user.is_private', false)
-        .order('created_at', { ascending: false })
-        .range((page - 1) * limit, page * limit - 1);
-
-    if (postsError) {
-        console.error('Error fetching explore posts:', postsError);
-        throw postsError;
+    if (!currentUser) {
+        return publicPosts.map(post => ({ ...post, is_liked: false }));
     }
-    if (!posts) return [];
+    
+    const emojiIds = publicPosts.map(p => p.id);
+    const { data: likedStatuses, error: likedError } = await supabase
+        .from('likes')
+        .select('emoji_id')
+        .eq('user_id', currentUser.id)
+        .in('emoji_id', emojiIds);
 
-    const emojiIds = posts.map(p => p.id);
-    if (emojiIds.length === 0) {
-        return [];
+    if (likedError) {
+        console.error('Error fetching liked statuses for explore:', likedError);
+        return publicPosts.map(post => ({ ...post, is_liked: false }));
     }
 
-    // Get like counts and liked statuses in parallel
-    const [likeCountsResult, likedStatusesResult] = await Promise.all([
-        supabase.rpc('get_like_counts_for_emojis', { p_emoji_ids: emojiIds }),
-        currentUser ? supabase.from('likes').select('emoji_id').eq('user_id', currentUser.id).in('emoji_id', emojiIds) : Promise.resolve({ data: [], error: null })
-    ]);
+    const likedSet = new Set(likedStatuses.map(l => l.emoji_id));
 
-    if (likeCountsResult.error) console.error("Error getting like counts:", likeCountsResult.error);
-    if (likedStatusesResult.error) console.error("Error getting liked status:", likedStatusesResult.error);
-
-    const likeCountsMap = new Map(likeCountsResult.data?.map((l: any) => [l.emoji_id, l.like_count]) || []);
-    const likedSet = new Set(likedStatusesResult.data?.map(l => l.emoji_id) || []);
-
-    // Combine all the data
-    return posts.map(post => ({
-        ...(post as unknown as EmojiState),
-        like_count: likeCountsMap.get(post.id) || 0,
+    // 3. Combine
+    return publicPosts.map(post => ({
+        ...post,
         is_liked: likedSet.has(post.id),
-        user: {
-            ...post.user,
-            has_mood: post.user && post.user.moods ? post.user.moods.length > 0 : false
-        } as any,
     }));
 }
+
+    
