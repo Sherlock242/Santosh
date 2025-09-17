@@ -117,6 +117,53 @@ const filters = [
     { name: 'Warm', style: { background: 'linear-gradient(to right, #f7b733, #fc4a1a)' }, css: 'sepia(0.3) saturate(1.2) brightness(1.1)' },
   ];
 
+const MoodContent = memo(({ emoji }: { emoji: Mood }) => {
+    const featureOffsetX = useMotionValue(emoji.feature_offset_x || 0);
+    const featureOffsetY = useMotionValue(emoji.feature_offset_y || 0);
+    const activeFilterCss = filters.find(f => f.name === emoji.selected_filter)?.css || 'none';
+
+    const renderEmojiFace = (emoji: EmojiState) => {
+        const props = {
+          ...emoji,
+          animation_type: emoji.animation_type,
+          color: emoji.emoji_color,
+          isDragging: false,
+          isInteractive: false,
+          feature_offset_x: featureOffsetX,
+          feature_offset_y: featureOffsetY,
+          setColor: () => {},
+        };
+        switch(emoji.model) {
+            case 'creator': return <CreatorMoji {...props} />;
+            case 'loki': return <ClockFace {...props} />;
+            case 'rimuru': return <RimuruFace {...props} />;
+            case 'emoji':
+            default: return <Face {...props} />;
+        }
+    };
+    
+    return (
+        <div className="w-full h-full flex flex-col bg-black">
+             <div 
+                className="flex-1 flex items-center justify-center min-h-0 relative"
+                style={{ 
+                    backgroundColor: emoji.background_color,
+                    filter: activeFilterCss,
+                }}
+            >
+                {renderEmojiFace(emoji)}
+            </div>
+            {emoji.caption && (
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/50 text-white text-center p-2 rounded-lg z-20">
+                    <p>{emoji.caption}</p>
+                </div>
+            )}
+        </div>
+    );
+});
+MoodContent.displayName = 'MoodContent';
+
+
 const PostContent = memo(({ 
     emoji, 
     onClose,
@@ -389,17 +436,14 @@ export function PostView({
         duration: 10,
         ease: 'linear',
         onComplete: () => {
-            const currentMood = localEmojis[currentIndex];
-            const nextMood = localEmojis[currentIndex + 1];
-
-            if (isCurrentEmojiMood(currentMood) && nextMood && isCurrentEmojiMood(nextMood) && nextMood.mood_user_id === currentMood.mood_user_id) {
+            if (currentIndex < localEmojis.length - 1) {
                 goToNext();
-            } else if (isCurrentEmojiMood(currentMood) && !nextMood) {
+            } else {
                 onClose(localEmojis);
             }
         }
     });
-  }, [progressWidth, currentIndex, localEmojis, goToNext, onClose]);
+  }, [progressWidth, currentIndex, localEmojis.length, goToNext, onClose]);
 
 
   useEffect(() => {
@@ -558,11 +602,8 @@ export function PostView({
                 <div className="flex-1" onClick={goToNext}></div>
             </div>
             
-            <PostContent
-                emoji={currentEmojiState as PostViewEmoji}
-                onClose={onClose}
-                onSetMood={handleSetMoodClick}
-            />
+             <MoodContent emoji={currentEmojiState as Mood} />
+
 
              <Sheet open={isViewersSheetOpen} onOpenChange={setIsViewersSheetOpen}>
               <SheetContent side="bottom" className="max-h-[80%] flex flex-col">
@@ -645,7 +686,7 @@ export function PostView({
                 >
                     <PostContent
                         emoji={currentEmojiState as PostViewEmoji}
-                        onClose={onClose}
+                        onClose={() => onClose()}
                         onSetMood={handleSetMoodClick}
                     />
                 </motion.div>
