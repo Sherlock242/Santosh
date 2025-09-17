@@ -45,7 +45,6 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
 
     const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
     const [viewingStoryFromFeed, setViewingStoryFromFeed] = useState<Mood[] | null>(null);
-    const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
     const loaderRef = useRef(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -189,7 +188,6 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             });
             const newPosts = feedPosts.filter(p => p.id !== emojiId);
             setFeedPosts(newPosts);
-            setSelectedPostId(null);
         } catch (error: any) {
             toast({
                 title: 'Error Deleting Post',
@@ -198,22 +196,6 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             });
         }
     };
-
-    const selectedPostIndex = selectedPostId ? feedPosts.findIndex(p => p.id === selectedPostId) : -1;
-    
-    if (selectedPostId && selectedPostIndex > -1) {
-         return (
-             <PostView 
-                emojis={feedPosts}
-                initialIndex={selectedPostIndex}
-                onClose={() => setSelectedPostId(null)}
-                onMoodChange={handleRefresh}
-                onDelete={handleDelete}
-                fetchMore={() => fetchPosts(page)}
-                hasMore={hasMore}
-            />
-         )
-    }
     
     if (selectedMood) {
         const userMoods = moods.filter(m => m.mood_user_id === selectedMood.mood_user_id);
@@ -275,9 +257,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                             }
                         };
                         return (
-                            <div key={post.id} onClick={() => setSelectedPostId(post.id)} className="cursor-pointer">
-                                <PostView emojis={[postWithUser]} showNav={false} onClose={()=>{}} onDelete={handleDelete} />
-                            </div>
+                            <PostView key={post.id} emojis={[postWithUser]} showNav={false} onClose={()=>{}} onDelete={handleDelete} />
                         )
                     })}
                 </div>
@@ -297,7 +277,17 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                 <MoodStories 
                     user={user}
                     moods={moods}
-                    onSelectMood={(index) => handleSelectMood(moods.findIndex(m => m.mood_id === displayMoods[index].mood_id))}
+                    onSelectMood={(index) => {
+                        const allMoodsFromUser = moods.filter(m => m.mood_user_id === moods[index].mood_user_id);
+                        const selectedMoodInUserGroup = allMoodsFromUser.findIndex(m => m.mood_id === moods[index].mood_id);
+                        
+                        const reorderedMoods = [
+                            ...allMoodsFromUser.slice(selectedMoodInUserGroup),
+                            ...allMoodsFromUser.slice(0, selectedMoodInUserGroup)
+                        ];
+
+                        setViewingStoryFromFeed(reorderedMoods);
+                    }}
                 />
                 <div>
                     {renderContent()}
