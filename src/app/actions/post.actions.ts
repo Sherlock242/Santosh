@@ -31,7 +31,8 @@ export async function deletePost(emojiId: string) {
     }
 
     // Now delete the post using the user's client to respect RLS
-    const { error: deleteError } = await supabase
+    // but the check above ensures they have permission. The admin client will handle the delete.
+    const { error: deleteError } = await supabaseAdmin
         .from('emojis')
         .delete()
         .eq('id', emojiId);
