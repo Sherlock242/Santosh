@@ -78,33 +78,24 @@ export async function getSupporters({ userId, page = 1, limit = 15 }: { userId: 
     const userIds = supportersData.map(s => s.supporter_id);
     if (userIds.length === 0) return [];
 
-    // 2. Fetch the profile details for those user IDs
-    const { data: users, error: usersError } = await supabase
-        .from('users')
-        .select('id, name, picture, is_private, is_gold_member')
-        .in('id', userIds);
+    // 2. Fetch profile details and support statuses in parallel
+    const [usersResult, supportStatusResult] = await Promise.all([
+        supabase.from('users').select('id, name, picture, is_private, is_gold_member').in('id', userIds),
+        currentUser ? supabase.from('supports').select('supported_id, status').eq('supporter_id', currentUser.id).in('supported_id', userIds) : Promise.resolve({ data: [], error: null })
+    ]);
     
-    if (usersError) {
-        console.error('Error fetching supporter profiles:', usersError);
+    if (usersResult.error) {
+        console.error('Error fetching supporter profiles:', usersResult.error);
         return [];
     }
         
-    // 3. Get the current user's support status towards these supporters
     let supportStatusMap = new Map<string, 'approved' | 'pending'>();
-    if (currentUser) {
-        const { data: supportStatusData, error: supportStatusError } = await supabase
-            .from('supports')
-            .select('supported_id, status')
-            .eq('supporter_id', currentUser.id)
-            .in('supported_id', userIds);
-
-        if (!supportStatusError && supportStatusData) {
-            supportStatusMap = new Map(supportStatusData.map(s => [s.supported_id, s.status as 'approved' | 'pending']));
-        }
+    if (supportStatusResult.data) {
+        supportStatusMap = new Map(supportStatusResult.data.map(s => [s.supported_id, s.status as 'approved' | 'pending']));
     }
 
-    // 4. Combine the data
-    return users.map(user => ({
+    // 3. Combine the data
+    return usersResult.data.map(user => ({
         ...user,
         support_status: supportStatusMap.get(user.id) || null,
         has_mood: false, // This data is not essential for this view and complicates the query.
@@ -133,33 +124,24 @@ export async function getSupporting({ userId, page = 1, limit = 15 }: { userId: 
     const userIds = supportingData.map(s => s.supported_id);
     if (userIds.length === 0) return [];
 
-    // 2. Fetch the profile details for those user IDs
-    const { data: users, error: usersError } = await supabase
-        .from('users')
-        .select('id, name, picture, is_private, is_gold_member')
-        .in('id', userIds);
+    // 2. Fetch the profile details for those user IDs and their support statuses in parallel
+    const [usersResult, supportStatusResult] = await Promise.all([
+        supabase.from('users').select('id, name, picture, is_private, is_gold_member').in('id', userIds),
+        currentUser ? supabase.from('supports').select('supported_id, status').eq('supporter_id', currentUser.id).in('supported_id', userIds) : Promise.resolve({ data: [], error: null })
+    ]);
 
-    if (usersError) {
-        console.error('Error fetching supporting profiles:', usersError);
+    if (usersResult.error) {
+        console.error('Error fetching supporting profiles:', usersResult.error);
         return [];
     }
     
-    // 3. Get the current user's support status towards these users
     let supportStatusMap = new Map<string, 'approved' | 'pending'>();
-     if (currentUser) {
-        const { data: supportStatusData, error: supportStatusError } = await supabase
-            .from('supports')
-            .select('supported_id, status')
-            .eq('supporter_id', currentUser.id)
-            .in('supported_id', userIds);
-        
-        if (!supportStatusError && supportStatusData) {
-            supportStatusMap = new Map(supportStatusData.map(s => [s.supported_id, s.status as 'approved' | 'pending']));
-        }
+    if (supportStatusResult.data) {
+        supportStatusMap = new Map(supportStatusResult.data.map(s => [s.supported_id, s.status as 'approved' | 'pending']));
     }
     
-    // 4. Combine the data
-    return users.map(user => ({
+    // 3. Combine the data
+    return usersResult.data.map(user => ({
         ...user,
         support_status: supportStatusMap.get(user.id) || null,
         has_mood: false // This data is not essential for this view and complicates the query.
