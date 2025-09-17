@@ -97,7 +97,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         } finally {
             setIsFetchingMore(false);
         }
-    }, [isFetchingMore, toast, hasMore, page]);
+    }, [isFetchingMore, toast, hasMore]);
     
     // Infinite Scroll
     useEffect(() => {
@@ -291,17 +291,18 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div className="h-full w-full overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
-            <MoodHeader />
-            
-            <MoodStories 
-                user={user}
-                moods={moods}
-                isLoading={isLoading}
-                onSelectMood={(index) => handleSelectMood(moods[index])}
-            />
+        <div className="h-full w-full flex flex-col">
+            <div className="flex-shrink-0">
+                <MoodHeader />
+                <MoodStories 
+                    user={user}
+                    moods={moods}
+                    isLoading={isLoading}
+                    onSelectMood={(index) => handleSelectMood(moods[index])}
+                />
+            </div>
         
-            <div className="relative">
+            <div className="flex-1 relative overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
                 {renderContent()}
                 {hasMore && (
                     <div ref={loaderRef} className="flex justify-center p-4">
