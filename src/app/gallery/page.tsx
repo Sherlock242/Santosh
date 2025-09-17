@@ -258,21 +258,21 @@ function GalleryPageContent() {
     }, [viewingUserId, authLoading]);
 
     const handleDelete = async (emojiId: string) => {
+        // Close the post view first
+        setSelectedEmojiId(null);
+
         try {
             // Call the server action to delete the post
             await deletePost(emojiId);
-            
-            // Refetch posts to update the UI
-            await fetchPosts();
-            
-            // Close the PostView *after* the fetch is complete
-            setSelectedEmojiId(null);
 
             toast({
                 title: 'Post Deleted',
                 description: 'Your post has been permanently removed.',
                 variant: 'success',
             });
+            
+            // Refetch posts to update the UI after deletion is confirmed
+            await fetchPosts();
             
         } catch (error: any) {
             console.error('Failed to delete post:', error);
@@ -281,6 +281,8 @@ function GalleryPageContent() {
                 description: error.message || 'Could not delete the post. Please try again.',
                 variant: 'destructive',
             });
+            // Refetch even on error to sync state, as the post might still be there
+            await fetchPosts();
         }
     };
     
