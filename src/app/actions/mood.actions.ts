@@ -103,33 +103,26 @@ export async function getMoodViewers(moodId: number): Promise<UserWithSupportSta
     const viewerIds = viewers.map(v => v.viewer_id);
     if (viewerIds.length === 0) return [];
 
-    // Step 2: Fetch all user profiles for those IDs in a separate, direct query.
-    const { data: users, error: usersError } = await supabase
-        .from('users')
-        .select('id, name, picture, is_private, is_gold_member')
-        .in('id', viewerIds);
-
-    if (usersError) {
-        console.error('Error fetching viewer profiles:', usersError);
+    // Step 2: Fetch all user profiles and their support statuses in parallel
+    const [usersResult, supportStatusResult] = await Promise.all([
+        supabase.from('users').select('id, name, picture, is_private, is_gold_member').in('id', viewerIds),
+        supabase.from('supports').select('supported_id, status').eq('supporter_id', currentUser.id).in('supported_id', viewerIds)
+    ]);
+    
+    if (usersResult.error) {
+        console.error('Error fetching viewer profiles:', usersResult.error);
         return [];
     }
-
-    // Step 3: Get the current user's support status towards the viewers.
-    const { data: supportStatusData, error: supportStatusError } = await supabase
-        .from('supports')
-        .select('supported_id, status')
-        .eq('supporter_id', currentUser.id)
-        .in('supported_id', viewerIds);
-        
-    if (supportStatusError) {
-        console.error('Error fetching support statuses:', supportStatusError);
+    
+    if (supportStatusResult.error) {
+        console.error('Error fetching support statuses:', supportStatusResult.error);
         // Continue without this data if it fails
     }
 
-    const supportStatusMap = new Map(supportStatusData?.map(s => [s.supported_id, s.status]));
-
-    // Step 4: Combine the data.
-    return users.map(user => ({
+    // Step 3: Combine the data.
+    const supportStatusMap = new Map(supportStatusResult.data?.map(s => [s.supported_id, s.status]));
+    
+    return usersResult.data.map(user => ({
         ...user,
         support_status: supportStatusMap.get(user.id) || null,
         has_mood: false // This info is not available in this context, default to false.

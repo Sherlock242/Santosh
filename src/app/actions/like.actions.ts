@@ -120,36 +120,26 @@ export async function getLikers({ emojiId, page = 1, limit = 15 }: { emojiId: st
     const userIds = likersData.map(l => l.user_id);
     if (userIds.length === 0) return [];
 
-    // 2. Fetch the profile details for those user IDs
-    const { data: users, error: usersError } = await supabase
-        .from('users')
-        .select('id, name, picture, is_private, is_gold_member')
-        .in('id', userIds);
+    // 2. Fetch profile details and support statuses in parallel
+    const [usersResult, supportStatusesResult] = await Promise.all([
+        supabase.from('users').select('id, name, picture, is_private, is_gold_member').in('id', userIds),
+        currentUser ? supabase.from('supports').select('supported_id, status').eq('supporter_id', currentUser.id).in('supported_id', userIds) : Promise.resolve({ data: [], error: null })
+    ]);
 
-    if (usersError) {
-        console.error('Error fetching liker profiles:', usersError);
+    if (usersResult.error) {
+        console.error('Error fetching liker profiles:', usersResult.error);
         return [];
     }
     
-    // 3. Fetch the support status of the current user towards the likers
-    let supportStatusMap = new Map<string, 'approved' | 'pending'>();
-    if (currentUser) {
-        const { data: supportStatuses, error: supportError } = await supabase
-            .from('supports')
-            .select('supported_id, status')
-            .eq('supporter_id', currentUser.id)
-            .in('supported_id', userIds);
-
-        if (supportError) {
-            console.error('Error fetching support statuses:', supportError);
-            // Continue without this data if it fails
-        } else if (supportStatuses) {
-            supportStatusMap = new Map(supportStatuses.map(s => [s.supported_id, s.status]));
-        }
+    if (supportStatusesResult.error) {
+        console.error('Error fetching support statuses:', supportStatusesResult.error);
+        // Continue without this data if it fails
     }
-    
-    // 4. Combine the data
-    return users.map(user => ({
+
+    // 3. Combine the data
+    const supportStatusMap = new Map(supportStatusesResult.data?.map(s => [s.supported_id, s.status]));
+
+    return usersResult.data.map(user => ({
         ...user,
         support_status: supportStatusMap.get(user.id) || null,
         has_mood: false // Note: We can't easily get has_mood here, default to false.
