@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -16,7 +15,7 @@ import { updatePostCache } from '@/lib/post-cache';
 const PostView = dynamic(
   () => import('@/components/post-view').then(mod => mod.PostView),
   {
-    loading: () => <div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>,
+    loading: () => <div className="flex h-96 w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>,
     ssr: false 
   }
 );
@@ -297,7 +296,6 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                 <MoodStories 
                     user={user}
                     moods={moods}
-                    isLoading={isLoading}
                     onSelectMood={(index) => handleSelectMood(moods[index])}
                 />
                 <div>

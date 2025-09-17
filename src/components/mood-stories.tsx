@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { memo } from 'react';
@@ -20,11 +19,10 @@ interface UserProfile {
 interface MoodStoriesProps {
     user: UserProfile | null;
     moods: Mood[];
-    isLoading: boolean;
     onSelectMood: (index: number) => void;
 }
 
-const MoodStories = memo(({ user, moods, isLoading, onSelectMood }: MoodStoriesProps) => {
+const MoodStories = memo(({ user, moods, onSelectMood }: MoodStoriesProps) => {
     
     const ownMood = moods.find(m => m.mood_user_id === user?.id);
     const userHasMood = !!ownMood;
@@ -32,6 +30,8 @@ const MoodStories = memo(({ user, moods, isLoading, onSelectMood }: MoodStoriesP
     
     // Create a combined list for rendering, with user's own mood first.
     const displayMoods = ownMood ? [ownMood, ...otherMoods] : otherMoods;
+    const isLoading = moods.length === 0 && !user;
+
 
     return (
         <div className="border-b border-border/40">
