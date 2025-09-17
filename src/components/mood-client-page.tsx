@@ -165,8 +165,8 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }, [user]);
     
     const handleRefresh = useCallback(async () => {
-        router.refresh();
-    }, [router]);
+        window.location.reload();
+    }, []);
 
     const handleDeletePost = (postId: string) => {
         setFeedPosts(prev => prev.filter(p => p.id !== postId));
