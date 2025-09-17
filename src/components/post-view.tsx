@@ -125,6 +125,7 @@ const PostContent = memo(({
     onDelete?: (id: string) => void,
     onSetMood: (id: string) => void,
 }) => {
+    const { user } = useAuth();
     const [localLikeCount, setLocalLikeCount] = useState(emoji.like_count);
     const [isLikedState, setIsLikedState] = useState(emoji.is_liked);
     const [likersEmojiId, setLikersEmojiId] = useState<string | null>(null);
@@ -199,12 +200,39 @@ const PostContent = memo(({
                             <Smile className="mr-2 h-4 w-4" />
                             <span>Set as Mood</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <Link href={`/design?emojiId=${emoji.id}`} className="flex items-center w-full">
-                                <Edit className="mr-2 h-4 w-4" />
-                                <span>Edit</span>
-                            </Link>
-                        </DropdownMenuItem>
+                        {user?.id === emoji.user_id && (
+                            <>
+                                <DropdownMenuItem asChild>
+                                    <Link href={`/design?emojiId=${emoji.id}`} className="flex items-center w-full">
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        <span>Edit</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                {onDelete && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <button className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full text-destructive">
+                                                     <Trash2 className="mr-2 h-4 w-4" />
+                                                     <span>Delete</span>
+                                                </button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Delete Post?</AlertDialogTitle>
+                                                    <AlertDialogDescription>Are you sure you want to permanently delete this post?</AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => onDelete(emoji.id)}>Delete</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </>
+                                )}
+                            </>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>

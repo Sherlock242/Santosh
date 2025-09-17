@@ -12,7 +12,7 @@ export async function deletePost(emojiId: string) {
         throw new Error('You must be logged in to delete a post.');
     }
 
-    // RLS policy should ensure that the user can only delete their own post.
+    // RLS policy will ensure that the user can only delete their own post.
     const { error } = await supabase
         .from('emojis')
         .delete()
@@ -24,6 +24,7 @@ export async function deletePost(emojiId: string) {
         throw new Error('Failed to delete the post. ' + error.message);
     }
 
+    // Revalidate paths to ensure the UI is updated across the app.
     revalidatePath('/gallery');
     revalidatePath('/mood');
     revalidatePath('/explore');

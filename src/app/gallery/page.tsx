@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { getGalleryPosts, getSupportStatus, getSupporterCount, getSupportingCount, deleteUserAccount } from '@/app/actions';
+import { getGalleryPosts, getSupportStatus, getSupporterCount, getSupportingCount, deleteUserAccount, deletePost } from '@/app/actions';
 import { supabase } from '@/lib/supabaseClient';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSupport } from '@/hooks/use-support';
@@ -256,6 +256,31 @@ function GalleryPageContent() {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [viewingUserId, authLoading]);
+
+    const handleDelete = async (emojiId: string) => {
+        // Close the PostView first
+        setSelectedEmojiId(null);
+
+        try {
+            // Call the server action to delete the post
+            await deletePost(emojiId);
+            toast({
+                title: 'Post Deleted',
+                description: 'Your post has been permanently removed.',
+                variant: 'success',
+            });
+            // The server action revalidates the path, so Next.js will refetch the data.
+            // For a more instant feeling on this page, we can refetch manually.
+            await fetchPosts();
+        } catch (error: any) {
+            console.error('Failed to delete post:', error);
+            toast({
+                title: 'Error Deleting Post',
+                description: error.message || 'Could not delete the post. Please try again.',
+                variant: 'destructive',
+            });
+        }
+    };
     
     const handleSignOut = async () => {
         setShowSignOutConfirm(false);
@@ -411,6 +436,7 @@ function GalleryPageContent() {
                         emojis={postsForView}
                         initialIndex={selectedEmojiIndex}
                         onClose={() => setSelectedEmojiId(null)}
+                        onDelete={handleDelete}
                     />
             ) : (
                 <>
