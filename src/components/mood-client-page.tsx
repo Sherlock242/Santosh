@@ -106,7 +106,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                     fetchPosts(page);
                 }
             },
-            { rootMargin: '200px' }
+            { root: scrollContainerRef.current, rootMargin: '200px' }
         );
 
         const currentLoader = loaderRef.current;
@@ -236,7 +236,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
   
     const renderContent = () => {
-        if (isLoading) {
+        if (isLoading && feedPosts.length === 0) {
             return (
                 <div className="flex h-full w-full flex-col items-center justify-center p-10">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -271,9 +271,9 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div className="h-full w-full flex flex-col">
-            <MoodHeader />
-            <div className="flex-1 overflow-y-auto no-scrollbar overscroll-behavior-y-contain" ref={scrollContainerRef}>
+        <div className="h-full w-full flex flex-col" ref={scrollContainerRef}>
+            <div className="flex-1 overflow-y-auto">
+                <MoodHeader />
                 <MoodStories 
                     user={user}
                     moods={moods}
