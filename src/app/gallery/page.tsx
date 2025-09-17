@@ -261,11 +261,14 @@ function GalleryPageContent() {
         try {
             await deletePost(emojiId);
             toast({ title: 'Post deleted', variant: 'success' });
-            setSelectedEmojiId(null);
-            await fetchPosts();
         } catch (error: any) {
             console.error("Failed to delete post", error);
             toast({ title: 'Error deleting post', description: error.message, variant: 'destructive' });
+        } finally {
+            // Refetch posts from the server to ensure UI is in sync.
+            await fetchPosts();
+            // Close the post view after deletion is complete.
+            setSelectedEmojiId(null);
         }
     };
     
