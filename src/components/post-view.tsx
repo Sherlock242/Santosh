@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback, memo, lazy, Suspense } from 'react';
@@ -16,7 +15,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,7 +36,7 @@ import { motion, useMotionValue, AnimatePresence, useAnimation, animate } from '
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { setMood, removeMood, recordMoodView, getMoodViewers, likePost, unlikePost } from '@/app/actions';
+import { setMood, removeMood, recordMoodView, getMoodViewers, likePost, unlikePost, deletePost } from '@/app/actions';
 import { LikeButton } from './like-button';
 import { TimeRemaining } from './time-remaining';
 import Image from 'next/image';
@@ -119,14 +117,15 @@ const filters = [
 
 const PostContent = memo(({ 
     emoji, 
-    onDelete,
+    onClose,
     onSetMood
 }: { 
     emoji: PostViewEmoji,
-    onDelete?: (id: string) => void,
+    onClose: () => void,
     onSetMood: (id: string) => void,
 }) => {
     const { user } = useAuth();
+    const { toast } = useToast();
     const [localLikeCount, setLocalLikeCount] = useState(emoji.like_count);
     const [isLikedState, setIsLikedState] = useState(emoji.is_liked);
     const [likersEmojiId, setLikersEmojiId] = useState<string | null>(null);
@@ -141,6 +140,24 @@ const PostContent = memo(({
     const handleLikeAnimation = useCallback(() => {
         setShowHeartIcon(true);
     }, []);
+    
+    const handleDeletePost = async (id: string) => {
+        try {
+            await deletePost(id);
+            toast({
+                title: 'Post Deleted',
+                description: 'Your post has been permanently removed.',
+                variant: 'success',
+            });
+            onClose();
+        } catch (error: any) {
+             toast({
+                title: 'Error Deleting Post',
+                description: error.message,
+                variant: 'destructive',
+            });
+        }
+    }
 
     useEffect(() => {
         if (showHeartIcon) {
@@ -176,7 +193,7 @@ const PostContent = memo(({
     
     return (
         <div
-            className="w-full flex-shrink-0 flex flex-col border-b border-border/40"
+            className="w-full h-full flex-shrink-0 flex flex-col bg-background"
         >
             <div className="flex items-center px-4 py-2">
                 <Avatar className="h-8 w-8">
@@ -209,29 +226,27 @@ const PostContent = memo(({
                                         <span>Edit</span>
                                     </Link>
                                 </DropdownMenuItem>
-                                {onDelete && (
-                                    <>
-                                        <DropdownMenuSeparator />
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <button className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full text-destructive">
-                                                     <Trash2 className="mr-2 h-4 w-4" />
-                                                     <span>Delete</span>
-                                                </button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Delete Post?</AlertDialogTitle>
-                                                    <AlertDialogDescription>Are you sure you want to permanently delete this post?</AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => onDelete(emoji.id)}>Delete</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </>
-                                )}
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <button className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full text-destructive">
+                                                 <Trash2 className="mr-2 h-4 w-4" />
+                                                 <span>Delete</span>
+                                            </button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Delete Post?</AlertDialogTitle>
+                                                <AlertDialogDescription>Are you sure you want to permanently delete this post?</AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => handleDeletePost(emoji.id)}>Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </>
                             </>
                         )}
                     </DropdownMenuContent>
@@ -239,7 +254,7 @@ const PostContent = memo(({
             </div>
 
             <div 
-                className="aspect-square flex items-center justify-center min-h-0 relative"
+                className="flex-1 flex items-center justify-center min-h-0 relative"
                 style={{ 
                     backgroundColor: emoji.background_color,
                     filter: activeFilterCss,
@@ -317,12 +332,10 @@ export function PostView({
   const [viewers, setViewers] = useState<Viewer[]>([]);
   const [isViewersSheetOpen, setIsViewersSheetOpen] = useState(false);
   const [isFetchingViewers, setIsFetchingViewers] = useState(false);
-  const [likerListEmojiId, setLikerListEmojiId] = useState<string | null>(null);
   
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const loaderRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   
   const progressWidth = useMotionValue('0%');
@@ -334,7 +347,7 @@ export function PostView({
     setLocalEmojis(emojis);
   }, [emojis]);
 
-  // Scroll to initial post on mount
+  // Scroll to initial post on mount for non-mood views
   useEffect(() => {
     if (containerRef.current && initialIndex > 0 && !isMoodView) {
       const element = containerRef.current.children[initialIndex] as HTMLElement;
@@ -364,7 +377,7 @@ export function PostView({
   const goToPrev = () => {
     if (currentIndex > 0) {
       setDirection(-1);
-      setCurrentIndex((prev) => prev + 1);
+      setCurrentIndex((prev) => prev - 1);
     }
   };
 
@@ -379,10 +392,12 @@ export function PostView({
 
             if (isCurrentEmojiMood(currentMood) && nextMood && isCurrentEmojiMood(nextMood) && nextMood.mood_user_id === currentMood.mood_user_id) {
                 goToNext();
+            } else if (isCurrentEmojiMood(currentMood) && !nextMood) {
+                onClose(localEmojis);
             }
         }
     });
-  }, [progressWidth, currentIndex, localEmojis, goToNext]);
+  }, [progressWidth, currentIndex, localEmojis, goToNext, onClose]);
 
 
   useEffect(() => {
@@ -414,31 +429,6 @@ export function PostView({
         }
     }
   }, [isViewersSheetOpen, isMoodView]);
-
-  useEffect(() => {
-    if (!fetchMore || isMoodView) return;
-
-    const observer = new IntersectionObserver(
-        (entries) => {
-            if (entries[0].isIntersecting && hasMore) {
-                fetchMore();
-            }
-        },
-        { threshold: 1.0 }
-    );
-
-    const currentLoader = loaderRef.current;
-    if (currentLoader) {
-        observer.observe(currentLoader);
-    }
-
-    return () => {
-        if (currentLoader) {
-            observer.unobserve(currentLoader);
-        }
-    };
-  }, [fetchMore, hasMore, isMoodView]);
-
   
   const handleShowViewers = async () => {
       if (!currentEmojiState || !isCurrentEmojiMood(currentEmojiState)) return;
@@ -497,79 +487,12 @@ export function PostView({
         setEmojiToSetMood(null);
     }
   };
-
-  const featureOffsetX = useMotionValue(0);
-  const featureOffsetY = useMotionValue(0);
   
   if (!currentEmojiState) {
     return null;
   }
   
   const postAuthor = isCurrentEmojiMood(currentEmojiState) ? currentEmojiState.mood_user : (currentEmojiState as PostViewEmoji).user;
-  
-  const defaultEmoji: EmojiState = {
-    id: 'default',
-    model: 'emoji',
-    expression: 'neutral',
-    background_color: '#000000',
-    emoji_color: '#ffb300',
-    show_sunglasses: false,
-    show_mustache: false,
-    selected_filter: null,
-    animation_type: 'none',
-    shape: 'default',
-    eye_style: 'default',
-    mouth_style: 'default',
-    eyebrow_style: 'default',
-    feature_offset_x: 0,
-    feature_offset_y: 0,
-  };
-
-  const finalEmoji: EmojiState = { ...defaultEmoji, ...currentEmojiState };
-
-  if (finalEmoji.model === 'loki' && finalEmoji.shape === 'blob') {
-    finalEmoji.shape = 'default';
-  }
-
-  featureOffsetX.set(finalEmoji.feature_offset_x || 0);
-  featureOffsetY.set(finalEmoji.feature_offset_y || 0);
-
-  const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? '100%' : '-100%',
-      opacity: 0,
-    }),
-    center: {
-      x: '0%',
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? '100%' : '-100%',
-      opacity: 0,
-    }),
-  };
-  
-  const activeFilterCss = filters.find(f => f.name === finalEmoji.selected_filter)?.css || 'none';
-
-  const renderEmojiFace = (emoji: EmojiState) => {
-    const props = {
-      ...emoji,
-      animation_type: emoji.animation_type,
-      color: emoji.emoji_color,
-      isDragging: false,
-      isInteractive: false,
-      feature_offset_x: featureOffsetX,
-      feature_offset_y: featureOffsetY,
-      setColor: () => {},
-    };
-    switch(emoji.model) {
-        case 'creator': return <CreatorMoji {...props} />;
-        case 'loki': return <ClockFace {...props} />;
-        case 'rimuru': return <RimuruFace {...props} />;
-        case 'emoji':
-        default: return <Face {...props} />;
-    }
-  };
   
   if (isMoodView) {
       return (
@@ -632,36 +555,12 @@ export function PostView({
                 <div className="flex-1" onClick={goToPrev}></div>
                 <div className="flex-1" onClick={goToNext}></div>
             </div>
-
-            <AnimatePresence initial={false} custom={direction}>
-                <motion.div
-                    key={currentIndex}
-                    custom={direction}
-                    variants={variants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{
-                        x: { type: "spring", stiffness: 300, damping: 30 },
-                        opacity: { duration: 0.2 }
-                    }}
-                     className="w-full h-full flex items-center justify-center absolute"
-                     style={{ 
-                      backgroundColor: finalEmoji.background_color,
-                      filter: activeFilterCss,
-                    }}
-                >
-                  {renderEmojiFace(finalEmoji)}
-                </motion.div>
-            </AnimatePresence>
-
-            {finalEmoji.caption && (
-              <div className="absolute top-20 left-4 right-4 z-20 text-center">
-                  <p className="inline-block bg-black/50 text-white text-sm p-2 rounded-lg">
-                      {finalEmoji.caption}
-                  </p>
-              </div>
-            )}
+            
+            <PostContent
+                emoji={currentEmojiState as PostViewEmoji}
+                onClose={onClose}
+                onSetMood={handleSetMoodClick}
+            />
 
              <Sheet open={isViewersSheetOpen} onOpenChange={setIsViewersSheetOpen}>
               <SheetContent side="bottom" className="max-h-[80%] flex flex-col">
@@ -700,40 +599,55 @@ export function PostView({
   // REGULAR POST VIEW
   return (
     <>
-      <div className="h-full w-full flex flex-col bg-background">
-          {showNav &&
-            <header className="flex-shrink-0 flex h-16 items-center justify-between border-b border-border/40 bg-background px-4 z-10 md:hidden">
-                <Button variant="ghost" size="icon" onClick={() => onClose(localEmojis)}>
+      <div className="fixed inset-0 bg-background z-50 flex flex-col">
+          <header className="flex-shrink-0 flex h-16 items-center justify-between border-b border-border/40 px-4 md:hidden">
+            <Button variant="ghost" size="icon" onClick={() => onClose(localEmojis)}>
                 <ArrowLeft />
-                </Button>
-                <h2 className="font-semibold">{isMoodView ? "Mood" : "Posts"}</h2>
-                <div className="w-10"></div>
-            </header>
-          }
+            </Button>
+            <h2 className="font-semibold">Posts</h2>
+            <div className="w-10"></div>
+          </header>
 
-          <div 
-              className="flex-1 flex flex-col overflow-y-auto no-scrollbar"
-              ref={containerRef}
-          >
-              {localEmojis.map((emoji) => {
-                  if (isCurrentEmojiMood(emoji)) return null;
-                  const isOwner = user?.id === emoji.user_id;
-                  return (
-                    <div key={emoji.id} className="w-full flex-shrink-0">
-                      <PostContent 
-                          emoji={emoji as PostViewEmoji} 
-                          onDelete={isOwner ? onDelete : undefined}
-                          onSetMood={handleSetMoodClick}
-                      />
-                    </div>
-                  )
-              })}
-              {hasMore && (
-                  <div ref={loaderRef} className="flex justify-center items-center p-4">
-                      <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-                  </div>
-              )}
-          </div>
+            <AnimatePresence initial={false} custom={direction}>
+                <motion.div
+                    key={currentIndex}
+                    custom={direction}
+                    variants={{
+                        enter: (direction: number) => ({
+                            y: direction > 0 ? '100%' : '-100%', opacity: 0
+                        }),
+                        center: { y: '0%', opacity: 1 },
+                        exit: (direction: number) => ({
+                            y: direction < 0 ? '100%' : '-100%', opacity: 0
+                        }),
+                    }}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{
+                        y: { type: 'spring', stiffness: 300, damping: 30 },
+                        opacity: { duration: 0.2 },
+                    }}
+                    className="h-full w-full absolute"
+                    drag="y"
+                    dragConstraints={{ top: 0, bottom: 0 }}
+                    dragElastic={1}
+                    onDragEnd={(e, { offset, velocity }) => {
+                        const swipe = Math.abs(offset.y) * velocity.y;
+                        if (swipe < -10000) {
+                            goToNext();
+                        } else if (swipe > 10000) {
+                            goToPrev();
+                        }
+                    }}
+                >
+                    <PostContent
+                        emoji={currentEmojiState as PostViewEmoji}
+                        onClose={onClose}
+                        onSetMood={handleSetMoodClick}
+                    />
+                </motion.div>
+            </AnimatePresence>
       </div>
       <AlertDialog open={!!emojiToSetMood} onOpenChange={(isOpen) => !isOpen && setEmojiToSetMood(null)}>
           <AlertDialogContent>
@@ -751,16 +665,6 @@ export function PostView({
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
-
-      {likerListEmojiId && (
-          <Suspense fallback={null}>
-              <LikerListSheet
-                  open={!!likerListEmojiId}
-                  onOpenChange={(isOpen) => !isOpen && setLikerListEmojiId(null)}
-                  emojiId={likerListEmojiId}
-              />
-          </Suspense>
-      )}
     </>
   );
 }

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -8,15 +7,16 @@ import type { EmojiState } from '@/app/design/page';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
-import { getFeedPosts, getFeedMoods, deletePost } from '../app/actions';
+import { getFeedPosts, getFeedMoods } from '../app/actions';
 import MoodStories from '@/components/mood-stories';
 import type { Mood, PostViewEmoji } from '@/components/post-view';
 import { updatePostCache } from '@/lib/post-cache';
+import { PostCard } from './post-card';
 
 const PostView = dynamic(
   () => import('@/components/post-view').then(mod => mod.PostView),
   {
-    loading: () => <div className="flex h-96 w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>,
+    loading: () => <div className="flex h-full w-full items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin" /></div>,
     ssr: false 
   }
 );
@@ -24,7 +24,7 @@ const PostView = dynamic(
 interface FeedPostType extends EmojiState {
     like_count: number;
     is_liked: boolean;
-    user: EmojiState['user'] & { has_mood?: boolean };
+    user: EmojiState['user'] & { has_mood?: boolean; is_gold_member?: boolean; };
 }
 
 interface MoodClientPageProps {
@@ -43,7 +43,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     const [page, setPage] = useState(initialPosts.length > 0 ? 2 : 1);
     const [hasMore, setHasMore] = useState(initialPosts.length === 5);
 
-    const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
+    const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
     const [viewingStoryFromFeed, setViewingStoryFromFeed] = useState<Mood[] | null>(null);
 
     const loaderRef = useRef(null);
@@ -165,56 +165,32 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         setHasMore(true);
         await loadInitialData(true);
     }, [loadInitialData]);
-
-    const handleSelectMood = (mood: Mood) => {
-        setSelectedMood(mood);
-    };
     
     const handleOnCloseMood = (updatedMoods?: Mood[]) => {
         if (updatedMoods) {
             setMoods(updatedMoods);
         }
-        setSelectedMood(null);
         setViewingStoryFromFeed(null);
     }
-
-    const handleDelete = async (emojiId: string) => {
-        try {
-            await deletePost(emojiId);
-            toast({
-                title: 'Post Deleted',
-                description: 'The post has been removed from your feed.',
-                variant: 'success',
-            });
-            const newPosts = feedPosts.filter(p => p.id !== emojiId);
-            setFeedPosts(newPosts);
-        } catch (error: any) {
-            toast({
-                title: 'Error Deleting Post',
-                description: error.message,
-                variant: 'destructive',
-            });
-        }
-    };
     
-    if (selectedMood) {
-        const userMoods = moods.filter(m => m.mood_user_id === selectedMood.mood_user_id);
-        const initialMoodIndex = userMoods.findIndex(m => m.mood_id === selectedMood.mood_id);
-        if (userMoods.length === 0 || initialMoodIndex === -1) {
-            setSelectedMood(null);
-            return null;
-        }
+    const selectedPostIndex = selectedPostId ? feedPosts.findIndex(p => p.id === selectedPostId) : -1;
+
+    if (selectedPostIndex > -1) {
+        const postsForView = feedPosts.map(post => ({
+            ...post,
+            user: {
+                id: post.user?.id || post.user_id || '',
+                name: post.user?.name || 'Unknown',
+                picture: post.user?.picture || '',
+                is_gold_member: post.user?.is_gold_member,
+            }
+        }));
+
         return (
-            <PostView 
-                emojis={userMoods}
-                initialIndex={initialMoodIndex}
-                onClose={() => handleOnCloseMood(moods)}
-                isMoodView={true}
-                onMoodChange={handleRefresh}
-                onDelete={(moodId) => {
-                    setMoods(moods.filter(m => m.mood_id !== parseInt(moodId)));
-                    loadInitialData();
-                }}
+            <PostView
+                emojis={postsForView}
+                initialIndex={selectedPostIndex}
+                onClose={() => setSelectedPostId(null)}
             />
         )
     }
@@ -246,20 +222,9 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         if (feedPosts.length > 0) {
             return (
                 <div className="divide-y divide-border">
-                    {feedPosts.map((post) => {
-                        const postWithUser = {
-                            ...post,
-                            user: {
-                                id: post.user_id || '',
-                                name: post.user?.name || 'Unknown',
-                                picture: post.user?.picture || '',
-                                is_gold_member: post.user?.is_gold_member,
-                            }
-                        };
-                        return (
-                            <PostView key={post.id} emojis={[postWithUser]} showNav={false} onClose={()=>{}} onDelete={handleDelete} />
-                        )
-                    })}
+                    {feedPosts.map((post) => (
+                        <PostCard key={post.id} post={post} onSelect={() => setSelectedPostId(post.id)} />
+                    ))}
                 </div>
             );
         }
