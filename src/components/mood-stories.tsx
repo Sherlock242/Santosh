@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { memo } from 'react';
@@ -58,7 +59,7 @@ const MoodStories = memo(({ user, moods, onSelectMood }: MoodStoriesProps) => {
                     ))
                 ) : (
                     displayMoods.map((mood, index) => (
-                    <div key={mood.mood_id} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => onSelectMood(moods.findIndex(m => m.mood_id === mood.mood_id))}>
+                    <div key={mood.mood_id} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => onSelectMood(index)}>
                         <StoryRing hasStory={true} isViewed={mood.is_viewed}>
                             <Avatar className="h-16 w-16 border-2 border-background">
                                 {mood.mood_user?.picture && <AvatarImage src={mood.mood_user.picture} alt={mood.mood_user.name} data-ai-hint="profile picture" className="rounded-full" />}

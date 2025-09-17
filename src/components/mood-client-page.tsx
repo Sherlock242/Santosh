@@ -297,7 +297,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                 <MoodStories 
                     user={user}
                     moods={moods}
-                    onSelectMood={(index) => handleSelectMood(moods[index])}
+                    onSelectMood={(index) => handleSelectMood(moods.findIndex(m => m.mood_id === displayMoods[index].mood_id))}
                 />
                 <div>
                     {renderContent()}
