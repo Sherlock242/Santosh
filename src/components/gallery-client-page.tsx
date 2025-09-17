@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
@@ -336,7 +335,7 @@ export default function GalleryClientPage({
             ) : (
                 <>
                     <ProfileHeader />
-                    <div className="flex-1 overflow-y-auto no-scrollbar">
+                    <div className="flex-1 overflow-y-auto no-scrollbar pb-14">
                         <div className="p-4 md:p-6">
                              <div className="flex items-center gap-4 md:gap-8">
                                 <div>
