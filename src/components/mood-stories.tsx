@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { memo } from 'react';
@@ -27,14 +28,18 @@ const MoodStories = memo(({ user, moods, isLoading, onSelectMood }: MoodStoriesP
     
     const ownMood = moods.find(m => m.mood_user_id === user?.id);
     const userHasMood = !!ownMood;
+    const otherMoods = moods.filter(mood => mood.mood_user_id !== user?.id);
+    
+    // Create a combined list for rendering, with user's own mood first.
+    const displayMoods = ownMood ? [ownMood, ...otherMoods] : otherMoods;
 
     return (
         <div className="border-b border-border/40">
             <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex w-max space-x-4 p-4">
-                {!isLoading && user && (
-                    <Link href={userHasMood ? "#" : "/gallery"} className="flex flex-col items-center gap-2 cursor-pointer" onClick={userHasMood ? (e) => { e.preventDefault(); onSelectMood(moods.findIndex(m => m.mood_user_id === user?.id)) } : undefined}>
-                        <StoryRing hasStory={userHasMood} isViewed={ownMood?.is_viewed}>
+                {!isLoading && user && !userHasMood && (
+                     <Link href="/gallery" className="flex flex-col items-center gap-2 cursor-pointer">
+                        <StoryRing hasStory={false}>
                              <Avatar className="h-16 w-16 border-2 border-background">
                                 <AvatarImage src={user.picture} alt={"Your Mood"} data-ai-hint="profile picture" className="rounded-full" />
                                 <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
@@ -52,15 +57,15 @@ const MoodStories = memo(({ user, moods, isLoading, onSelectMood }: MoodStoriesP
                         </div>
                     ))
                 ) : (
-                    moods.filter(mood => mood.mood_user_id !== user?.id).map((mood) => (
+                    displayMoods.map((mood, index) => (
                     <div key={mood.mood_id} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => onSelectMood(moods.findIndex(m => m.mood_id === mood.mood_id))}>
                         <StoryRing hasStory={true} isViewed={mood.is_viewed}>
-                        <Avatar className="h-16 w-16 border-2 border-background">
-                            {mood.mood_user?.picture && <AvatarImage src={mood.mood_user.picture} alt={mood.mood_user.name} data-ai-hint="profile picture" className="rounded-full" />}
-                            <AvatarFallback>{mood.mood_user?.name ? mood.mood_user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
-                        </Avatar>
+                            <Avatar className="h-16 w-16 border-2 border-background">
+                                {mood.mood_user?.picture && <AvatarImage src={mood.mood_user.picture} alt={mood.mood_user.name} data-ai-hint="profile picture" className="rounded-full" />}
+                                <AvatarFallback>{mood.mood_user?.name ? mood.mood_user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+                            </Avatar>
                         </StoryRing>
-                        <span className="text-xs font-medium text-muted-foreground">{mood.mood_user?.name}</span>
+                        <span className="text-xs font-medium text-muted-foreground">{mood.mood_user_id === user?.id ? 'Your Mood' : mood.mood_user?.name}</span>
                     </div>
                     ))
                 )}
