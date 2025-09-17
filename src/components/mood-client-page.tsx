@@ -271,9 +271,9 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div className="h-full w-full flex flex-col" ref={scrollContainerRef}>
-            <div className="flex-1 overflow-y-auto">
-                <MoodHeader />
+        <div className="h-full w-full flex flex-col" >
+            <MoodHeader />
+            <div className="flex-1 overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
                 <MoodStories 
                     user={user}
                     moods={moods}
