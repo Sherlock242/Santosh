@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { getGalleryPosts, getSupportStatus, getSupporterCount, getSupportingCount, deleteUserAccount } from '@/app/actions';
+import { getGalleryPosts, getSupportStatus, getSupporterCount, getSupportingCount, deleteUserAccount, deletePost } from '@/app/actions';
 import { supabase } from '@/lib/supabaseClient';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSupport } from '@/hooks/use-support';
@@ -258,10 +258,8 @@ function GalleryPageContent() {
     }, [viewingUserId, authLoading]);
     
     const handleDelete = async (emojiId: string) => {
-        if (!supabase || !viewingUserId) return;
         try {
-            const { error } = await supabase.from('emojis').delete().eq('id', emojiId);
-            if (error) throw error;
+            await deletePost(emojiId);
 
             const updatedEmojis = savedEmojis.filter(emoji => emoji.id !== emojiId);
             setSavedEmojis(updatedEmojis);
@@ -271,7 +269,7 @@ function GalleryPageContent() {
             setSelectedEmojiId(null);
             toast({ title: 'Post deleted', variant: 'success' })
         } catch (error: any) {
-            console.error("Failed to delete emoji from Supabase", error);
+            console.error("Failed to delete post", error);
             toast({ title: 'Error deleting post', description: error.message, variant: 'destructive' })
         }
     };
