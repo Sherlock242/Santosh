@@ -258,20 +258,22 @@ function GalleryPageContent() {
     }, [viewingUserId, authLoading]);
 
     const handleDelete = async (emojiId: string) => {
-        // Close the PostView first
-        setSelectedEmojiId(null);
-
         try {
             // Call the server action to delete the post
             await deletePost(emojiId);
+            
+            // Refetch posts to update the UI
+            await fetchPosts();
+            
+            // Close the PostView *after* the fetch is complete
+            setSelectedEmojiId(null);
+
             toast({
                 title: 'Post Deleted',
                 description: 'Your post has been permanently removed.',
                 variant: 'success',
             });
-            // The server action revalidates the path, so Next.js will refetch the data.
-            // For a more instant feeling on this page, we can refetch manually.
-            await fetchPosts();
+            
         } catch (error: any) {
             console.error('Failed to delete post:', error);
             toast({
