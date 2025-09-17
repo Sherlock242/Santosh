@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -275,7 +276,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                         };
                         return (
                             <div key={post.id} onClick={() => setSelectedPostId(post.id)} className="cursor-pointer">
-                                <PostView emojis={[postWithUser]} showNav={false} onClose={()=>{}} />
+                                <PostView emojis={[postWithUser]} showNav={false} onClose={()=>{}} onDelete={handleDelete} />
                             </div>
                         )
                     })}
