@@ -201,12 +201,12 @@ export async function getLinkRequests({ query, page = 1, limit = 10, userId }: {
             request_text,
             created_at,
             user_id,
-            user:users!link_requests_user_id_fkey(id, name, picture),
-            responses:link_request_responses (
+            user:users!inner(id, name, picture),
+            responses:link_request_responses!inner (
                 id,
                 urls,
                 created_at,
-                user:users!link_request_responses_user_id_fkey(id, name, picture)
+                user:users!inner(id, name, picture)
             )
         `)
         .order('created_at', { ascending: false })
