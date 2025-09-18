@@ -268,8 +268,12 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
 
     // Step 2: Create a notification for the original requestor
     try {
-        // Find the owner of the original request
-        const { data: requestData, error: requestError } = await supabase
+        const currentUserId = user.id;
+        // This must use an admin client to fetch the recipient's ID,
+        // as RLS would otherwise prevent it.
+        const supabaseAdmin = createSupabaseServerClient(true);
+
+        const { data: requestData, error: requestError } = await supabaseAdmin
             .from('link_requests')
             .select('user_id')
             .eq('id', requestId)
@@ -277,23 +281,21 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
 
         if (requestError) {
             console.error('Notification Error: Could not find original requestor.', requestError);
-            // Don't fail the whole action, just log it. The response was saved.
             return;
         }
 
         const recipientId = requestData.user_id;
 
         // Don't send a notification if the user is responding to their own request
-        if (recipientId && recipientId !== user.id) {
+        if (recipientId && recipientId !== currentUserId) {
             await createNotification({
                 recipient_id: recipientId,
-                actor_id: user.id,
+                actor_id: currentUserId,
                 type: 'new_link_response',
                 link_request_id: requestId,
             });
         }
     } catch (notificationError: any) {
-        // Log the error but don't fail the whole action, since the response was saved.
         console.error('Failed to create notification:', notificationError.message);
     }
 

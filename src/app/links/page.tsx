@@ -245,6 +245,8 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
         return null; // Don't render if user is missing
     }
 
+    const hasUnreadResponse = user?.id === requestUser.id && request.responses.some(r => r.user.id !== user.id);
+
     return (
         <div className="rounded-lg border bg-card p-3 space-y-3">
             <div className="flex items-start justify-between gap-3">
@@ -252,9 +254,12 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
                     <Link href={`/gallery?userId=${requestUser.id}`}>
                         <Avatar className="h-8 w-8"><AvatarImage src={requestUser.picture} alt={requestUser.name} /><AvatarFallback>{requestUser.name?.charAt(0).toUpperCase()}</AvatarFallback></Avatar>
                     </Link>
-                    <div>
-                        <p className="text-sm font-semibold">{requestUser.name}</p>
-                        <p className="text-sm">{request.request_text}</p>
+                    <div className="flex items-center gap-2">
+                        <div>
+                            <p className="text-sm font-semibold">{requestUser.name}</p>
+                            <p className="text-sm">{request.request_text}</p>
+                        </div>
+                         {hasUnreadResponse && <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></div>}
                     </div>
                 </div>
                 {user?.id === requestUser.id ? (
