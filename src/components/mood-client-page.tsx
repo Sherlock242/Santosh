@@ -150,7 +150,11 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }, [toast, user, feedPosts.length]);
 
     useEffect(() => {
-      refreshFeed();
+      // Don't run initial refresh on mount if we have initial data.
+      // This prevents the flicker on first load.
+      if (initialPosts.length === 0 && initialMoods.length === 0) {
+        refreshFeed();
+      }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
     
@@ -158,9 +162,16 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         setFeedPosts(prev => prev.filter(p => p.id !== postId));
     };
     
-    const handleOnCloseMood = (updatedMoods?: Mood[]) => {
-        if (updatedMoods) {
-            setMoods(updatedMoods);
+    const handleOnCloseMood = (updatedViewedMoods?: Mood[]) => {
+        if (updatedViewedMoods) {
+            const viewedMoodIds = new Set(updatedViewedMoods.filter(m => m.is_viewed).map(m => m.mood_id));
+            setMoods(currentMoods => 
+                currentMoods.map(mood => 
+                    viewedMoodIds.has(mood.mood_id)
+                        ? { ...mood, is_viewed: true }
+                        : mood
+                )
+            );
         }
         setViewingStoryFromFeed(null);
     }
@@ -245,19 +256,17 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                     const selectedMood = moods[index];
                     if (!selectedMood) return;
 
-                    // Filter to get only the stories for the selected user
                     const userStoryMoods = moods.filter(m => m.mood_user_id === selectedMood.mood_user_id);
                     
-                    // Find the starting point within that user's stories
                     const startIndexInUserStory = userStoryMoods.findIndex(m => m.mood_id === selectedMood.mood_id);
 
-                    // Reorder that user's stories to start from the selected one
+                    if (startIndexInUserStory === -1) return;
+
                     const userPlaylist = [
                         ...userStoryMoods.slice(startIndexInUserStory),
                         ...userStoryMoods.slice(0, startIndexInUserStory)
                     ];
 
-                    // Set only that user's playlist to be viewed
                     setViewingStoryFromFeed(userPlaylist);
                 }}
             />
