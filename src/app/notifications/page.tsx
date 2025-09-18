@@ -223,12 +223,7 @@ export default function NotificationsPage() {
             const uniqueNew = newNotifications.filter((n: Notification) => !existingIds.has(n.id));
             return [...prev, ...uniqueNew];
         });
-
-        // Mark as read after fetching the first page
-        if (pageNum === 1 && newNotifications.length > 0) {
-            await markNotificationsAsRead();
-        }
-
+        
         setPage(pageNum + 1);
 
     } catch (error: any) {
@@ -242,6 +237,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (user) {
+        markNotificationsAsRead();
         fetchNotifications(1);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

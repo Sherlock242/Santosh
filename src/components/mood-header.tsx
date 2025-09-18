@@ -5,44 +5,50 @@ import { useAuth } from '@/hooks/use-auth';
 import { Bell } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
   
 const NotificationBell = () => {
     const { user, supabase } = useAuth();
     const [hasNewNotifications, setHasNewNotifications] = useState(false);
 
+    const checkForNewNotifications = useCallback(async () => {
+        if (!user) return;
+        const { count, error } = await supabase
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('recipient_id', user.id)
+            .eq('is_read', false);
+        
+        if (error) {
+            console.error("Error checking for notifications:", error);
+            return;
+        }
+        
+        setHasNewNotifications(count ? count > 0 : false);
+    }, [user, supabase]);
+
+    useEffect(() => {
+        checkForNewNotifications();
+    }, [checkForNewNotifications]);
+
     useEffect(() => {
         if (!user) return;
-
-        // Check for unread notifications initially
-        const checkInitialNotifications = async () => {
-            const { count } = await supabase
-                .from('notifications')
-                .select('*', { count: 'exact', head: true })
-                .eq('recipient_id', user.id)
-                .eq('is_read', false);
-            if (count && count > 0) {
-                setHasNewNotifications(true);
-            }
-        };
-
-        checkInitialNotifications();
 
         const channel = supabase
             .channel('realtime-notifications-header')
             .on(
                 'postgres_changes',
                 {
-                    event: 'INSERT',
+                    event: '*', // Listen to all changes
                     schema: 'public',
                     table: 'notifications',
                     filter: `recipient_id=eq.${user.id}`,
                 },
-                (payload) => {
-                    if (payload.new && !(payload.new as any).is_read) {
-                        setHasNewNotifications(true);
-                    }
+                () => {
+                    // When any change happens, re-check the count.
+                    // This is more reliable than trying to manage state based on payload.
+                    checkForNewNotifications();
                 }
             )
             .subscribe();
@@ -50,7 +56,7 @@ const NotificationBell = () => {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user, supabase]);
+    }, [user, supabase, checkForNewNotifications]);
 
     return (
         <Button asChild variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary">

@@ -8,7 +8,7 @@ import type { EmojiState } from '@/app/design/page';
 type NotificationPayload = {
     recipient_id: string;
     actor_id: string;
-    type: 'new_supporter' | 'new_like' | 'new_support_request' | 'support_request_approved';
+    type: 'new_supporter' | 'new_like' | 'new_support_request' | 'support_request_approved' | 'new_link_response';
     emoji_id?: string;
     link_request_id?: string;
 }
@@ -100,39 +100,20 @@ export async function getNotifications({ page = 1, limit = 15 }: { page: number,
             link_request_id: n.link_request_id || null,
         } as FullNotification;
     });
-
-    // Mark notifications as read
-    await markNotificationsAsRead();
     
     return fullNotifications;
 }
-
-
 
 export async function markNotificationsAsRead() {
     const supabase = createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    
-    // Fetch unread notifications first
-    const { data: unreadNotifications, error: fetchError } = await supabase
-        .from('notifications')
-        .select('id')
-        .eq('recipient_id', user.id)
-        .eq('is_read', false);
 
-    if (fetchError || !unreadNotifications || unreadNotifications.length === 0) {
-        if(fetchError) console.error('Error fetching unread notifications:', fetchError);
-        return; // No unread notifications to mark
-    }
-    
-    const idsToUpdate = unreadNotifications.map(n => n.id);
-
-    // Then, update only those notifications
     const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
-        .in('id', idsToUpdate);
+        .eq('recipient_id', user.id)
+        .eq('is_read', false);
 
     if (error) {
         console.error('Error marking notifications as read:', error);
