@@ -53,7 +53,7 @@ export async function addLink(payload: LinkPayload) {
     revalidatePath('/links');
 }
 
-export async function getLinks({ query, page = 1, limit = 10 }: { query: string; page: number; limit: number; }) {
+export async function getLinks({ query, page = 1, limit = 10, userId }: { query: string; page: number; limit: number; userId?: string; }) {
     const supabase = createSupabaseServerClient();
     
     const from = (page - 1) * limit;
@@ -68,6 +68,11 @@ export async function getLinks({ query, page = 1, limit = 10 }: { query: string;
     if (query) {
         linksQuery = linksQuery.or(`title.ilike.%${query}%,url.ilike.%${query}%`);
     }
+    
+    if (userId) {
+        linksQuery = linksQuery.eq('user_id', userId);
+    }
+
 
     const { data: links, error: linksError } = await linksQuery;
 
@@ -156,7 +161,7 @@ export async function createLinkRequest(requestText: string) {
     revalidatePath('/links');
 }
 
-export async function getLinkRequests({ query, page = 1, limit = 10 }: { query: string; page: number; limit: number; }) {
+export async function getLinkRequests({ query, page = 1, limit = 10, userId }: { query: string; page: number; limit: number; userId?: string; }) {
     const supabase = createSupabaseServerClient();
     const from = (page - 1) * limit;
     const to = page * limit - 1;
@@ -180,6 +185,10 @@ export async function getLinkRequests({ query, page = 1, limit = 10 }: { query: 
     
     if (query) {
         requestQuery = requestQuery.ilike('request_text', `%${query}%`);
+    }
+
+    if (userId) {
+        requestQuery = requestQuery.eq('user_id', userId);
     }
 
     const { data, error } = await requestQuery;
