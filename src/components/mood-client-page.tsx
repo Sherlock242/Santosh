@@ -51,7 +51,6 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     const [viewingStoryFromFeed, setViewingStoryFromFeed] = useState<Mood[] | null>(null);
 
     const loaderRef = useRef(null);
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
     
     const fetchPosts = useCallback(async (pageNum: number) => {
         if (isFetchingMore || !hasMore) return;
@@ -231,7 +230,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div className="h-full w-full overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
+        <div>
             <MoodHeader />
             <MoodStories 
                 user={user}
