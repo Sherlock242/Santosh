@@ -47,6 +47,23 @@ export async function getNotifications({ page = 1, limit = 15 }: { page: number,
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
+    // ** DIRECT ACTION **
+    // Mark all unread notifications as read before fetching them.
+    // We use an admin client here to bypass RLS, which might prevent a user from updating rows they don't "own".
+    // This is safe because we are explicitly scoping the update to the current user's ID.
+    const supabaseAdmin = createSupabaseServerClient(true);
+    const { error: markAsReadError } = await supabaseAdmin
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('recipient_id', user.id)
+        .eq('is_read', false);
+
+    if (markAsReadError) {
+        // Log the error but don't block the user's action. The notifications will still be fetched.
+        console.error("Error marking notifications as read:", markAsReadError);
+    }
+
+
     // 1. Fetch notifications for the current user
     const { data: notificationsData, error: notificationsError } = await supabase
         .from('notifications')

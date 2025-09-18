@@ -2,12 +2,11 @@
 import React, { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import NotificationsClientPage from '@/components/notifications-client-page';
-import { getNotifications, markNotificationsAsRead } from '../actions/notification.actions';
+import { getNotifications } from '../actions/notification.actions';
 
 export default async function NotificationsPage() {
     // This server component now handles marking as read and fetching initial data.
-    await markNotificationsAsRead();
-    
+    // The getNotifications function itself will now mark notifications as read.
     const initialNotifications = await getNotifications({ page: 1, limit: 15 });
 
     return (
