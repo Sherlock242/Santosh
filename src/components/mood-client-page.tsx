@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -244,15 +245,20 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                     const selectedMood = moods[index];
                     if (!selectedMood) return;
 
+                    // Filter to get only the stories for the selected user
                     const userStoryMoods = moods.filter(m => m.mood_user_id === selectedMood.mood_user_id);
+                    
+                    // Find the starting point within that user's stories
                     const startIndexInUserStory = userStoryMoods.findIndex(m => m.mood_id === selectedMood.mood_id);
-                    const reorderedUserStory = [
+
+                    // Reorder that user's stories to start from the selected one
+                    const userPlaylist = [
                         ...userStoryMoods.slice(startIndexInUserStory),
                         ...userStoryMoods.slice(0, startIndexInUserStory)
                     ];
-                    const otherUsersMoods = moods.filter(m => m.mood_user_id !== selectedMood.mood_user_id);
-                    const fullPlaylist = [...reorderedUserStory, ...otherUsersMoods];
-                    setViewingStoryFromFeed(fullPlaylist);
+
+                    // Set only that user's playlist to be viewed
+                    setViewingStoryFromFeed(userPlaylist);
                 }}
             />
             {renderContent()}
