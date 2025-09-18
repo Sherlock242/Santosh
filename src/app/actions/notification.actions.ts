@@ -105,6 +105,19 @@ export async function getNotifications({ page = 1, limit = 15 }: { page: number,
 }
 
 export async function markNotificationsAsRead() {
-    // This function is now empty as the logic has been moved directly to the server-side
-    // rendering of the notifications page for improved reliability.
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const supabaseAdmin = createSupabaseServerClient(true);
+    const { error } = await supabaseAdmin
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('recipient_id', user.id)
+        .eq('is_read', false);
+
+    if (error) {
+        console.error("Error marking notifications as read (direct action):", error);
+        // Don't throw, as the page should still load.
+    }
 }
