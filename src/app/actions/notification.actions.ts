@@ -8,7 +8,7 @@ import type { EmojiState } from '@/app/design/page';
 type NotificationPayload = {
     recipient_id: string;
     actor_id: string;
-    type: 'new_supporter' | 'new_like' | 'new_support_request' | 'support_request_approved' | 'new_link_response';
+    type: 'new_supporter' | 'new_like' | 'new_support_request' | 'support_request_approved';
     emoji_id?: string;
     link_request_id?: string;
 }
@@ -36,6 +36,7 @@ export async function createNotification(payload: NotificationPayload) {
     const supabase = createSupabaseServerClient(); 
     const { error } = await supabase.from('notifications').insert(payload);
     if (error) {
+        // We log the error but don't throw, as notification failure shouldn't block main actions.
         console.error('Error creating notification:', error);
     }
 }

@@ -3,7 +3,6 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
-import { createNotification } from './notification.actions';
 
 interface LinkPayload {
     titlePrefix: string;
@@ -263,14 +262,19 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error(responseError.message);
     }
 
-    // 3. Create a notification for the original requestor
+    // 3. Create a notification for the original requestor (Direct Insert)
     if (user.id !== request.user_id) {
-        await createNotification({
+        const { error: notificationError } = await supabase.from('notifications').insert({
             recipient_id: request.user_id,
             actor_id: user.id,
             type: 'new_link_response',
             link_request_id: requestId,
         });
+
+        if (notificationError) {
+            // Log the error but don't block the user's action
+            console.error('Failed to create notification for link response:', notificationError);
+        }
     }
 
     revalidatePath('/links');
