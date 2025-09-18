@@ -6,9 +6,14 @@ import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { createNotification } from './notification.actions';
 
+interface LinkItem {
+    subtitle: string;
+    url: string;
+}
+
 interface LinkPayload {
-    titlePrefix: string;
-    urls: string[];
+    title: string;
+    links: LinkItem[];
     color: string;
 }
 
@@ -20,25 +25,20 @@ export async function addLink(payload: LinkPayload) {
         throw new Error('You must be logged in to add a link.');
     }
 
-    if (!payload.urls || payload.urls.length === 0) {
+    if (!payload.links || payload.links.length === 0) {
         throw new Error('You must add at least one link.');
     }
 
-    const linksToInsert = payload.urls.map((url, index) => {
-        // If there's only one URL and a prefix is given, use the prefix as the full title.
-        // Otherwise, append an index for multiple URLs.
-        let title = payload.urls.length > 1 
-            ? `${payload.titlePrefix} ${index + 1}` 
-            : payload.titlePrefix || url;
-        
-        if (title.length > 200) {
-            title = title.substring(0, 197) + '...';
-        }
+    // A random ID to group these links together as a pack
+    const packId = crypto.randomUUID();
 
+    const linksToInsert = payload.links.map((link) => {
         return {
             user_id: user.id,
-            title: title,
-            url: url,
+            pack_id: packId,
+            pack_title: payload.title,
+            title: link.subtitle, // Use subtitle as the individual link title
+            url: link.url,
             color: payload.color,
             clicks: 0,
         };
@@ -62,12 +62,12 @@ export async function getLinks({ query, page = 1, limit = 10, userId }: { query:
 
     let linksQuery = supabase
         .from('links')
-        .select(`id, title, url, created_at, user_id, color, clicks`)
+        .select(`id, title, url, created_at, user_id, color, clicks, pack_id, pack_title`)
         .order('created_at', { ascending: false })
         .range(from, to);
 
     if (query) {
-        linksQuery = linksQuery.or(`title.ilike.%${query}%,url.ilike.%${query}%`);
+        linksQuery = linksQuery.or(`title.ilike.%${query}%,url.ilike.%${query}%,pack_title.ilike.%${query}%`);
     }
     
     if (userId) {

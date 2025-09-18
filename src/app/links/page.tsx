@@ -41,6 +41,8 @@ interface LinkEntry {
     user: UserProfile | null;
     color: string;
     clicks: number;
+    pack_id: string;
+    pack_title: string;
 }
 
 interface LinkPack {
@@ -319,6 +321,11 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
 };
 
 type ActiveTab = 'all-links' | 'my-links' | 'all-requests' | 'my-requests';
+interface LinkItem {
+    id: number;
+    subtitle: string;
+    url: string;
+}
 
 // --- Main Page Component ---
 export default function LinksPage() {
@@ -345,10 +352,9 @@ export default function LinksPage() {
     const [showAddLinkForm, setShowAddLinkForm] = useState(false);
     const [showRequestForm, setShowRequestForm] = useState(false);
 
-
     // States for Add Link Form
-    const [titlePrefix, setTitlePrefix] = useState('');
-    const [urls, setUrls] = useState('');
+    const [title, setTitle] = useState('');
+    const [linkItems, setLinkItems] = useState<LinkItem[]>([{ id: 1, subtitle: '', url: '' }]);
     const [color, setColor] = useState('#8A2BE2');
     const colorInputRef = useRef<HTMLInputElement>(null);
 
@@ -400,13 +406,15 @@ export default function LinksPage() {
 
     const handleAddLink = (e: React.FormEvent) => {
         e.preventDefault();
-        const urlList = urls.split('\n').map(u => u.trim()).filter(u => u);
-        if (urlList.length === 0) return toast({ title: 'Please enter at least one URL', variant: 'destructive' });
-        if (!titlePrefix.trim()) return toast({ title: 'Write as a placeholder', variant: 'destructive' });
+        const validLinks = linkItems.filter(item => item.subtitle.trim() && item.url.trim());
+        if (validLinks.length === 0) return toast({ title: 'Please fill out at least one link completely.', variant: 'destructive' });
+        if (!title.trim()) return toast({ title: 'Please provide a title for the link pack.', variant: 'destructive' });
+
         startTransition(async () => {
             try {
-                await addLink({ titlePrefix, urls: urlList, color });
-                setTitlePrefix(''); setUrls('');
+                await addLink({ title, links: validLinks, color });
+                setTitle('');
+                setLinkItems([{ id: 1, subtitle: '', url: '' }]);
                 toast({ title: 'Links added successfully!', variant: 'success' });
                 setShowAddLinkForm(false);
                 refreshCurrentTab();
@@ -414,6 +422,20 @@ export default function LinksPage() {
                 toast({ title: 'Error adding links', description: error.message, variant: 'destructive' });
             }
         });
+    };
+    
+    const handleLinkItemChange = (id: number, field: 'subtitle' | 'url', value: string) => {
+        setLinkItems(linkItems.map(item => item.id === id ? { ...item, [field]: value } : item));
+    };
+
+    const addLinkInput = () => {
+        setLinkItems([...linkItems, { id: Date.now(), subtitle: '', url: '' }]);
+    };
+
+    const removeLinkInput = (id: number) => {
+        if (linkItems.length > 1) {
+            setLinkItems(linkItems.filter(item => item.id !== id));
+        }
     };
 
     const handleCreateRequest = (e: React.FormEvent) => {
@@ -481,21 +503,14 @@ export default function LinksPage() {
         const packs = new Map<string, LinkPack>();
         
         links.forEach(link => {
-            const match = link.title.match(/^(.*)\s+\d+$/);
-            const isMultiLink = match && links.filter(l => l.title.startsWith(match![1])).length > 1;
-            
-            let packTitle: string;
-            if (isMultiLink) {
-                packTitle = match[1];
-            } else {
-                packTitle = link.title; 
-            }
+            const packId = link.pack_id || link.id; // Fallback for older links
+            const packTitle = link.pack_title || link.title;
 
-            if (packs.has(packTitle)) {
-                packs.get(packTitle)!.links.push(link);
+            if (packs.has(packId)) {
+                packs.get(packId)!.links.push(link);
             } else {
-                packs.set(packTitle, {
-                    id: packTitle,
+                packs.set(packId, {
+                    id: packId,
                     title: packTitle,
                     links: [link],
                     user: link.user,
@@ -592,12 +607,31 @@ export default function LinksPage() {
                     initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                 >
                     <form onSubmit={handleAddLink} className="space-y-4">
-                        <Input id="title-prefix" placeholder="Title" value={titlePrefix} onChange={(e) => setTitlePrefix(e.target.value)} disabled={isPending} maxLength={200} required />
-                        <div className="relative">
-                            <Textarea id="urls" placeholder="Your links (one per line)" value={urls} onChange={(e) => setUrls(e.target.value)} disabled={isPending} required className="pr-10" rows={4} />
-                            <button type="button" className="absolute bottom-2 right-2 p-1 text-muted-foreground hover:text-foreground" onClick={() => colorInputRef.current?.click()}><Palette className="h-5 w-5" style={{ color: color }} /><span className="sr-only">Choose color</span></button>
+                        <div className="flex items-center gap-2">
+                             <Input id="title" placeholder="Pack Title (e.g., Wednesday Series)" value={title} onChange={(e) => setTitle(e.target.value)} disabled={isPending} maxLength={200} required />
+                             <button type="button" className="p-2 text-muted-foreground hover:text-foreground" onClick={() => colorInputRef.current?.click()}>
+                                <Palette className="h-5 w-5" style={{ color: color }} />
+                                <span className="sr-only">Choose color</span>
+                            </button>
                             <input ref={colorInputRef} type="color" value={color} onChange={(e) => setColor(e.target.value)} className="absolute -z-10 w-0 h-0 opacity-0" />
                         </div>
+                       
+                        <div className="space-y-3">
+                            {linkItems.map((item, index) => (
+                                <div key={item.id} className="flex items-center gap-2">
+                                    <Input placeholder={`Subtitle ${index + 1}`} value={item.subtitle} onChange={(e) => handleLinkItemChange(item.id, 'subtitle', e.target.value)} disabled={isPending} required />
+                                    <Input placeholder={`URL ${index + 1}`} value={item.url} onChange={(e) => handleLinkItemChange(item.id, 'url', e.target.value)} disabled={isPending} required type="url" />
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => removeLinkInput(item.id)} disabled={isPending || linkItems.length <= 1}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <Button type="button" variant="outline" size="sm" onClick={addLinkInput} className="w-full">
+                            <Plus className="h-4 w-4 mr-2" /> Add Another Link
+                        </Button>
+                        
                         <div className='flex gap-2'>
                             <Button type="submit" className="w-full" disabled={isPending}>{isPending ? <Loader2 className="animate-spin" /> : 'Add Links'}</Button>
                             <Button type="button" variant="secondary" onClick={() => setShowAddLinkForm(false)}>Cancel</Button>
