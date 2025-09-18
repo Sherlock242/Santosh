@@ -40,7 +40,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     const { toast } = useToast();
     const [moods, setMoods] = useState<Mood[]>(initialMoods);
     const [feedPosts, setFeedPosts] = useState<FeedPostType[]>(initialPosts);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
     
     const [page, setPage] = useState(initialPosts.length > 0 ? 2 : 1);
@@ -115,11 +115,16 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
 
     const refreshFeed = useCallback(async () => {
         if (!user) {
+            setFeedPosts([]);
+            setMoods([]);
             setIsLoading(false);
             return;
         }
         
-        setIsLoading(true);
+        // Only show full loading state if there are no posts currently.
+        if (feedPosts.length === 0) {
+            setIsLoading(true);
+        }
 
         try {
             const [moodsData, postsData] = await Promise.all([
@@ -141,7 +146,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         } finally {
             setIsLoading(false);
         }
-    }, [toast, user]);
+    }, [toast, user, feedPosts.length]);
 
     useEffect(() => {
       refreshFeed();
@@ -199,7 +204,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
   
     const renderContent = () => {
-        if (isLoading && feedPosts.length === 0) {
+        if (isLoading) {
             return (
                 <div className="flex h-full w-full flex-col items-center justify-center p-10">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -229,12 +234,12 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div className="pb-14">
+        <div className="pb-14 no-scrollbar">
             <MoodHeader />
             <MoodStories 
                 user={user}
                 moods={moods}
-                isLoading={isLoading}
+                isLoading={isLoading && moods.length === 0}
                 onSelectMood={(index) => {
                     const selectedMood = moods[index];
                     if (!selectedMood) return;
