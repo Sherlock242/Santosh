@@ -35,7 +35,7 @@ export default function RootLayout({
         <meta name="description" content="Create and share interactive emojis." />
         <meta name="google-adsense-account" content="ca-pub-2882939249270622" />
       </head>
-      <body className={cn("font-body antialiased bg-background overflow-x-hidden")}>
+      <body className={cn("font-body antialiased bg-background overflow-x-hidden no-scrollbar")}>
         <AuthProvider>
           <React.Suspense fallback={<TopLoader />}>
             <TopLoader />
