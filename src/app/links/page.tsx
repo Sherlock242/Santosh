@@ -606,7 +606,7 @@ export default function LinksPage() {
                     <form onSubmit={handleCreateRequest} className="space-y-4">
                          <Textarea
                             id="request-text"
-                            placeholder="Request a link"
+                            placeholder="Request a link (max 200 characters)"
                             value={requestText}
                             onChange={(e) => setRequestText(e.target.value)}
                             disabled={isPending}
