@@ -241,7 +241,7 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error('You can add between 1 and 5 links.');
     }
 
-    // Step 1: Insert the response
+    // Step 1: Insert the response with the user-level client
     const { error: responseError } = await supabase.from('link_request_responses').insert({
         request_id: requestId,
         user_id: user.id,
@@ -253,28 +253,25 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error(responseError.message);
     }
 
-    // Step 2: Create a notification for the original requester.
-    // Replicating the pattern from likePost action.
-    const { data: requestData, error: requestError } = await supabase
+    // Step 2: Create notification using an admin client to bypass RLS.
+    const supabaseAdmin = createSupabaseServerClient(true);
+    const { data: requestData, error: requestError } = await supabaseAdmin
         .from('link_requests')
         .select('user_id')
         .eq('id', requestId)
         .single();
     
     if (requestError) {
-        // Don't throw, as the main action succeeded. Just log the error.
+        // The main action succeeded, so don't throw. Just log the error.
         console.error('Could not find original request to create notification:', requestError);
-    } else if (requestData) {
-        const recipientId = requestData.user_id;
-        // Prevent self-notification
-        if (user.id !== recipientId) {
-             await createNotification({
-                recipient_id: recipientId,
-                actor_id: user.id,
-                type: 'new_link_response',
-                link_request_id: requestId,
-            });
-        }
+    } else if (requestData && requestData.user_id !== user.id) {
+        // Only notify if someone other than the requester is responding.
+        await createNotification({
+            recipient_id: requestData.user_id,
+            actor_id: user.id,
+            type: 'new_link_response',
+            link_request_id: requestId,
+        });
     }
     
     revalidatePath('/links');
