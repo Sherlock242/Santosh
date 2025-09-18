@@ -4,7 +4,6 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
-import { createNotification } from './notification.actions';
 
 interface LinkPayload {
     titlePrefix: string;
@@ -254,34 +253,31 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
     }
 
     // Step 2: Create a notification for the original requester using an admin client.
-    try {
-        const supabaseAdmin = createSupabaseServerClient(true);
-        const { data: requestData, error: requestError } = await supabaseAdmin
-            .from('link_requests')
-            .select('user_id')
-            .eq('id', requestId)
-            .single();
+    // This is a trusted server action that needs to bypass RLS to find the request owner.
+    const supabaseAdmin = createSupabaseServerClient(true);
+    const { data: requestData, error: requestError } = await supabaseAdmin
+        .from('link_requests')
+        .select('user_id')
+        .eq('id', requestId)
+        .single();
 
-        if (requestError || !requestData) {
-            console.error('Could not find original request to create notification:', requestError);
-            // Don't throw an error, just log it. The main action succeeded.
-        } else {
-            const recipientId = requestData.user_id;
-            // Prevent self-notification
-            if (user.id !== recipientId) {
-                const { error: notificationError } = await supabaseAdmin.from('notifications').insert({
-                    recipient_id: recipientId,
-                    actor_id: user.id,
-                    type: 'new_link_response',
-                    link_request_id: requestId,
-                });
-                if (notificationError) {
-                    console.error('Failed to create notification with admin client:', notificationError);
-                }
+    if (requestError || !requestData) {
+        // Don't throw, as the main action succeeded. Just log the error.
+        console.error('Could not find original request to create notification:', requestError);
+    } else {
+        const recipientId = requestData.user_id;
+        // Prevent self-notification
+        if (user.id !== recipientId) {
+            const { error: notificationError } = await supabaseAdmin.from('notifications').insert({
+                recipient_id: recipientId,
+                actor_id: user.id,
+                type: 'new_link_response',
+                link_request_id: requestId,
+            });
+            if (notificationError) {
+                console.error('Failed to create notification with admin client:', notificationError);
             }
         }
-    } catch (e) {
-        console.error('An unexpected error occurred during notification creation:', e);
     }
     
     revalidatePath('/links');
