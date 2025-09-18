@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -230,7 +229,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div>
+        <div className="pb-14">
             <MoodHeader />
             <MoodStories 
                 user={user}
