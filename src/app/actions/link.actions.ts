@@ -4,6 +4,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { createNotification } from './notification.actions';
 
 interface LinkPayload {
     titlePrefix: string;
@@ -252,31 +253,27 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error(responseError.message);
     }
 
-    // Step 2: Create a notification for the original requester using an admin client.
-    // This is a trusted server action that needs to bypass RLS to find the request owner.
-    const supabaseAdmin = createSupabaseServerClient(true);
-    const { data: requestData, error: requestError } = await supabaseAdmin
+    // Step 2: Create a notification for the original requester.
+    // Replicating the pattern from likePost action.
+    const { data: requestData, error: requestError } = await supabase
         .from('link_requests')
         .select('user_id')
         .eq('id', requestId)
         .single();
-
-    if (requestError || !requestData) {
+    
+    if (requestError) {
         // Don't throw, as the main action succeeded. Just log the error.
         console.error('Could not find original request to create notification:', requestError);
-    } else {
+    } else if (requestData) {
         const recipientId = requestData.user_id;
         // Prevent self-notification
         if (user.id !== recipientId) {
-            const { error: notificationError } = await supabaseAdmin.from('notifications').insert({
+             await createNotification({
                 recipient_id: recipientId,
                 actor_id: user.id,
                 type: 'new_link_response',
                 link_request_id: requestId,
             });
-            if (notificationError) {
-                console.error('Failed to create notification with admin client:', notificationError);
-            }
         }
     }
     
