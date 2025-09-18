@@ -17,14 +17,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 
 // --- Types ---
 interface UserProfile {
@@ -69,7 +68,7 @@ interface LinkRequest {
 }
 
 const LINKS_PER_PAGE = 10;
-const REQUESTS_PER_PAGE = 10;
+const REQUESTS_PER_PAGE = 5;
 
 // --- Hooks ---
 function useDebounce(value: string, delay: number) {
@@ -168,6 +167,7 @@ const LinkPackPost = ({ pack, user, handleDeleteLink, handleDeletePack, handleLi
         </Collapsible>
     )
 }
+
 
 const ResponseForm = ({ requestId, onResponseAdded }: { requestId: string, onResponseAdded: () => void }) => {
     const { toast } = useToast();
@@ -331,7 +331,6 @@ export default function LinksPage() {
     
     // Common States
     const [activeTab, setActiveTab] = useState<'links' | 'requests'>('links');
-    const [showMyContentOnly, setShowMyContentOnly] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
     const [isPending, startTransition] = useTransition();
@@ -348,10 +347,10 @@ export default function LinksPage() {
     // State for Link Request Form
     const [requestText, setRequestText] = useState('');
 
-    const fetchLinks = useCallback(async (query: string, pageNum: number, forUser: boolean) => {
+    const fetchLinks = useCallback(async (query: string, pageNum: number) => {
         setIsLinksLoading(true);
         try {
-            const fetchedLinks = await getLinks({ query, page: pageNum, limit: LINKS_PER_PAGE, userId: forUser ? user?.id : undefined });
+            const fetchedLinks = await getLinks({ query, page: pageNum, limit: LINKS_PER_PAGE });
             setLinks(pageNum === 1 ? fetchedLinks as LinkEntry[] : [...links, ...fetchedLinks as LinkEntry[]]);
             setHasMoreLinks(fetchedLinks.length === LINKS_PER_PAGE);
         } catch (error: any) {
@@ -359,12 +358,12 @@ export default function LinksPage() {
         } finally {
             setIsLinksLoading(false);
         }
-    }, [user, links, toast]);
+    }, [links, toast]);
 
-    const fetchRequests = useCallback(async (query: string, pageNum: number, forUser: boolean) => {
+    const fetchRequests = useCallback(async (query: string, pageNum: number) => {
         setIsRequestsLoading(true);
         try {
-            const linkRequests = await getLinkRequests({ query, page: pageNum, limit: REQUESTS_PER_PAGE, userId: forUser ? user?.id : undefined });
+            const linkRequests = await getLinkRequests({ query, page: pageNum, limit: REQUESTS_PER_PAGE });
             setRequests(pageNum === 1 ? linkRequests as LinkRequest[] : [...requests, ...linkRequests as LinkRequest[]]);
             setHasMoreRequests(linkRequests.length === REQUESTS_PER_PAGE);
         } catch (error: any) {
@@ -372,19 +371,19 @@ export default function LinksPage() {
         } finally {
             setIsRequestsLoading(false);
         }
-    }, [user, requests, toast]);
+    }, [requests, toast]);
     
     useEffect(() => {
         setLinksPage(1);
-        fetchLinks(debouncedSearchQuery, 1, showMyContentOnly);
+        fetchLinks(debouncedSearchQuery, 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedSearchQuery, showMyContentOnly, activeTab === 'links']);
+    }, [debouncedSearchQuery, activeTab === 'links']);
 
      useEffect(() => {
         setRequestsPage(1);
-        fetchRequests(debouncedSearchQuery, 1, showMyContentOnly);
+        fetchRequests(debouncedSearchQuery, 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedSearchQuery, showMyContentOnly, activeTab === 'requests']);
+    }, [debouncedSearchQuery, activeTab === 'requests']);
 
     const handleAddLink = (e: React.FormEvent) => {
         e.preventDefault();
@@ -397,7 +396,7 @@ export default function LinksPage() {
                 setTitlePrefix(''); setUrls('');
                 toast({ title: 'Links added successfully!', variant: 'success' });
                 setShowAddLinkForm(false);
-                fetchLinks(debouncedSearchQuery, 1, showMyContentOnly);
+                fetchLinks(debouncedSearchQuery, 1);
             } catch (error: any) {
                 toast({ title: 'Error adding links', description: error.message, variant: 'destructive' });
             }
@@ -413,7 +412,7 @@ export default function LinksPage() {
                 setRequestText('');
                 toast({ title: 'Request posted!', variant: 'success' });
                 setShowRequestForm(false);
-                fetchRequests(debouncedSearchQuery, 1, showMyContentOnly);
+                fetchRequests(debouncedSearchQuery, 1);
             } catch (error: any) {
                 toast({ title: 'Error posting request', description: error.message, variant: 'destructive' });
             }
@@ -457,10 +456,10 @@ export default function LinksPage() {
     const refreshCurrentTab = () => {
         if (activeTab === 'links') {
             setLinksPage(1);
-            fetchLinks(debouncedSearchQuery, 1, showMyContentOnly);
+            fetchLinks(debouncedSearchQuery, 1);
         } else {
             setRequestsPage(1);
-            fetchRequests(debouncedSearchQuery, 1, showMyContentOnly);
+            fetchRequests(debouncedSearchQuery, 1);
         }
     }
 
@@ -502,14 +501,14 @@ export default function LinksPage() {
              return <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
         }
         if (linkPacks.length === 0) {
-            return <div className="text-center py-10 text-muted-foreground"><LinkIcon className="mx-auto h-12 w-12" /><p className="mt-4 font-semibold">No links found</p>{searchQuery ? <p className="text-sm">Try a different search term.</p> : <p className="text-sm">{showMyContentOnly ? "You haven't added any links." : "No links here yet."}</p>}</div>
+            return <div className="text-center py-10 text-muted-foreground"><LinkIcon className="mx-auto h-12 w-12" /><p className="mt-4 font-semibold">No links found</p>{searchQuery ? <p className="text-sm">Try a different search term.</p> : <p className="text-sm">No links here yet. Be the first to add one!</p>}</div>
         }
         return (
             <>
                 {linkPacks.map(item => (
                     <LinkPackPost key={item.id} pack={item} user={user} handleDeleteLink={handleDeleteLink} handleDeletePack={handleDeletePack} handleLinkClick={handleLinkClick} />
                 ))}
-                {!isLinksLoading && hasMoreLinks && <Button variant="outline" className="w-full" onClick={() => fetchLinks(debouncedSearchQuery, linksPage + 1, showMyContentOnly)}>Load More</Button>}
+                {!isLinksLoading && hasMoreLinks && <Button variant="outline" className="w-full" onClick={() => fetchLinks(debouncedSearchQuery, linksPage + 1)}>Load More</Button>}
             </>
         )
     };
@@ -519,12 +518,12 @@ export default function LinksPage() {
             return <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
         }
         if (requests.length === 0) {
-            return <div className="text-center py-10 text-muted-foreground"><MessageSquarePlus className="mx-auto h-12 w-12" /><p className="mt-4 font-semibold">No requests found</p>{searchQuery ? <p className="text-sm">Try a different search term.</p> : <p className="text-sm">{showMyContentOnly ? "You haven't requested any links." : "No one has requested a link yet."}</p>}</div>
+            return <div className="text-center py-10 text-muted-foreground"><MessageSquarePlus className="mx-auto h-12 w-12" /><p className="mt-4 font-semibold">No requests found</p>{searchQuery ? <p className="text-sm">Try a different search term.</p> : <p className="text-sm">No one has requested a link yet. Be the first!</p>}</div>
         }
         return (
             <>
                 {requests.map(request => <RequestPost key={request.id} request={request} user={user} refreshRequests={refreshCurrentTab} handleLinkClick={(url) => { window.open(url, '_blank', 'noopener,noreferrer'); }} />)}
-                {!isRequestsLoading && hasMoreRequests && <Button variant="outline" className="w-full" onClick={() => fetchRequests(debouncedSearchQuery, requestsPage + 1, showMyContentOnly)}>Load More</Button>}
+                {!isRequestsLoading && hasMoreRequests && <Button variant="outline" className="w-full" onClick={() => fetchRequests(debouncedSearchQuery, requestsPage + 1)}>Load More</Button>}
             </>
         )
     }
@@ -556,12 +555,6 @@ export default function LinksPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input placeholder="Search..." className="pl-10 h-11" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                  </div>
-                 {user && (
-                    <div className="flex items-center space-x-2 mt-4">
-                        <Switch id="my-content-switch" checked={showMyContentOnly} onCheckedChange={setShowMyContentOnly} />
-                        <Label htmlFor="my-content-switch">Show my posts only</Label>
-                    </div>
-                 )}
             </div>
 
             <div className="flex items-center border-b">
@@ -604,7 +597,7 @@ export default function LinksPage() {
                     <form onSubmit={handleCreateRequest} className="space-y-4">
                          <Textarea
                             id="request-text"
-                            placeholder="Request a link..."
+                            placeholder="Request a link"
                             value={requestText}
                             onChange={(e) => setRequestText(e.target.value)}
                             disabled={isPending}
@@ -629,3 +622,5 @@ export default function LinksPage() {
         </div>
     );
 }
+
+    
