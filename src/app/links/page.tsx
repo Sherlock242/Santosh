@@ -482,7 +482,7 @@ export default function LinksPage() {
         
         links.forEach(link => {
             const match = link.title.match(/^(.*)\s+\d+$/);
-            const isMultiLink = match && links.filter(l => l.title.startsWith(match[1])).length > 1;
+            const isMultiLink = match && links.filter(l => l.title.startsWith(match![1])).length > 1;
             
             let packTitle: string;
             if (isMultiLink) {
@@ -503,6 +503,11 @@ export default function LinksPage() {
                     user_id: link.user_id,
                 });
             }
+        });
+
+        // Sort links within each pack by creation date (oldest first)
+        packs.forEach(pack => {
+            pack.links.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
         });
         
         return [...Array.from(packs.values())].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
