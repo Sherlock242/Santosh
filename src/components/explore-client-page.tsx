@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -10,7 +11,8 @@ import { GalleryThumbnail } from '@/components/gallery-thumbnail';
 import type { EmojiState } from '@/app/design/page';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { getExplorePosts, searchUsers as searchUsersAction, deletePost } from '../app/actions';
+import { getExplorePosts, searchUsers as searchUsersAction } from '@/app/actions';
+import { deletePost } from '@/app/actions';
 import Image from 'next/image';
 import { updatePostCache } from '@/lib/post-cache';
 import { GoldTick } from '@/components/gold-tick';
@@ -196,7 +198,7 @@ export default function ExploreClientPage({ initialPosts }: { initialPosts: Expl
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             placeholder="Search for users"
-            className="pl-10 h-12 rounded-lg bg-muted border-input focus-visible:ring-primary"
+            className="pl-10 h-12 rounded-lg bg-muted border-amber-400 focus-visible:ring-amber-400"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
