@@ -562,9 +562,9 @@ export default function LinksPage() {
                     exit={{ opacity: 0, height: 0 }}
                 >
                     <form onSubmit={handleAddLink} className="space-y-4">
-                        <Input id="title-prefix" placeholder="Title (e.g., 'My Awesome Links' or 'Episode')" value={titlePrefix} onChange={(e) => setTitlePrefix(e.target.value)} disabled={isPending} maxLength={200} />
+                        <Input id="title-prefix" placeholder="Title" value={titlePrefix} onChange={(e) => setTitlePrefix(e.target.value)} disabled={isPending} maxLength={200} />
                         <div className="relative">
-                        <Textarea id="urls" placeholder="https://example.com/episode-1\nhttps://example.com/episode-2" value={urls} onChange={(e) => setUrls(e.target.value)} disabled={isPending} required className="pr-10" rows={4} />
+                        <Textarea id="urls" placeholder="Your links" value={urls} onChange={(e) => setUrls(e.target.value)} disabled={isPending} required className="pr-10" rows={4} />
                             <button type="button" className="absolute bottom-2 right-2 p-1 text-muted-foreground hover:text-foreground" onClick={() => colorInputRef.current?.click()}><Palette className="h-5 w-5" style={{ color: color }} /><span className="sr-only">Choose color</span></button>
                             <input ref={colorInputRef} type="color" value={color} onChange={(e) => setColor(e.target.value)} className="absolute -z-10 w-0 h-0 opacity-0" />
                         </div>
