@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Loader2, UserPlus, Heart, Check, MessageSquareReply } from 'lucide-react';
-import { getNotifications, markNotificationsAsRead, respondToSupportRequest } from '../actions';
+import { getNotifications, respondToSupportRequest } from '../actions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GalleryThumbnail } from '@/components/gallery-thumbnail';
 import type { EmojiState } from '@/app/design/page';
@@ -237,7 +237,6 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (user) {
-        markNotificationsAsRead();
         fetchNotifications(1);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
