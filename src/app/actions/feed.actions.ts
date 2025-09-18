@@ -55,11 +55,12 @@ export async function getFeedMoods() {
     }
     if (!data) return [];
     
-    // Un-nest the emoji data
+    // Un-nest the emoji data and filter out moods with no associated emoji
     const flattenedData = data.map(m => {
         const { emojis, ...mood } = m;
+        if (!emojis) return null; // If emoji is null, this mood is invalid.
         return { ...mood, ...(emojis as any) };
-    });
+    }).filter(Boolean); // This removes any null entries.
 
     // 3. Check which moods have been viewed by the current user
     const moodIds = flattenedData.map(m => m.mood_id);
