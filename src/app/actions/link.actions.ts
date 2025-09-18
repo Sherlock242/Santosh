@@ -238,20 +238,8 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
     if (!urls || urls.length === 0 || urls.length > 5) {
         throw new Error('You can add between 1 and 5 links.');
     }
-    
-    // 1. Get the original request to find the owner
-    const { data: request, error: requestError } = await supabase
-        .from('link_requests')
-        .select('user_id')
-        .eq('id', requestId)
-        .single();
-    
-    if (requestError || !request) {
-        console.error('Error finding link request owner:', requestError);
-        throw new Error('Could not find the original request.');
-    }
 
-    // 2. Insert the response
+    // Insert the response first
     const { error: responseError } = await supabase.from('link_request_responses').insert({
         request_id: requestId,
         user_id: user.id,
@@ -263,20 +251,40 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error(responseError.message);
     }
 
-    // 3. Create a notification for the original requestor (Direct Insert)
-    if (user.id !== request.user_id) {
-        const { error: notificationError } = await supabase.from('notifications').insert({
-            recipient_id: request.user_id,
-            actor_id: user.id,
-            type: 'new_link_response',
-            link_request_id: requestId,
-        });
-
-        if (notificationError) {
-            // Log the error but don't block the user's action
-            console.error('Failed to create notification for link response:', notificationError);
+    // Now, handle the notification part using an admin client to bypass RLS for reading.
+    try {
+        const supabaseAdmin = createSupabaseServerClient(true);
+        // 1. Get the original request to find the owner
+        const { data: request, error: requestError } = await supabaseAdmin
+            .from('link_requests')
+            .select('user_id')
+            .eq('id', requestId)
+            .single();
+        
+        if (requestError || !request) {
+            console.error('Error finding link request owner for notification:', requestError);
+            throw new Error('Could not find the original request.');
         }
+
+        // 2. Create a notification for the original requestor, if it's not the same user
+        if (user.id !== request.user_id) {
+            const { error: notificationError } = await supabaseAdmin.from('notifications').insert({
+                recipient_id: request.user_id,
+                actor_id: user.id,
+                type: 'new_link_response',
+                link_request_id: requestId,
+            });
+
+            if (notificationError) {
+                // Log the error but don't block the user's action
+                console.error('Failed to create notification for link response:', notificationError);
+            }
+        }
+    } catch(e) {
+        // Log any errors from the notification process but don't let it fail the whole action
+        console.error("An error occurred during the notification creation part of addLinkResponse:", e);
     }
+
 
     revalidatePath('/links');
 }
