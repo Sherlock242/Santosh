@@ -230,7 +230,7 @@ export async function getLinkRequests({ query, page = 1, limit = 10, userId }: {
     return data || [];
 }
 
-export async function addLinkResponse({ requestId, urls, recipientId }: { requestId: string; urls: string[]; recipientId: string; }) {
+export async function addLinkResponse({ requestId, urls }: { requestId: string; urls: string[]; }) {
     const supabase = createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -241,41 +241,23 @@ export async function addLinkResponse({ requestId, urls, recipientId }: { reques
         throw new Error('You can add between 1 and 5 links.');
     }
 
-    // Step 1: Insert the response using the standard user client
-    const { error: responseError } = await supabase.from('link_request_responses').insert({
-        request_id: requestId,
-        user_id: user.id,
-        urls: urls,
+    // This action now calls a database function to handle the logic.
+    // The RPC needs to be called with a client that can execute it.
+    // Assuming the function is defined with `security definer`.
+    const { error } = await supabase.rpc('handle_new_link_response', {
+        p_request_id: requestId,
+        p_user_id: user.id,
+        p_urls: urls
     });
 
-    if (responseError) {
-        console.error('Error adding link response:', responseError);
-        throw new Error(responseError.message);
+    if (error) {
+        console.error('Error in handle_new_link_response RPC:', error);
+        throw new Error('Failed to add response. ' + error.message);
     }
-    
-    // Step 2: Create a notification if the responder is not the original requester.
-    // This part requires an admin client to bypass RLS on the notifications table.
-    if (user.id !== recipientId) {
-        try {
-            const supabaseAdmin = createSupabaseServerClient(true);
-            const { error: notificationError } = await supabaseAdmin.from('notifications').insert({
-                recipient_id: recipientId,
-                actor_id: user.id,
-                type: 'new_link_response',
-                link_request_id: requestId,
-            });
 
-            if (notificationError) {
-                // Log the error but don't throw, as the main action (adding the response) succeeded.
-                console.error('Error creating link response notification:', notificationError);
-            }
-        } catch(e) {
-             console.error('Unexpected error during notification creation:', e);
-        }
-    }
-    
     revalidatePath('/links');
 }
+
 
 export async function deleteLinkRequest(requestId: string) {
     const supabase = createSupabaseServerClient();
