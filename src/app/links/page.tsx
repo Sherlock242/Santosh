@@ -56,14 +56,15 @@ interface LinkResponse {
     id: string;
     urls: string[];
     created_at: string;
-    user: UserProfile[];
+    user: UserProfile;
 }
 
 interface LinkRequest {
     id: string;
     request_text: string;
     created_at: string;
-    user: UserProfile[]; 
+    user_id: string;
+    user: UserProfile; 
     responses: LinkResponse[];
 }
 
@@ -169,7 +170,7 @@ const LinkPackPost = ({ pack, user, handleDeleteLink, handleDeletePack, handleLi
 }
 
 
-const ResponseForm = ({ requestId, onResponseAdded }: { requestId: string, onResponseAdded: () => void }) => {
+const ResponseForm = ({ requestId, recipientId, onResponseAdded }: { requestId: string; recipientId: string; onResponseAdded: () => void }) => {
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     const [urls, setUrls] = useState('');
@@ -183,7 +184,7 @@ const ResponseForm = ({ requestId, onResponseAdded }: { requestId: string, onRes
         }
         startTransition(async () => {
             try {
-                await addLinkResponse({ requestId, urls: urlList });
+                await addLinkResponse({ requestId, urls: urlList, recipientId });
                 setUrls('');
                 toast({ title: 'Response added!', variant: 'success' });
                 onResponseAdded();
@@ -214,7 +215,7 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
 
-    const requestUser = Array.isArray(request.user) ? request.user[0] : request.user;
+    const requestUser = request.user;
 
     const handleDeleteRequest = async () => {
         startTransition(async () => {
@@ -269,7 +270,7 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
             <AnimatePresence>
                 {showResponseForm && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                        <ResponseForm requestId={request.id} onResponseAdded={() => { setShowResponseForm(false); refreshRequests(); }} />
+                        <ResponseForm requestId={request.id} recipientId={requestUser.id} onResponseAdded={() => { setShowResponseForm(false); refreshRequests(); }} />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -277,7 +278,7 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
             {request.responses.length > 0 && (
                 <div className="space-y-3 pt-2 border-t border-border/50">
                     {request.responses.map(response => {
-                        const responseUser = Array.isArray(response.user) ? response.user[0] : response.user;
+                        const responseUser = response.user;
                         if (!responseUser) return null;
 
                         return (
