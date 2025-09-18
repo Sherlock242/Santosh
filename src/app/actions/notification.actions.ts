@@ -105,11 +105,14 @@ export async function getNotifications({ page = 1, limit = 15 }: { page: number,
 }
 
 export async function markNotificationsAsRead() {
-    const supabase = createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const supabaseUserClient = createSupabaseServerClient();
+    const { data: { user } } = await supabaseUserClient.auth.getUser();
     if (!user) return;
-
-    const { error } = await supabase
+    
+    // Use an admin client to bypass RLS for this update.
+    // This is safe because we are explicitly filtering by the authenticated user's ID.
+    const supabaseAdmin = createSupabaseServerClient(true);
+    const { error } = await supabaseAdmin
         .from('notifications')
         .update({ is_read: true })
         .eq('recipient_id', user.id)
