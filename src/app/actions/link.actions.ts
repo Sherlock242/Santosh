@@ -230,7 +230,7 @@ export async function getLinkRequests({ query, page = 1, limit = 10, userId }: {
     return data || [];
 }
 
-export async function addLinkResponse({ requestId, urls, recipientId }: { requestId: string; urls: string[]; recipientId: string; }) {
+export async function addLinkResponse({ requestId, urls }: { requestId: string; urls: string[]; }) {
     const supabase = createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -253,16 +253,36 @@ export async function addLinkResponse({ requestId, urls, recipientId }: { reques
         throw new Error(responseError.message);
     }
 
-    // Step 2: Create a notification for the original requester, if they are not the one responding.
-    if (user.id !== recipientId) {
-        await createNotification({
-            recipient_id: recipientId,
-            actor_id: user.id,
-            type: 'new_link_response',
-            link_request_id: requestId,
-        });
-    }
+    // Step 2: Create a notification for the original requester.
+    try {
+        const supabaseAdmin = createSupabaseServerClient(true);
+        const { data: requestData, error: requestError } = await supabaseAdmin
+            .from('link_requests')
+            .select('user_id')
+            .eq('id', requestId)
+            .single();
 
+        if (requestError || !requestData) {
+            console.error('Could not find original request to create notification:', requestError);
+            // Don't throw an error, just log it. The main action succeeded.
+        } else {
+            const recipientId = requestData.user_id;
+            if (user.id !== recipientId) {
+                const { error: notificationError } = await supabaseAdmin.from('notifications').insert({
+                    recipient_id: recipientId,
+                    actor_id: user.id,
+                    type: 'new_link_response',
+                    link_request_id: requestId,
+                });
+                if (notificationError) {
+                    console.error('Failed to create notification with admin client:', notificationError);
+                }
+            }
+        }
+    } catch (e) {
+        console.error('An unexpected error occurred during notification creation:', e);
+    }
+    
     revalidatePath('/links');
 }
 

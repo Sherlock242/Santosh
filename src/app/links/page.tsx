@@ -170,7 +170,7 @@ const LinkPackPost = ({ pack, user, handleDeleteLink, handleDeletePack, handleLi
 }
 
 
-const ResponseForm = ({ requestId, recipientId, onResponseAdded }: { requestId: string; recipientId: string; onResponseAdded: () => void }) => {
+const ResponseForm = ({ requestId, onResponseAdded }: { requestId: string; onResponseAdded: () => void }) => {
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     const [urls, setUrls] = useState('');
@@ -184,7 +184,7 @@ const ResponseForm = ({ requestId, recipientId, onResponseAdded }: { requestId: 
         }
         startTransition(async () => {
             try {
-                await addLinkResponse({ requestId, urls: urlList, recipientId });
+                await addLinkResponse({ requestId, urls: urlList });
                 setUrls('');
                 toast({ title: 'Response added!', variant: 'success' });
                 onResponseAdded();
@@ -270,7 +270,7 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
             <AnimatePresence>
                 {showResponseForm && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                        <ResponseForm requestId={request.id} recipientId={requestUser.id} onResponseAdded={() => { setShowResponseForm(false); refreshRequests(); }} />
+                        <ResponseForm requestId={request.id} onResponseAdded={() => { setShowResponseForm(false); refreshRequests(); }} />
                     </motion.div>
                 )}
             </AnimatePresence>
