@@ -105,7 +105,17 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         };
     }, [hasMore, isFetchingMore, isLoading, page, fetchPosts]);
 
-    const loadInitialData = useCallback(async (forceRefresh = false) => {
+    const refreshMoods = useCallback(async () => {
+        if (!user) return;
+        try {
+            const moodsData = await getFeedMoods();
+            setMoods(moodsData as Mood[] || []);
+        } catch(error: any) {
+            toast({ title: "Could not refresh moods", description: error.message, variant: 'destructive'});
+        }
+    }, [user, toast]);
+
+    const refreshFeed = useCallback(async () => {
         if (!user) {
             setIsLoading(false);
             return;
@@ -125,12 +135,8 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             
             const newPage = postsData.length > 0 ? 2 : 1;
             setPage(newPage);
+            setHasMore(postsData.length >= 5);
 
-            if (postsData.length < 5) {
-                setHasMore(false);
-            } else {
-                setHasMore(true);
-            }
         } catch(error: any) {
             toast({ title: "Could not load your feed", description: error.message, variant: 'destructive'});
             setHasMore(false);
@@ -140,37 +146,17 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }, [toast, user]);
 
     useEffect(() => {
-      loadInitialData();
+      refreshFeed();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
     
-    const handleRefresh = useCallback(async () => {
-        await loadInitialData(true);
-    }, [loadInitialData]);
-
     const handleDeletePost = (postId: string) => {
         setFeedPosts(prev => prev.filter(p => p.id !== postId));
     };
     
     const handleOnCloseMood = (updatedMoods?: Mood[]) => {
-        // Find which user's moods were being viewed
-        const viewedUserId = viewingStoryFromFeed?.[0]?.mood_user_id;
-
-        if (updatedMoods && viewedUserId) {
-            // Create a map of the updated moods that were viewed
-            const updatedViewedMoodsMap = new Map(updatedMoods.map(m => [m.mood_id, m]));
-            
-            // Update the main moods list
-            setMoods(currentMoods => 
-                currentMoods.map(currentMood => {
-                    // If this mood was in the set that was just viewed, update it
-                    if (updatedViewedMoodsMap.has(currentMood.mood_id)) {
-                        return updatedViewedMoodsMap.get(currentMood.mood_id)!;
-                    }
-                    // Otherwise, keep the old one
-                    return currentMood;
-                })
-            );
+        if (updatedMoods) {
+            setMoods(updatedMoods);
         }
         setViewingStoryFromFeed(null);
     }
@@ -194,7 +180,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                 initialIndex={selectedPostIndex}
                 onClose={() => setSelectedPostId(null)}
                 onDelete={handleDeletePost}
-                onMoodChange={handleRefresh}
+                onMoodChange={refreshMoods}
             />
         )
     }
@@ -206,10 +192,9 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                 initialIndex={0}
                 onClose={handleOnCloseMood}
                 isMoodView={true}
-                onMoodChange={handleRefresh}
+                onMoodChange={refreshMoods}
                 onDelete={(moodId) => {
                     setMoods(moods.filter(m => m.mood_id !== parseInt(moodId)));
-                    loadInitialData();
                 }}
             />
         )
@@ -218,7 +203,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     const renderContent = () => {
         if (isLoading && feedPosts.length === 0) {
             return (
-                <div className="flex h-full w-full flex-col items-center justify-center p-10 mt-20">
+                <div className="flex h-full w-full flex-col items-center justify-center p-10">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             );
@@ -227,14 +212,14 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             return (
                 <div>
                     {feedPosts.map((post) => (
-                        <PostCard key={post.id} post={post} onSelect={() => setSelectedPostId(post.id)} onDelete={handleDeletePost} onMoodChange={handleRefresh} />
+                        <PostCard key={post.id} post={post} onSelect={() => setSelectedPostId(post.id)} onDelete={handleDeletePost} onMoodChange={refreshMoods} />
                     ))}
                 </div>
             );
         }
         
         return (
-             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4 text-muted-foreground mt-20">
+             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4 text-muted-foreground">
                 <UserPlus className="h-16 w-16 text-muted-foreground/50" />
                 <h2 className="text-xl font-bold text-foreground">Welcome to Edengram</h2>
                 <p>Your feed is empty. Find users to support on the explore page.</p>
@@ -246,44 +231,36 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div className="h-full w-full overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
+        <div className="h-full w-full flex flex-col">
             <MoodHeader />
-            <MoodStories 
-                user={user}
-                moods={moods}
-                isLoading={isLoading}
-                onSelectMood={(index) => {
-                    // Find all moods from the selected user to create their story playlist
-                    const selectedMood = moods[index];
-                    if (!selectedMood) return;
+            <div className="flex-1 overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
+                <MoodStories 
+                    user={user}
+                    moods={moods}
+                    isLoading={isLoading}
+                    onSelectMood={(index) => {
+                        const selectedMood = moods[index];
+                        if (!selectedMood) return;
 
-                    const userStoryMoods = moods.filter(m => m.mood_user_id === selectedMood.mood_user_id);
-                    
-                    // Find the index of the specific mood that was tapped within that user's story
-                    const startIndexInUserStory = userStoryMoods.findIndex(m => m.mood_id === selectedMood.mood_id);
-
-                    // Reorder the user's moods so the tapped one is first
-                    const reorderedUserStory = [
-                        ...userStoryMoods.slice(startIndexInUserStory),
-                        ...userStoryMoods.slice(0, startIndexInUserStory)
-                    ];
-
-                    // Find all other stories that are NOT from the selected user
-                    const otherUsersMoods = moods.filter(m => m.mood_user_id !== selectedMood.mood_user_id);
-                    
-                    // Combine them for the full playlist: selected user's story first, then the rest
-                    const fullPlaylist = [...reorderedUserStory, ...otherUsersMoods];
-
-                    setViewingStoryFromFeed(fullPlaylist);
-                }}
-            />
-            <div>
-                {renderContent()}
-                {!isLoading && hasMore && (
-                    <div ref={loaderRef} className="flex justify-center p-4">
-                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    </div>
-                )}
+                        const userStoryMoods = moods.filter(m => m.mood_user_id === selectedMood.mood_user_id);
+                        const startIndexInUserStory = userStoryMoods.findIndex(m => m.mood_id === selectedMood.mood_id);
+                        const reorderedUserStory = [
+                            ...userStoryMoods.slice(startIndexInUserStory),
+                            ...userStoryMoods.slice(0, startIndexInUserStory)
+                        ];
+                        const otherUsersMoods = moods.filter(m => m.mood_user_id !== selectedMood.mood_user_id);
+                        const fullPlaylist = [...reorderedUserStory, ...otherUsersMoods];
+                        setViewingStoryFromFeed(fullPlaylist);
+                    }}
+                />
+                <div className='min-h-0'>
+                    {renderContent()}
+                    {!isLoading && hasMore && (
+                        <div ref={loaderRef} className="flex justify-center p-4">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
