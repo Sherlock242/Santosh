@@ -241,18 +241,48 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error('You can add between 1 and 5 links.');
     }
 
-    // This action now calls a database function to handle the logic.
-    // The RPC needs to be called with a client that can execute it.
-    // Assuming the function is defined with `security definer`.
-    const { error } = await supabase.rpc('handle_new_link_response', {
-        p_request_id: requestId,
-        p_user_id: user.id,
-        p_urls: urls
+    // Step 1: Insert the response
+    const { error: responseError } = await supabase.from('link_request_responses').insert({
+        request_id: requestId,
+        user_id: user.id,
+        urls: urls
     });
 
-    if (error) {
-        console.error('Error in handle_new_link_response RPC:', error);
-        throw new Error('Failed to add response. ' + error.message);
+    if (responseError) {
+        console.error('Error adding link response:', responseError);
+        throw new Error('Failed to add response. ' + responseError.message);
+    }
+
+    // Step 2: Create a notification using an admin client
+    try {
+        const supabaseAdmin = createSupabaseServerClient(true);
+        
+        // Find the owner of the original request
+        const { data: requestData, error: requestError } = await supabaseAdmin
+            .from('link_requests')
+            .select('user_id')
+            .eq('id', requestId)
+            .single();
+
+        if (requestError) {
+            console.error('Notification Error: Could not find original requestor.', requestError);
+            throw new Error('Response saved, but failed to find request owner for notification.');
+        }
+
+        const recipientId = requestData.user_id;
+
+        // Don't send a notification if the user is responding to their own request
+        if (recipientId && recipientId !== user.id) {
+            await createNotification({
+                recipient_id: recipientId,
+                actor_id: user.id,
+                type: 'new_link_response',
+                link_request_id: requestId,
+            });
+        }
+    } catch (notificationError: any) {
+        // Log the error but don't fail the whole action, since the response was saved.
+        console.error('Failed to create notification:', notificationError.message);
     }
 
     revalidatePath('/links');
