@@ -570,9 +570,9 @@ export default function LinksPage() {
 
             <div className="flex items-center border-b text-sm font-medium text-muted-foreground overflow-x-auto no-scrollbar">
                 <button className={`flex-1 p-3 whitespace-nowrap ${activeTab === 'all-links' ? 'border-b-2 border-primary text-primary' : ''}`} onClick={() => setActiveTab('all-links')}>All Links</button>
-                <button className={`flex-1 p-3 whitespace-nowrap ${activeTab === 'my-links' ? 'border-b-2 border-primary text-primary' : ''}`} onClick={() => setActiveTab('my-links')}>My Links</button>
+                {user && <button className={`flex-1 p-3 whitespace-nowrap ${activeTab === 'my-links' ? 'border-b-2 border-primary text-primary' : ''}`} onClick={() => setActiveTab('my-links')}>My Links</button>}
                 <button className={`flex-1 p-3 whitespace-nowrap ${activeTab === 'all-requests' ? 'border-b-2 border-primary text-primary' : ''}`} onClick={() => setActiveTab('all-requests')}>All Requests</button>
-                <button className={`flex-1 p-3 whitespace-nowrap ${activeTab === 'my-requests' ? 'border-b-2 border-primary text-primary' : ''}`} onClick={() => setActiveTab('my-requests')}>My Requests</button>
+                {user && <button className={`flex-1 p-3 whitespace-nowrap ${activeTab === 'my-requests' ? 'border-b-2 border-primary text-primary' : ''}`} onClick={() => setActiveTab('my-requests')}>My Requests</button>}
             </div>
             
             <AnimatePresence>
@@ -632,3 +632,4 @@ export default function LinksPage() {
     );
 }
 
+    
