@@ -40,14 +40,12 @@ const NotificationBell = () => {
             .on(
                 'postgres_changes',
                 {
-                    event: '*', // Listen to all changes
+                    event: '*',
                     schema: 'public',
                     table: 'notifications',
                     filter: `recipient_id=eq.${user.id}`,
                 },
                 () => {
-                    // When any change happens, re-check the count.
-                    // This is more reliable than trying to manage state based on payload.
                     checkForNewNotifications();
                 }
             )
@@ -60,7 +58,7 @@ const NotificationBell = () => {
 
     return (
         <Button asChild variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary">
-            <Link href="/notifications" onClick={() => setHasNewNotifications(false)}>
+            <Link href="/notifications">
                 <Bell />
                 {hasNewNotifications && <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-primary" />}
                 <span className="sr-only">Notifications</span>
