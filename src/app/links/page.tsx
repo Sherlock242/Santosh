@@ -89,53 +89,6 @@ function useDebounce(value: string, delay: number) {
 }
 
 // --- Sub-components ---
-const LinkPost = ({ link, user, handleDeleteLink, handleLinkClick }: { link: LinkEntry, user: any, handleDeleteLink: (id: string) => void, handleLinkClick: (link: LinkEntry) => void }) => (
-    <div key={link.id} className="rounded-lg border bg-card p-3 space-y-2">
-        <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 overflow-hidden">
-                {link.user && (
-                    <Link href={`/gallery?userId=${link.user.id}`}>
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src={link.user.picture} alt={link.user.name} />
-                            <AvatarFallback>{link.user.name?.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                    </Link>
-                )}
-                <p className="text-sm font-semibold truncate">{link.user?.name || 'Anonymous'}</p>
-            </div>
-            <div className="flex items-center gap-1">
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground flex-shrink-0">
-                    <Eye className="h-4 w-4" />
-                    <span>{link.clicks || 0}</span>
-                </div>
-                {user && user.id === link.user_id && (
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>This will permanently delete the link titled &quot;{link.title}&quot;.</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteLink(link.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                )}
-            </div>
-        </div>
-        <button onClick={() => handleLinkClick(link)} className="overflow-hidden text-left w-full group">
-            <p className="font-semibold truncate">{link.title}</p>
-            <p className="text-sm truncate" style={{ color: link.color }}>{link.url}</p>
-        </button>
-    </div>
-);
-
 const LinkPackPost = ({ pack, user, handleDeleteLink, handleLinkClick }: { pack: LinkPack, user: any, handleDeleteLink: (id: string) => void, handleLinkClick: (link: LinkEntry) => void }) => {
     return (
         <Collapsible defaultOpen={true} className="rounded-lg border bg-card p-3 space-y-2">
@@ -511,30 +464,33 @@ export default function LinksPage() {
     // Group links into packs
     const linkPacks = useMemo(() => {
         const packs = new Map<string, LinkPack>();
-        const singleLinks: LinkEntry[] = [];
         const packRegex = /^(.*)\s+\d+$/;
 
         links.forEach(link => {
             const match = link.title.match(packRegex);
+            let packTitle: string;
+
             if (match) {
-                const packTitle = match[1];
-                if (packs.has(packTitle)) {
-                    packs.get(packTitle)!.links.push(link);
-                } else {
-                    packs.set(packTitle, {
-                        id: packTitle,
-                        title: packTitle,
-                        links: [link],
-                        user: link.user,
-                        created_at: link.created_at,
-                    });
-                }
+                packTitle = match[1];
             } else {
-                singleLinks.push(link);
+                // If it doesn't match the multi-link regex, treat it as its own pack
+                packTitle = link.title;
+            }
+
+            if (packs.has(packTitle)) {
+                packs.get(packTitle)!.links.push(link);
+            } else {
+                packs.set(packTitle, {
+                    id: packTitle,
+                    title: packTitle,
+                    links: [link],
+                    user: link.user,
+                    created_at: link.created_at,
+                });
             }
         });
         
-        return [...Array.from(packs.values()), ...singleLinks].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        return [...Array.from(packs.values())].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     }, [links]);
     
@@ -547,10 +503,9 @@ export default function LinksPage() {
         }
         return (
             <>
-                {linkPacks.map(item => 'links' in item 
-                    ? <LinkPackPost key={item.id} pack={item} user={user} handleDeleteLink={handleDeleteLink} handleLinkClick={handleLinkClick} />
-                    : <LinkPost key={item.id} link={item as LinkEntry} user={user} handleDeleteLink={handleDeleteLink} handleLinkClick={handleLinkClick} />
-                )}
+                {linkPacks.map(item => (
+                    <LinkPackPost key={item.id} pack={item} user={user} handleDeleteLink={handleDeleteLink} handleLinkClick={handleLinkClick} />
+                ))}
                 {!isLinksLoading && hasMoreLinks && <Button variant="outline" className="w-full" onClick={() => fetchLinks(debouncedSearchQuery, linksPage + 1, activeTab === 'my-links' ? user?.id : undefined)}>Load More</Button>}
             </>
         )
@@ -609,7 +564,7 @@ export default function LinksPage() {
                     <form onSubmit={handleAddLink} className="space-y-4">
                         <Input id="title-prefix" placeholder="Title (e.g., 'My Awesome Links' or 'Episode')" value={titlePrefix} onChange={(e) => setTitlePrefix(e.target.value)} disabled={isPending} maxLength={200} />
                         <div className="relative">
-                        <Textarea id="urls" placeholder="https://example.com/episode-1&#10;https://example.com/episode-2" value={urls} onChange={(e) => setUrls(e.target.value)} disabled={isPending} required className="pr-10" rows={4} />
+                        <Textarea id="urls" placeholder="https://example.com/episode-1\nhttps://example.com/episode-2" value={urls} onChange={(e) => setUrls(e.target.value)} disabled={isPending} required className="pr-10" rows={4} />
                             <button type="button" className="absolute bottom-2 right-2 p-1 text-muted-foreground hover:text-foreground" onClick={() => colorInputRef.current?.click()}><Palette className="h-5 w-5" style={{ color: color }} /><span className="sr-only">Choose color</span></button>
                             <input ref={colorInputRef} type="color" value={color} onChange={(e) => setColor(e.target.value)} className="absolute -z-10 w-0 h-0 opacity-0" />
                         </div>
