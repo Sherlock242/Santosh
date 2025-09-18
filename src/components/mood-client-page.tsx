@@ -231,37 +231,33 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div className="h-full w-full flex flex-col">
+        <div className="h-full w-full overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
             <MoodHeader />
-            <div className="flex-1 overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
-                <MoodStories 
-                    user={user}
-                    moods={moods}
-                    isLoading={isLoading}
-                    onSelectMood={(index) => {
-                        const selectedMood = moods[index];
-                        if (!selectedMood) return;
+            <MoodStories 
+                user={user}
+                moods={moods}
+                isLoading={isLoading}
+                onSelectMood={(index) => {
+                    const selectedMood = moods[index];
+                    if (!selectedMood) return;
 
-                        const userStoryMoods = moods.filter(m => m.mood_user_id === selectedMood.mood_user_id);
-                        const startIndexInUserStory = userStoryMoods.findIndex(m => m.mood_id === selectedMood.mood_id);
-                        const reorderedUserStory = [
-                            ...userStoryMoods.slice(startIndexInUserStory),
-                            ...userStoryMoods.slice(0, startIndexInUserStory)
-                        ];
-                        const otherUsersMoods = moods.filter(m => m.mood_user_id !== selectedMood.mood_user_id);
-                        const fullPlaylist = [...reorderedUserStory, ...otherUsersMoods];
-                        setViewingStoryFromFeed(fullPlaylist);
-                    }}
-                />
-                <div className='min-h-0'>
-                    {renderContent()}
-                    {!isLoading && hasMore && (
-                        <div ref={loaderRef} className="flex justify-center p-4">
-                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                        </div>
-                    )}
+                    const userStoryMoods = moods.filter(m => m.mood_user_id === selectedMood.mood_user_id);
+                    const startIndexInUserStory = userStoryMoods.findIndex(m => m.mood_id === selectedMood.mood_id);
+                    const reorderedUserStory = [
+                        ...userStoryMoods.slice(startIndexInUserStory),
+                        ...userStoryMoods.slice(0, startIndexInUserStory)
+                    ];
+                    const otherUsersMoods = moods.filter(m => m.mood_user_id !== selectedMood.mood_user_id);
+                    const fullPlaylist = [...reorderedUserStory, ...otherUsersMoods];
+                    setViewingStoryFromFeed(fullPlaylist);
+                }}
+            />
+            {renderContent()}
+            {!isLoading && hasMore && (
+                <div ref={loaderRef} className="flex justify-center p-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-            </div>
+            )}
         </div>
     );
 }
