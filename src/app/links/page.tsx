@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 // --- Types ---
 interface UserProfile {
@@ -312,6 +313,8 @@ const RequestPost = ({ request, user, refreshRequests, handleLinkClick }: { requ
     );
 };
 
+type ActiveTab = 'all-links' | 'my-links' | 'all-requests' | 'my-requests';
+
 // --- Main Page Component ---
 export default function LinksPage() {
     const { user } = useAuth();
@@ -330,7 +333,7 @@ export default function LinksPage() {
     const [hasMoreRequests, setHasMoreRequests] = useState(true);
     
     // Common States
-    const [activeTab, setActiveTab] = useState<'links' | 'requests'>('links');
+    const [activeTab, setActiveTab] = useState<ActiveTab>('all-links');
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
     const [isPending, startTransition] = useTransition();
@@ -346,11 +349,17 @@ export default function LinksPage() {
 
     // State for Link Request Form
     const [requestText, setRequestText] = useState('');
+    
+    const isMyLinksTab = activeTab === 'my-links';
+    const isMyRequestsTab = activeTab === 'my-requests';
+    const isLinksView = activeTab === 'all-links' || activeTab === 'my-links';
+    const isRequestsView = activeTab === 'all-requests' || activeTab === 'my-requests';
 
-    const fetchLinks = useCallback(async (query: string, pageNum: number) => {
+
+    const fetchLinks = useCallback(async (query: string, pageNum: number, forUserId?: string) => {
         setIsLinksLoading(true);
         try {
-            const fetchedLinks = await getLinks({ query, page: pageNum, limit: LINKS_PER_PAGE });
+            const fetchedLinks = await getLinks({ query, page: pageNum, limit: LINKS_PER_PAGE, userId: forUserId });
             setLinks(pageNum === 1 ? fetchedLinks as LinkEntry[] : [...links, ...fetchedLinks as LinkEntry[]]);
             setHasMoreLinks(fetchedLinks.length === LINKS_PER_PAGE);
         } catch (error: any) {
@@ -360,10 +369,10 @@ export default function LinksPage() {
         }
     }, [links, toast]);
 
-    const fetchRequests = useCallback(async (query: string, pageNum: number) => {
+    const fetchRequests = useCallback(async (query: string, pageNum: number, forUserId?: string) => {
         setIsRequestsLoading(true);
         try {
-            const linkRequests = await getLinkRequests({ query, page: pageNum, limit: REQUESTS_PER_PAGE });
+            const linkRequests = await getLinkRequests({ query, page: pageNum, limit: REQUESTS_PER_PAGE, userId: forUserId });
             setRequests(pageNum === 1 ? linkRequests as LinkRequest[] : [...requests, ...linkRequests as LinkRequest[]]);
             setHasMoreRequests(linkRequests.length === REQUESTS_PER_PAGE);
         } catch (error: any) {
@@ -374,29 +383,28 @@ export default function LinksPage() {
     }, [requests, toast]);
     
     useEffect(() => {
-        setLinksPage(1);
-        fetchLinks(debouncedSearchQuery, 1);
+        if (isLinksView) {
+            setLinksPage(1);
+            fetchLinks(debouncedSearchQuery, 1, isMyLinksTab ? user?.id : undefined);
+        } else {
+            setRequestsPage(1);
+            fetchRequests(debouncedSearchQuery, 1, isMyRequestsTab ? user?.id : undefined);
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedSearchQuery, activeTab === 'links']);
-
-     useEffect(() => {
-        setRequestsPage(1);
-        fetchRequests(debouncedSearchQuery, 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedSearchQuery, activeTab === 'requests']);
+    }, [debouncedSearchQuery, activeTab, user]);
 
     const handleAddLink = (e: React.FormEvent) => {
         e.preventDefault();
         const urlList = urls.split('\n').map(u => u.trim()).filter(u => u);
         if (urlList.length === 0) return toast({ title: 'Please enter at least one URL', variant: 'destructive' });
-        if (!titlePrefix.trim()) return toast({ title: 'Please enter a title', variant: 'destructive' });
+        if (!titlePrefix.trim()) return toast({ title: 'Write as a placeholder', variant: 'destructive' });
         startTransition(async () => {
             try {
                 await addLink({ titlePrefix, urls: urlList, color });
                 setTitlePrefix(''); setUrls('');
                 toast({ title: 'Links added successfully!', variant: 'success' });
                 setShowAddLinkForm(false);
-                fetchLinks(debouncedSearchQuery, 1);
+                refreshCurrentTab();
             } catch (error: any) {
                 toast({ title: 'Error adding links', description: error.message, variant: 'destructive' });
             }
@@ -412,7 +420,7 @@ export default function LinksPage() {
                 setRequestText('');
                 toast({ title: 'Request posted!', variant: 'success' });
                 setShowRequestForm(false);
-                fetchRequests(debouncedSearchQuery, 1);
+                refreshCurrentTab();
             } catch (error: any) {
                 toast({ title: 'Error posting request', description: error.message, variant: 'destructive' });
             }
@@ -454,28 +462,28 @@ export default function LinksPage() {
     };
     
     const refreshCurrentTab = () => {
-        if (activeTab === 'links') {
+        if (isLinksView) {
             setLinksPage(1);
-            fetchLinks(debouncedSearchQuery, 1);
+            fetchLinks(debouncedSearchQuery, 1, isMyLinksTab ? user?.id : undefined);
         } else {
             setRequestsPage(1);
-            fetchRequests(debouncedSearchQuery, 1);
+            fetchRequests(debouncedSearchQuery, 1, isMyRequestsTab ? user?.id : undefined);
         }
     }
 
     // Group links into packs
     const linkPacks = useMemo(() => {
         const packs = new Map<string, LinkPack>();
-        const packRegex = /^(.*)\s+\d+$/;
-
+        
         links.forEach(link => {
-            const match = link.title.match(packRegex);
+            const match = link.title.match(/^(.*)\s+\d+$/);
+            const isMultiLink = match && links.filter(l => l.title.startsWith(match[1])).length > 1;
+            
             let packTitle: string;
-
-            if (match) {
+            if (isMultiLink) {
                 packTitle = match[1];
             } else {
-                packTitle = link.title;
+                packTitle = link.title; 
             }
 
             if (packs.has(packTitle)) {
@@ -508,7 +516,7 @@ export default function LinksPage() {
                 {linkPacks.map(item => (
                     <LinkPackPost key={item.id} pack={item} user={user} handleDeleteLink={handleDeleteLink} handleDeletePack={handleDeletePack} handleLinkClick={handleLinkClick} />
                 ))}
-                {!isLinksLoading && hasMoreLinks && <Button variant="outline" className="w-full" onClick={() => fetchLinks(debouncedSearchQuery, linksPage + 1)}>Load More</Button>}
+                {!isLinksLoading && hasMoreLinks && <Button variant="outline" className="w-full" onClick={() => fetchLinks(debouncedSearchQuery, linksPage + 1, isMyLinksTab ? user?.id : undefined)}>Load More</Button>}
             </>
         )
     };
@@ -523,7 +531,7 @@ export default function LinksPage() {
         return (
             <>
                 {requests.map(request => <RequestPost key={request.id} request={request} user={user} refreshRequests={refreshCurrentTab} handleLinkClick={(url) => { window.open(url, '_blank', 'noopener,noreferrer'); }} />)}
-                {!isRequestsLoading && hasMoreRequests && <Button variant="outline" className="w-full" onClick={() => fetchRequests(debouncedSearchQuery, requestsPage + 1)}>Load More</Button>}
+                {!isRequestsLoading && hasMoreRequests && <Button variant="outline" className="w-full" onClick={() => fetchRequests(debouncedSearchQuery, requestsPage + 1, isMyRequestsTab ? user?.id : undefined)}>Load More</Button>}
             </>
         )
     }
@@ -535,12 +543,15 @@ export default function LinksPage() {
                 <h1 className="text-xl font-bold">Public Links</h1>
             </div>
             {user && (
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => activeTab === 'links' ? setShowAddLinkForm(prev => !prev) : setShowRequestForm(prev => !prev)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        {activeTab === 'links' ? 'Add Link' : 'New Request'}
-                    </Button>
-                </div>
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm"><Plus className="h-4 w-4 mr-2" /> Add New</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem onSelect={() => {setShowRequestForm(false); setShowAddLinkForm(true);}}>Add Link</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => {setShowAddLinkForm(false); setShowRequestForm(true);}}>Request a Link</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             )}
         </header>
     )
@@ -557,17 +568,15 @@ export default function LinksPage() {
                  </div>
             </div>
 
-            <div className="flex items-center border-b">
-                <button className={`flex-1 p-3 text-sm font-medium ${activeTab === 'links' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`} onClick={() => setActiveTab('links')}>
-                    Links
-                </button>
-                <button className={`flex-1 p-3 text-sm font-medium ${activeTab === 'requests' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`} onClick={() => setActiveTab('requests')}>
-                    Requests
-                </button>
+            <div className="flex items-center border-b text-sm font-medium text-muted-foreground overflow-x-auto no-scrollbar">
+                <button className={`flex-1 p-3 whitespace-nowrap ${activeTab === 'all-links' ? 'border-b-2 border-primary text-primary' : ''}`} onClick={() => setActiveTab('all-links')}>All Links</button>
+                <button className={`flex-1 p-3 whitespace-nowrap ${activeTab === 'my-links' ? 'border-b-2 border-primary text-primary' : ''}`} onClick={() => setActiveTab('my-links')}>My Links</button>
+                <button className={`flex-1 p-3 whitespace-nowrap ${activeTab === 'all-requests' ? 'border-b-2 border-primary text-primary' : ''}`} onClick={() => setActiveTab('all-requests')}>All Requests</button>
+                <button className={`flex-1 p-3 whitespace-nowrap ${activeTab === 'my-requests' ? 'border-b-2 border-primary text-primary' : ''}`} onClick={() => setActiveTab('my-requests')}>My Requests</button>
             </div>
             
             <AnimatePresence>
-            {activeTab === 'links' && showAddLinkForm && (
+            {showAddLinkForm && (
                 <motion.div 
                     className="p-4 md:p-6 border-b"
                     initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
@@ -589,7 +598,7 @@ export default function LinksPage() {
             </AnimatePresence>
             
             <AnimatePresence>
-            {activeTab === 'requests' && showRequestForm && (
+            {showRequestForm && (
                  <motion.div
                     className="p-4 md:p-6 border-b"
                     initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
@@ -616,11 +625,10 @@ export default function LinksPage() {
 
 
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 pb-20 md:pb-6">
-                {activeTab === 'links' && renderLinks()}
-                {activeTab === 'requests' && renderRequests()}
+                {isLinksView && renderLinks()}
+                {isRequestsView && renderRequests()}
             </div>
         </div>
     );
 }
 
-    
