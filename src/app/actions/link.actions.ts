@@ -252,7 +252,32 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error(responseError.message);
     }
     
-    // The notification is now expected to be handled by a database trigger.
+    // Create notification using admin client to bypass RLS
+    try {
+        const supabaseAdmin = createSupabaseServerClient(true);
+        const { data: requestData, error: requestError } = await supabaseAdmin
+            .from('link_requests')
+            .select('user_id')
+            .eq('id', requestId)
+            .single();
+
+        if (requestError) {
+            console.error('Notification Error: Could not fetch original request author.', requestError);
+            // Do not throw, as the main action succeeded.
+        } else if (requestData && requestData.user_id !== user.id) {
+            const { error: notificationError } = await supabaseAdmin.from('notifications').insert({
+                recipient_id: requestData.user_id,
+                actor_id: user.id,
+                type: 'new_link_response',
+                link_request_id: requestId,
+            });
+            if (notificationError) {
+                console.error('Notification Error: Could not insert notification.', notificationError);
+            }
+        }
+    } catch (e) {
+        console.error('Notification Error: An unexpected error occurred.', e);
+    }
     
     revalidatePath('/links');
 }
