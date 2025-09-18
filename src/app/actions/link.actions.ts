@@ -266,12 +266,10 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error('Failed to add response. ' + responseError.message);
     }
 
-    // Step 2: Create a notification using an admin client
+    // Step 2: Create a notification for the original requestor
     try {
-        const supabaseAdmin = createSupabaseServerClient(true);
-        
         // Find the owner of the original request
-        const { data: requestData, error: requestError } = await supabaseAdmin
+        const { data: requestData, error: requestError } = await supabase
             .from('link_requests')
             .select('user_id')
             .eq('id', requestId)
@@ -279,7 +277,8 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
 
         if (requestError) {
             console.error('Notification Error: Could not find original requestor.', requestError);
-            throw new Error('Response saved, but failed to find request owner for notification.');
+            // Don't fail the whole action, just log it. The response was saved.
+            return;
         }
 
         const recipientId = requestData.user_id;
@@ -366,4 +365,3 @@ export async function deleteLinkResponse(responseId: string) {
 
     revalidatePath('/links');
 }
-
