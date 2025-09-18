@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Loader2, UserPlus, Heart, Check, MessageSquareReply } from 'lucide-react';
-import { getNotifications, respondToSupportRequest } from '../actions';
+import { getNotifications, respondToSupportRequest, markNotificationsAsRead } from '../actions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GalleryThumbnail } from '@/components/gallery-thumbnail';
 import type { EmojiState } from '@/app/design/page';
@@ -203,6 +203,8 @@ export default function NotificationsPage() {
     
     if (pageNum === 1) {
         setIsLoading(true);
+        // Mark as read when fetching the first page
+        await markNotificationsAsRead();
     } else {
         setIsFetchingMore(true);
     }

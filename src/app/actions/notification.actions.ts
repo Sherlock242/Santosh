@@ -47,9 +47,6 @@ export async function getNotifications({ page = 1, limit = 15 }: { page: number,
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
-    // Directly mark notifications as read when they are fetched.
-    await markNotificationsAsRead();
-
     // 1. Fetch notifications for the current user
     const { data: notificationsData, error: notificationsError } = await supabase
         .from('notifications')
