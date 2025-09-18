@@ -33,7 +33,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: { us
         );
     }
     
-    const isOwnProfile = !searchParams.userId || (authUser && searchParams.userId === authUser.id);
+    const isOwnProfile = !!(!searchParams.userId || (authUser && searchParams.userId === authUser.id));
     
     // Fetch initial data on the server
     const profileUser = await getProfileUser(userId);
