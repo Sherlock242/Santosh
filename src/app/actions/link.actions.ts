@@ -251,32 +251,38 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error(responseError.message);
     }
 
-    // Now, handle the notification part using an admin client to bypass RLS for reading.
+    // Now, handle the notification part. This must use an admin client
+    // to bypass RLS when fetching the original request owner's ID.
     try {
         const supabaseAdmin = createSupabaseServerClient(true);
-        // 1. Get the original request to find the owner
+        
+        // 1. Get the original request to find the owner's ID
         const { data: request, error: requestError } = await supabaseAdmin
             .from('link_requests')
             .select('user_id')
             .eq('id', requestId)
             .single();
         
+        // Throw an error if the request can't be found.
         if (requestError || !request) {
             console.error('Error finding link request owner for notification:', requestError);
-            throw new Error('Could not find the original request.');
+            // We don't throw an error to the user, but log it. The main action (response) succeeded.
+            return;
         }
 
-        // 2. Create a notification for the original requestor, if it's not the same user
+        // 2. Create a notification for the original requestor, only if it's not the same user.
         if (user.id !== request.user_id) {
-            const { error: notificationError } = await supabaseAdmin.from('notifications').insert({
-                recipient_id: request.user_id,
-                actor_id: user.id,
-                type: 'new_link_response',
-                link_request_id: requestId,
-            });
+            const { error: notificationError } = await supabaseAdmin
+                .from('notifications')
+                .insert({
+                    recipient_id: request.user_id,
+                    actor_id: user.id,
+                    type: 'new_link_response',
+                    link_request_id: requestId,
+                });
 
             if (notificationError) {
-                // Log the error but don't block the user's action
+                // Log the error but don't block the user's action.
                 console.error('Failed to create notification for link response:', notificationError);
             }
         }
