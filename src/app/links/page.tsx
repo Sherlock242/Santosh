@@ -1,13 +1,13 @@
 
 'use client';
 
-import React, { useState, useEffect, useTransition, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useTransition, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Share2, Palette, Eye, ChevronLeft, ChevronRight, MessageSquarePlus, Send, X, ChevronsUpDown } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Palette, Eye, ChevronsUpDown, MessageSquarePlus, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addLink, getLinks, deleteLink, createLinkRequest, getLinkRequests, addLinkResponse, deleteLinkRequest, deleteLinkResponse } from '../actions/link.actions';
+import { addLink, getLinks, deleteLink, deleteLinks, createLinkRequest, getLinkRequests, addLinkResponse, deleteLinkRequest, deleteLinkResponse } from '../actions/link.actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,22 +17,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { cn } from '@/lib/utils';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-  } from "@/components/ui/dropdown-menu"
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 // --- Types ---
 interface UserProfile {
@@ -53,11 +45,12 @@ interface LinkEntry {
 }
 
 interface LinkPack {
-    id: string; // Use the title as a unique ID for the pack
+    id: string; 
     title: string;
     links: LinkEntry[];
     user: UserProfile | null;
     created_at: string;
+    user_id: string;
 }
 
 interface LinkResponse {
@@ -89,7 +82,8 @@ function useDebounce(value: string, delay: number) {
 }
 
 // --- Sub-components ---
-const LinkPackPost = ({ pack, user, handleDeleteLink, handleLinkClick }: { pack: LinkPack, user: any, handleDeleteLink: (id: string) => void, handleLinkClick: (link: LinkEntry) => void }) => {
+const LinkPackPost = ({ pack, user, handleDeleteLink, handleDeletePack, handleLinkClick }: { pack: LinkPack, user: any, handleDeleteLink: (id: string) => void, handleDeletePack: (ids: string[]) => void, handleLinkClick: (link: LinkEntry) => void }) => {
+    const isOwner = user && user.id === pack.user_id;
     return (
         <Collapsible defaultOpen={true} className="rounded-lg border bg-card p-3 space-y-2">
             <div className="flex items-center justify-between gap-3">
@@ -102,16 +96,37 @@ const LinkPackPost = ({ pack, user, handleDeleteLink, handleLinkClick }: { pack:
                             </Avatar>
                         </Link>
                     )}
-                    <p className="text-sm font-semibold truncate">{pack.user?.name || 'Anonymous'}</p>
+                    <div className="overflow-hidden">
+                        <p className="text-sm font-semibold truncate">{pack.user?.name || 'Anonymous'}</p>
+                        <h3 className="font-semibold text-lg truncate">{pack.title}</h3>
+                    </div>
                 </div>
-                <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                        <ChevronsUpDown className="h-4 w-4" />
-                        <span className="sr-only">Toggle pack</span>
-                    </Button>
-                </CollapsibleTrigger>
+                 <div className="flex items-center gap-1">
+                    {isOwner && (
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Pack?</AlertDialogTitle>
+                                    <AlertDialogDescription>This will delete the &quot;{pack.title}&quot; pack and all {pack.links.length} links inside it.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeletePack(pack.links.map(l => l.id))} className="bg-destructive hover:bg-destructive/90">Delete Pack</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )}
+                    <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                            <ChevronsUpDown className="h-4 w-4" />
+                            <span className="sr-only">Toggle pack</span>
+                        </Button>
+                    </CollapsibleTrigger>
+                </div>
             </div>
-             <h3 className="font-semibold text-lg">{pack.title}</h3>
 
             <CollapsibleContent className="space-y-2">
                 {pack.links.map(link => (
@@ -126,16 +141,16 @@ const LinkPackPost = ({ pack, user, handleDeleteLink, handleLinkClick }: { pack:
                                     <Eye className="h-3 w-3" />
                                     <span>{link.clicks || 0}</span>
                                 </div>
-                                {user && user.id === link.user_id && (
+                                {isOwner && (
                                      <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
-                                                <Trash2 className="h-4 w-4" />
+                                                <X className="h-4 w-4" />
                                             </Button>
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                             <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogTitle>Delete Link?</AlertDialogTitle>
                                                 <AlertDialogDescription>This will permanently delete the link titled &quot;{link.title}&quot;.</AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
@@ -315,11 +330,12 @@ export default function LinksPage() {
     const [hasMoreRequests, setHasMoreRequests] = useState(true);
     
     // Common States
-    const [activeTab, setActiveTab] = useState('all-links');
+    const [activeTab, setActiveTab] = useState<'links' | 'requests'>('links');
+    const [showMyContentOnly, setShowMyContentOnly] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
     const [isPending, startTransition] = useTransition();
-    const [showAddForm, setShowAddForm] = useState(false);
+    const [showAddLinkForm, setShowAddLinkForm] = useState(false);
     const [showRequestForm, setShowRequestForm] = useState(false);
 
 
@@ -332,10 +348,10 @@ export default function LinksPage() {
     // State for Link Request Form
     const [requestText, setRequestText] = useState('');
 
-    const fetchLinks = async (query: string, pageNum: number, userId?: string) => {
+    const fetchLinks = useCallback(async (query: string, pageNum: number, forUser: boolean) => {
         setIsLinksLoading(true);
         try {
-            const fetchedLinks = await getLinks({ query, page: pageNum, limit: LINKS_PER_PAGE, userId });
+            const fetchedLinks = await getLinks({ query, page: pageNum, limit: LINKS_PER_PAGE, userId: forUser ? user?.id : undefined });
             setLinks(pageNum === 1 ? fetchedLinks as LinkEntry[] : [...links, ...fetchedLinks as LinkEntry[]]);
             setHasMoreLinks(fetchedLinks.length === LINKS_PER_PAGE);
         } catch (error: any) {
@@ -343,12 +359,12 @@ export default function LinksPage() {
         } finally {
             setIsLinksLoading(false);
         }
-    };
+    }, [user, links, toast]);
 
-    const fetchRequests = async (query: string, pageNum: number, userId?: string) => {
+    const fetchRequests = useCallback(async (query: string, pageNum: number, forUser: boolean) => {
         setIsRequestsLoading(true);
         try {
-            const linkRequests = await getLinkRequests({ query, page: pageNum, limit: REQUESTS_PER_PAGE, userId });
+            const linkRequests = await getLinkRequests({ query, page: pageNum, limit: REQUESTS_PER_PAGE, userId: forUser ? user?.id : undefined });
             setRequests(pageNum === 1 ? linkRequests as LinkRequest[] : [...requests, ...linkRequests as LinkRequest[]]);
             setHasMoreRequests(linkRequests.length === REQUESTS_PER_PAGE);
         } catch (error: any) {
@@ -356,50 +372,32 @@ export default function LinksPage() {
         } finally {
             setIsRequestsLoading(false);
         }
-    }
+    }, [user, requests, toast]);
     
     useEffect(() => {
-        setLinks([]);
-        setRequests([]);
-        setSearchQuery('');
-        
-        switch (activeTab) {
-            case 'all-links':
-                setLinksPage(1);
-                fetchLinks(debouncedSearchQuery, 1);
-                break;
-            case 'all-requests':
-                setRequestsPage(1);
-                fetchRequests(debouncedSearchQuery, 1);
-                break;
-            case 'my-links':
-                setLinksPage(1);
-                if (user) fetchLinks(debouncedSearchQuery, 1, user.id);
-                break;
-            case 'my-requests':
-                setRequestsPage(1);
-                if (user) fetchRequests(debouncedSearchQuery, 1, user.id);
-                break;
-        }
+        setLinksPage(1);
+        fetchLinks(debouncedSearchQuery, 1, showMyContentOnly);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedSearchQuery, activeTab, user]);
+    }, [debouncedSearchQuery, showMyContentOnly, activeTab === 'links']);
+
+     useEffect(() => {
+        setRequestsPage(1);
+        fetchRequests(debouncedSearchQuery, 1, showMyContentOnly);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedSearchQuery, showMyContentOnly, activeTab === 'requests']);
 
     const handleAddLink = (e: React.FormEvent) => {
         e.preventDefault();
         const urlList = urls.split('\n').map(u => u.trim()).filter(u => u);
         if (urlList.length === 0) return toast({ title: 'Please enter at least one URL', variant: 'destructive' });
+        if (!titlePrefix.trim()) return toast({ title: 'Please enter a title', variant: 'destructive' });
         startTransition(async () => {
             try {
                 await addLink({ titlePrefix, urls: urlList, color });
                 setTitlePrefix(''); setUrls('');
                 toast({ title: 'Links added successfully!', variant: 'success' });
-                setShowAddForm(false);
-                if (activeTab === 'all-links' || activeTab === 'my-links') {
-                    setLinksPage(1);
-                    fetchLinks(debouncedSearchQuery, 1, activeTab === 'my-links' ? user?.id : undefined);
-                } else {
-                    setActiveTab('my-links');
-                }
+                setShowAddLinkForm(false);
+                fetchLinks(debouncedSearchQuery, 1, showMyContentOnly);
             } catch (error: any) {
                 toast({ title: 'Error adding links', description: error.message, variant: 'destructive' });
             }
@@ -415,12 +413,7 @@ export default function LinksPage() {
                 setRequestText('');
                 toast({ title: 'Request posted!', variant: 'success' });
                 setShowRequestForm(false);
-                if (activeTab === 'all-requests' || activeTab === 'my-requests') {
-                    setRequestsPage(1);
-                    fetchRequests(debouncedSearchQuery, 1, activeTab === 'my-requests' ? user?.id : undefined);
-                } else {
-                    setActiveTab('my-requests');
-                }
+                fetchRequests(debouncedSearchQuery, 1, showMyContentOnly);
             } catch (error: any) {
                 toast({ title: 'Error posting request', description: error.message, variant: 'destructive' });
             }
@@ -438,6 +431,18 @@ export default function LinksPage() {
             }
         });
     }
+    
+    const handleDeletePack = (linkIds: string[]) => {
+        startTransition(async () => {
+             try {
+                await deleteLinks(linkIds);
+                toast({ title: 'Link pack deleted', variant: 'success' });
+                setLinks(prev => prev.filter(link => !linkIds.includes(link.id)));
+            } catch (error: any) {
+                toast({ title: 'Error deleting pack', description: error.message, variant: 'destructive' });
+            }
+        });
+    }
 
     const handleLinkClick = (link: LinkEntry) => {
          fetch('/api/links/increment', {
@@ -450,17 +455,12 @@ export default function LinksPage() {
     };
     
     const refreshCurrentTab = () => {
-        switch (activeTab) {
-            case 'all-links':
-            case 'my-links':
-                setLinksPage(1);
-                fetchLinks(debouncedSearchQuery, 1, activeTab === 'my-links' ? user?.id : undefined);
-                break;
-            case 'all-requests':
-            case 'my-requests':
-                setRequestsPage(1);
-                fetchRequests(debouncedSearchQuery, 1, activeTab === 'my-requests' ? user?.id : undefined);
-                break;
+        if (activeTab === 'links') {
+            setLinksPage(1);
+            fetchLinks(debouncedSearchQuery, 1, showMyContentOnly);
+        } else {
+            setRequestsPage(1);
+            fetchRequests(debouncedSearchQuery, 1, showMyContentOnly);
         }
     }
 
@@ -476,7 +476,6 @@ export default function LinksPage() {
             if (match) {
                 packTitle = match[1];
             } else {
-                // If it doesn't match the multi-link regex, treat it as its own pack
                 packTitle = link.title;
             }
 
@@ -489,6 +488,7 @@ export default function LinksPage() {
                     links: [link],
                     user: link.user,
                     created_at: link.created_at,
+                    user_id: link.user_id,
                 });
             }
         });
@@ -502,14 +502,14 @@ export default function LinksPage() {
              return <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
         }
         if (linkPacks.length === 0) {
-            return <div className="text-center py-10 text-muted-foreground"><LinkIcon className="mx-auto h-12 w-12" /><p className="mt-4 font-semibold">No links found</p>{searchQuery ? <p className="text-sm">Try a different search term.</p> : <p className="text-sm">No links here yet.</p>}</div>
+            return <div className="text-center py-10 text-muted-foreground"><LinkIcon className="mx-auto h-12 w-12" /><p className="mt-4 font-semibold">No links found</p>{searchQuery ? <p className="text-sm">Try a different search term.</p> : <p className="text-sm">{showMyContentOnly ? "You haven't added any links." : "No links here yet."}</p>}</div>
         }
         return (
             <>
                 {linkPacks.map(item => (
-                    <LinkPackPost key={item.id} pack={item} user={user} handleDeleteLink={handleDeleteLink} handleLinkClick={handleLinkClick} />
+                    <LinkPackPost key={item.id} pack={item} user={user} handleDeleteLink={handleDeleteLink} handleDeletePack={handleDeletePack} handleLinkClick={handleLinkClick} />
                 ))}
-                {!isLinksLoading && hasMoreLinks && <Button variant="outline" className="w-full" onClick={() => fetchLinks(debouncedSearchQuery, linksPage + 1, activeTab === 'my-links' ? user?.id : undefined)}>Load More</Button>}
+                {!isLinksLoading && hasMoreLinks && <Button variant="outline" className="w-full" onClick={() => fetchLinks(debouncedSearchQuery, linksPage + 1, showMyContentOnly)}>Load More</Button>}
             </>
         )
     };
@@ -519,76 +519,92 @@ export default function LinksPage() {
             return <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
         }
         if (requests.length === 0) {
-            return <div className="text-center py-10 text-muted-foreground"><MessageSquarePlus className="mx-auto h-12 w-12" /><p className="mt-4 font-semibold">No requests found</p>{searchQuery ? <p className="text-sm">Try a different search term.</p> : <p className="text-sm">No one has requested a link yet.</p>}</div>
+            return <div className="text-center py-10 text-muted-foreground"><MessageSquarePlus className="mx-auto h-12 w-12" /><p className="mt-4 font-semibold">No requests found</p>{searchQuery ? <p className="text-sm">Try a different search term.</p> : <p className="text-sm">{showMyContentOnly ? "You haven't requested any links." : "No one has requested a link yet."}</p>}</div>
         }
         return (
             <>
                 {requests.map(request => <RequestPost key={request.id} request={request} user={user} refreshRequests={refreshCurrentTab} handleLinkClick={(url) => { window.open(url, '_blank', 'noopener,noreferrer'); }} />)}
-                {!isRequestsLoading && hasMoreRequests && <Button variant="outline" className="w-full" onClick={() => fetchRequests(debouncedSearchQuery, requestsPage + 1, activeTab === 'my-requests' ? user?.id : undefined)}>Load More</Button>}
+                {!isRequestsLoading && hasMoreRequests && <Button variant="outline" className="w-full" onClick={() => fetchRequests(debouncedSearchQuery, requestsPage + 1, showMyContentOnly)}>Load More</Button>}
             </>
         )
     }
 
+    const renderHeader = () => (
+         <header className="flex h-16 items-center justify-between border-b border-border/40 bg-background px-4 md:px-6">
+            <div className="flex items-center gap-3">
+                <LinkIcon className="h-6 w-6" />
+                <h1 className="text-xl font-bold">Public Links</h1>
+            </div>
+            {user && (
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => activeTab === 'links' ? setShowAddLinkForm(prev => !prev) : setShowRequestForm(prev => !prev)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        {activeTab === 'links' ? 'Add Link' : 'New Request'}
+                    </Button>
+                </div>
+            )}
+        </header>
+    )
+
 
     return (
         <div className="flex h-full w-full flex-col">
-            <header className="flex h-16 items-center justify-between border-b border-border/40 bg-background px-4 md:px-6">
-                <div className="flex items-center gap-3"><LinkIcon className="h-6 w-6" /><h1 className="text-xl font-bold">Public Links</h1></div>
+            {renderHeader()}
+            
+            <div className="p-4 md:p-6 border-b">
+                 <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input placeholder="Search..." className="pl-10 h-11" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                 </div>
                  {user && (
-                    <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                        <Plus className="h-5 w-5" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => { setShowAddForm(true); setShowRequestForm(false); }}>
-                            Add New Link
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => { setShowRequestForm(true); setShowAddForm(false); }}>
-                            Request a Link
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
-            </header>
+                    <div className="flex items-center space-x-2 mt-4">
+                        <Switch id="my-content-switch" checked={showMyContentOnly} onCheckedChange={setShowMyContentOnly} />
+                        <Label htmlFor="my-content-switch">Show my posts only</Label>
+                    </div>
+                 )}
+            </div>
 
+            <div className="flex items-center border-b">
+                <button className={`flex-1 p-3 text-sm font-medium ${activeTab === 'links' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`} onClick={() => setActiveTab('links')}>
+                    Links
+                </button>
+                <button className={`flex-1 p-3 text-sm font-medium ${activeTab === 'requests' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`} onClick={() => setActiveTab('requests')}>
+                    Requests
+                </button>
+            </div>
+            
             <AnimatePresence>
-            {showAddForm && (
+            {activeTab === 'links' && showAddLinkForm && (
                 <motion.div 
                     className="p-4 md:p-6 border-b"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
+                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                 >
                     <form onSubmit={handleAddLink} className="space-y-4">
-                        <Input id="title-prefix" placeholder="Title" value={titlePrefix} onChange={(e) => setTitlePrefix(e.target.value)} disabled={isPending} maxLength={200} />
+                        <Input id="title-prefix" placeholder="Title" value={titlePrefix} onChange={(e) => setTitlePrefix(e.target.value)} disabled={isPending} maxLength={200} required />
                         <div className="relative">
-                        <Textarea id="urls" placeholder="Your links" value={urls} onChange={(e) => setUrls(e.target.value)} disabled={isPending} required className="pr-10" rows={4} />
+                            <Textarea id="urls" placeholder="Your links (one per line)" value={urls} onChange={(e) => setUrls(e.target.value)} disabled={isPending} required className="pr-10" rows={4} />
                             <button type="button" className="absolute bottom-2 right-2 p-1 text-muted-foreground hover:text-foreground" onClick={() => colorInputRef.current?.click()}><Palette className="h-5 w-5" style={{ color: color }} /><span className="sr-only">Choose color</span></button>
                             <input ref={colorInputRef} type="color" value={color} onChange={(e) => setColor(e.target.value)} className="absolute -z-10 w-0 h-0 opacity-0" />
                         </div>
                         <div className='flex gap-2'>
-                        <Button type="submit" className="w-full" disabled={isPending}>{isPending ? <Loader2 className="animate-spin" /> : 'Add Links'}</Button>
-                        <Button type="button" variant="secondary" onClick={() => setShowAddForm(false)}>Cancel</Button>
+                            <Button type="submit" className="w-full" disabled={isPending}>{isPending ? <Loader2 className="animate-spin" /> : 'Add Links'}</Button>
+                            <Button type="button" variant="secondary" onClick={() => setShowAddLinkForm(false)}>Cancel</Button>
                         </div>
                     </form>
                 </motion.div>
             )}
             </AnimatePresence>
-
-             <AnimatePresence>
-            {showRequestForm && (
-                <motion.div
+            
+            <AnimatePresence>
+            {activeTab === 'requests' && showRequestForm && (
+                 <motion.div
                     className="p-4 md:p-6 border-b"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
+                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                 >
                     <form onSubmit={handleCreateRequest} className="space-y-4">
                          <Textarea
                             id="request-text"
-                            placeholder="Request a link"
+                            placeholder="Request a link..."
                             value={requestText}
                             onChange={(e) => setRequestText(e.target.value)}
                             disabled={isPending}
@@ -597,45 +613,19 @@ export default function LinksPage() {
                             required
                         />
                         <div className='flex gap-2'>
-                            <Button type="submit" className="w-full" disabled={isPending}>
-                                {isPending ? <Loader2 className="animate-spin" /> : 'Post Request'}
-                            </Button>
+                            <Button type="submit" className="w-full" disabled={isPending}>{isPending ? <Loader2 className="animate-spin" /> : 'Post Request'}</Button>
                             <Button type="button" variant="secondary" onClick={() => setShowRequestForm(false)}>Cancel</Button>
                         </div>
                     </form>
                 </motion.div>
             )}
             </AnimatePresence>
-            
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-                <div className="p-4 md:p-6 border-b">
-                     <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
-                        <TabsTrigger value="all-links" className="py-2">All Links</TabsTrigger>
-                        <TabsTrigger value="all-requests" className="py-2">All Requests</TabsTrigger>
-                        <TabsTrigger value="my-links" className="py-2" disabled={!user}>My Links</TabsTrigger>
-                        <TabsTrigger value="my-requests" className="py-2" disabled={!user}>My Requests</TabsTrigger>
-                    </TabsList>
-                </div>
 
-                <div className="p-4 md:px-6"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" /><Input placeholder="Search..." className="pl-10 h-11" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /></div></div>
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 pb-20 md:pb-6">
-                    <TabsContent value="all-links" className="m-0 space-y-3">
-                       {renderLinks()}
-                    </TabsContent>
-                    <TabsContent value="all-requests" className="m-0 space-y-3">
-                        {renderRequests()}
-                    </TabsContent>
-                     <TabsContent value="my-links" className="m-0 space-y-3">
-                       {renderLinks()}
-                    </TabsContent>
-                    <TabsContent value="my-requests" className="m-0 space-y-3">
-                        {renderRequests()}
-                    </TabsContent>
-                </div>
-            </Tabs>
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 pb-20 md:pb-6">
+                {activeTab === 'links' && renderLinks()}
+                {activeTab === 'requests' && renderRequests()}
+            </div>
         </div>
     );
 }
-
-    

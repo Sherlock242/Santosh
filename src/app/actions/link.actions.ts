@@ -135,6 +135,33 @@ export async function deleteLink(linkId: string) {
     revalidatePath('/links');
 }
 
+export async function deleteLinks(linkIds: string[]) {
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        throw new Error('You must be logged in to delete links.');
+    }
+    
+    if (!linkIds || linkIds.length === 0) {
+        return;
+    }
+
+    // RLS policy will ensure user can only delete their own links.
+    const { error } = await supabase
+        .from('links')
+        .delete()
+        .in('id', linkIds)
+        .eq('user_id', user.id);
+
+    if (error) {
+        console.error('Error deleting links pack:', error);
+        throw new Error(error.message);
+    }
+
+    revalidatePath('/links');
+}
+
 
 // --- Link Request Actions ---
 
