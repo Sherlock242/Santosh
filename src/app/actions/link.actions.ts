@@ -19,8 +19,8 @@ export async function addLink(payload: LinkPayload) {
         throw new Error('You must be logged in to add a link.');
     }
 
-    if (!payload.urls || payload.urls.length === 0 || payload.urls.length > 5) {
-        throw new Error('You can add between 1 and 5 links at a time.');
+    if (!payload.urls || payload.urls.length === 0) {
+        throw new Error('You must add at least one link.');
     }
 
     const linksToInsert = payload.urls.map((url, index) => {
