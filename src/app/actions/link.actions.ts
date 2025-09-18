@@ -241,7 +241,7 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error('You can add between 1 and 5 links.');
     }
 
-    // Step 1: Insert the response with the user-level client
+    // Step 1: Insert the response with the user-level client.
     const { error: responseError } = await supabase.from('link_request_responses').insert({
         request_id: requestId,
         user_id: user.id,
@@ -253,25 +253,34 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error(responseError.message);
     }
 
-    // Step 2: Create notification using an admin client to bypass RLS.
-    const supabaseAdmin = createSupabaseServerClient(true);
-    const { data: requestData, error: requestError } = await supabaseAdmin
-        .from('link_requests')
-        .select('user_id')
-        .eq('id', requestId)
-        .single();
-    
-    if (requestError) {
-        // The main action succeeded, so don't throw. Just log the error.
-        console.error('Could not find original request to create notification:', requestError);
-    } else if (requestData && requestData.user_id !== user.id) {
-        // Only notify if someone other than the requester is responding.
-        await createNotification({
-            recipient_id: requestData.user_id,
-            actor_id: user.id,
-            type: 'new_link_response',
-            link_request_id: requestId,
-        });
+    // Step 2: Create the notification using an admin client to bypass RLS.
+    try {
+        const supabaseAdmin = createSupabaseServerClient(true);
+        const { data: requestData, error: requestError } = await supabaseAdmin
+            .from('link_requests')
+            .select('user_id')
+            .eq('id', requestId)
+            .single();
+        
+        if (requestError) {
+            // Log the error but don't fail the entire transaction.
+            console.error('Could not find original request to create notification:', requestError);
+        } else if (requestData && requestData.user_id !== user.id) {
+            // Only notify if someone other than the requester is responding.
+            const { error: notificationError } = await supabaseAdmin.from('notifications').insert({
+                recipient_id: requestData.user_id,
+                actor_id: user.id,
+                type: 'new_link_response',
+                link_request_id: requestId,
+            });
+
+            if (notificationError) {
+                // Also log this error but don't throw.
+                console.error('Error directly inserting notification:', notificationError);
+            }
+        }
+    } catch (e) {
+        console.error('An unexpected error occurred during notification creation:', e);
     }
     
     revalidatePath('/links');
