@@ -71,7 +71,7 @@ export async function getNotifications({ page = 1, limit = 15 }: { page: number,
         { data: supportStatusData, error: supportStatusError },
         { data: emojisData, error: emojisError }
     ] = await Promise.all([
-        supabase.from('users').select('id, name, picture, is_private').in('id', actorIds),
+        supabase.from('users').select('id, name, picture, is_private, is_gold_member').in('id', actorIds),
         supabase.from('supports').select('supported_id, status').eq('supporter_id', user.id).in('supported_id', actorIds),
         emojiIds.length > 0 ? supabase.from('emojis').select('*').in('id', emojiIds) : Promise.resolve({ data: [], error: null })
     ]);
@@ -94,7 +94,7 @@ export async function getNotifications({ page = 1, limit = 15 }: { page: number,
         return {
             ...n,
             created_at: n.created_at,
-            actor: actor || { id: n.actor_id, name: 'Unknown User', picture: '', is_private: false },
+            actor: actor || { id: n.actor_id, name: 'Unknown User', picture: '', is_private: false, is_gold_member: false },
             emoji: emoji || null,
             actor_support_status: actorSupportStatus,
             link_request_id: n.link_request_id || null,
@@ -105,20 +105,6 @@ export async function getNotifications({ page = 1, limit = 15 }: { page: number,
 }
 
 export async function markNotificationsAsRead() {
-    const supabaseUserClient = createSupabaseServerClient();
-    const { data: { user } } = await supabaseUserClient.auth.getUser();
-    if (!user) return;
-    
-    // Use an admin client to bypass RLS for this update.
-    // This is safe because we are explicitly filtering by the authenticated user's ID.
-    const supabaseAdmin = createSupabaseServerClient(true);
-    const { error } = await supabaseAdmin
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('recipient_id', user.id)
-        .eq('is_read', false);
-
-    if (error) {
-        console.error('Error marking notifications as read:', error);
-    }
+    // This function is now empty as the logic has been moved directly to the server-side
+    // rendering of the notifications page for improved reliability.
 }
