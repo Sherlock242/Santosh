@@ -241,6 +241,7 @@ export async function addLinkResponse({ requestId, urls, recipientId }: { reques
         throw new Error('You can add between 1 and 5 links.');
     }
 
+    // Step 1: Insert the response
     const { error: responseError } = await supabase.from('link_request_responses').insert({
         request_id: requestId,
         user_id: user.id,
@@ -252,7 +253,7 @@ export async function addLinkResponse({ requestId, urls, recipientId }: { reques
         throw new Error(responseError.message);
     }
     
-    // --- Send Notification ---
+    // Step 2: Create a notification if the responder is not the recipient
     if (recipientId && user.id !== recipientId) {
         await createNotification({
             recipient_id: recipientId,
