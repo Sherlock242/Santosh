@@ -49,7 +49,7 @@ export async function getNotifications({ page = 1, limit = 15 }: { page: number,
     // 1. Fetch notifications for the current user
     const { data: notificationsData, error: notificationsError } = await supabase
         .from('notifications')
-        .select('*')
+        .select('*, link_request_id')
         .eq('recipient_id', user.id)
         .order('created_at', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
@@ -95,7 +95,8 @@ export async function getNotifications({ page = 1, limit = 15 }: { page: number,
             created_at: n.created_at,
             actor: actor || { id: n.actor_id, name: 'Unknown User', picture: '', is_private: false },
             emoji: emoji || null,
-            actor_support_status: actorSupportStatus
+            actor_support_status: actorSupportStatus,
+            link_request_id: n.link_request_id || null,
         } as FullNotification;
     });
 
