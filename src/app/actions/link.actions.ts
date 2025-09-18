@@ -253,7 +253,7 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error(responseError.message);
     }
 
-    // Step 2: Create a notification for the original requester.
+    // Step 2: Create a notification for the original requester using an admin client.
     try {
         const supabaseAdmin = createSupabaseServerClient(true);
         const { data: requestData, error: requestError } = await supabaseAdmin
@@ -267,6 +267,7 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
             // Don't throw an error, just log it. The main action succeeded.
         } else {
             const recipientId = requestData.user_id;
+            // Prevent self-notification
             if (user.id !== recipientId) {
                 const { error: notificationError } = await supabaseAdmin.from('notifications').insert({
                     recipient_id: recipientId,
