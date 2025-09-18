@@ -1,6 +1,5 @@
 
 import React, { Suspense } from 'react';
-import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { Loader2 } from 'lucide-react';
 import NotificationsClientPage from '@/components/notifications-client-page';
 import { getNotifications, markNotificationsAsRead } from '../actions/notification.actions';
