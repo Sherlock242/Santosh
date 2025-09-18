@@ -201,12 +201,12 @@ export async function getLinkRequests({ query, page = 1, limit = 10, userId }: {
             request_text,
             created_at,
             user_id,
-            user:users!inner(id, name, picture),
-            responses:link_request_responses!inner (
+            user:users ( id, name, picture ),
+            responses:link_request_responses (
                 id,
                 urls,
                 created_at,
-                user:users!inner(id, name, picture)
+                user:users ( id, name, picture )
             )
         `)
         .order('created_at', { ascending: false })
@@ -226,8 +226,21 @@ export async function getLinkRequests({ query, page = 1, limit = 10, userId }: {
         console.error('Error fetching link requests:', error);
         throw new Error(error.message);
     }
+    
+    if (!data) return [];
 
-    return data || [];
+    // Manually correct the data structure to fix type issues
+    const correctedData = data.map(req => {
+        const user = Array.isArray(req.user) ? req.user[0] : req.user;
+        const responses = req.responses.map((res: any) => {
+             const responseUser = Array.isArray(res.user) ? res.user[0] : res.user;
+             return { ...res, user: responseUser };
+        });
+        return { ...req, user, responses };
+    });
+
+
+    return correctedData;
 }
 
 export async function addLinkResponse({ requestId, urls }: { requestId: string; urls: string[]; }) {
