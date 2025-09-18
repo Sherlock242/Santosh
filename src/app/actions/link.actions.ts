@@ -241,7 +241,7 @@ export async function addLinkResponse({ requestId, urls, recipientId }: { reques
         throw new Error('You can add between 1 and 5 links.');
     }
 
-    // Step 1: Insert the response
+    // Step 1: Insert the response using the standard user client
     const { error: responseError } = await supabase.from('link_request_responses').insert({
         request_id: requestId,
         user_id: user.id,
@@ -253,14 +253,25 @@ export async function addLinkResponse({ requestId, urls, recipientId }: { reques
         throw new Error(responseError.message);
     }
     
-    // Step 2: Create a notification if the responder is not the recipient
-    if (recipientId && user.id !== recipientId) {
-        await createNotification({
-            recipient_id: recipientId,
-            actor_id: user.id,
-            type: 'new_link_response',
-            link_request_id: requestId,
-        });
+    // Step 2: Create a notification if the responder is not the original requester.
+    // This part requires an admin client to bypass RLS on the notifications table.
+    if (user.id !== recipientId) {
+        try {
+            const supabaseAdmin = createSupabaseServerClient(true);
+            const { error: notificationError } = await supabaseAdmin.from('notifications').insert({
+                recipient_id: recipientId,
+                actor_id: user.id,
+                type: 'new_link_response',
+                link_request_id: requestId,
+            });
+
+            if (notificationError) {
+                // Log the error but don't throw, as the main action (adding the response) succeeded.
+                console.error('Error creating link response notification:', notificationError);
+            }
+        } catch(e) {
+             console.error('Unexpected error during notification creation:', e);
+        }
     }
     
     revalidatePath('/links');
