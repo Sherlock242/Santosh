@@ -320,6 +320,8 @@ export default function LinksPage() {
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
     const [isPending, startTransition] = useTransition();
     const [showAddForm, setShowAddForm] = useState(false);
+    const [showRequestForm, setShowRequestForm] = useState(false);
+
 
     // States for Add Link Form
     const [titlePrefix, setTitlePrefix] = useState('');
@@ -412,6 +414,7 @@ export default function LinksPage() {
                 await createLinkRequest(requestText);
                 setRequestText('');
                 toast({ title: 'Request posted!', variant: 'success' });
+                setShowRequestForm(false);
                 if (activeTab === 'all-requests' || activeTab === 'my-requests') {
                     setRequestsPage(1);
                     fetchRequests(debouncedSearchQuery, 1, activeTab === 'my-requests' ? user?.id : undefined);
@@ -539,13 +542,10 @@ export default function LinksPage() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => setShowAddForm(true)}>
+                        <DropdownMenuItem onSelect={() => { setShowAddForm(true); setShowRequestForm(false); }}>
                             Add New Link
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => {
-                            const newRequest = window.prompt("What link are you looking for?");
-                            if (newRequest) handleCreateRequest({ preventDefault: () => {}, target: {} } as React.FormEvent);
-                        }}>
+                        <DropdownMenuItem onSelect={() => { setShowRequestForm(true); setShowAddForm(false); }}>
                             Request a Link
                         </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -571,6 +571,36 @@ export default function LinksPage() {
                         <div className='flex gap-2'>
                         <Button type="submit" className="w-full" disabled={isPending}>{isPending ? <Loader2 className="animate-spin" /> : 'Add Links'}</Button>
                         <Button type="button" variant="secondary" onClick={() => setShowAddForm(false)}>Cancel</Button>
+                        </div>
+                    </form>
+                </motion.div>
+            )}
+            </AnimatePresence>
+
+             <AnimatePresence>
+            {showRequestForm && (
+                <motion.div
+                    className="p-4 md:p-6 border-b"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                >
+                    <form onSubmit={handleCreateRequest} className="space-y-4">
+                         <Textarea
+                            id="request-text"
+                            placeholder="What link are you looking for? (e.g., 'latest episode of...')"
+                            value={requestText}
+                            onChange={(e) => setRequestText(e.target.value)}
+                            disabled={isPending}
+                            maxLength={200}
+                            rows={3}
+                            required
+                        />
+                        <div className='flex gap-2'>
+                            <Button type="submit" className="w-full" disabled={isPending}>
+                                {isPending ? <Loader2 className="animate-spin" /> : 'Post Request'}
+                            </Button>
+                            <Button type="button" variant="secondary" onClick={() => setShowRequestForm(false)}>Cancel</Button>
                         </div>
                     </form>
                 </motion.div>
