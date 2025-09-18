@@ -8,4 +8,3 @@ export * from './actions/feed.actions';
 export * from './actions/order.actions';
 export * from './actions/link.actions';
 export * from './actions/payment.actions';
-export * from './actions/post.actions';
