@@ -421,8 +421,10 @@ export function PostView({
     if (currentIndex < localEmojis.length - 1) {
       setDirection(1);
       setCurrentIndex((prev) => prev + 1);
+    } else {
+        onClose(localEmojis);
     }
-  }, [currentIndex, localEmojis.length]);
+  }, [currentIndex, localEmojis, onClose]);
 
   const goToPrev = () => {
     if (currentIndex > 0) {

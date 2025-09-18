@@ -153,8 +153,24 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     };
     
     const handleOnCloseMood = (updatedMoods?: Mood[]) => {
-        if (updatedMoods) {
-            setMoods(updatedMoods);
+        // Find which user's moods were being viewed
+        const viewedUserId = viewingStoryFromFeed?.[0]?.mood_user_id;
+
+        if (updatedMoods && viewedUserId) {
+            // Create a map of the updated moods that were viewed
+            const updatedViewedMoodsMap = new Map(updatedMoods.map(m => [m.mood_id, m]));
+            
+            // Update the main moods list
+            setMoods(currentMoods => 
+                currentMoods.map(currentMood => {
+                    // If this mood was in the set that was just viewed, update it
+                    if (updatedViewedMoodsMap.has(currentMood.mood_id)) {
+                        return updatedViewedMoodsMap.get(currentMood.mood_id)!;
+                    }
+                    // Otherwise, keep the old one
+                    return currentMood;
+                })
+            );
         }
         setViewingStoryFromFeed(null);
     }
@@ -188,7 +204,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             <PostView 
                 emojis={viewingStoryFromFeed}
                 initialIndex={0}
-                onClose={() => handleOnCloseMood(moods)}
+                onClose={handleOnCloseMood}
                 isMoodView={true}
                 onMoodChange={handleRefresh}
                 onDelete={(moodId) => {
@@ -237,15 +253,28 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                 moods={moods}
                 isLoading={isLoading}
                 onSelectMood={(index) => {
-                    const allMoodsFromUser = moods.filter(m => m.mood_user_id === moods[index].mood_user_id);
-                    const selectedMoodInUserGroup = allMoodsFromUser.findIndex(m => m.mood_id === moods[index].mood_id);
+                    // Find all moods from the selected user to create their story playlist
+                    const selectedMood = moods[index];
+                    if (!selectedMood) return;
+
+                    const userStoryMoods = moods.filter(m => m.mood_user_id === selectedMood.mood_user_id);
                     
-                    const reorderedMoods = [
-                        ...allMoodsFromUser.slice(selectedMoodInUserGroup),
-                        ...allMoodsFromUser.slice(0, selectedMoodInUserGroup)
+                    // Find the index of the specific mood that was tapped within that user's story
+                    const startIndexInUserStory = userStoryMoods.findIndex(m => m.mood_id === selectedMood.mood_id);
+
+                    // Reorder the user's moods so the tapped one is first
+                    const reorderedUserStory = [
+                        ...userStoryMoods.slice(startIndexInUserStory),
+                        ...userStoryMoods.slice(0, startIndexInUserStory)
                     ];
 
-                    setViewingStoryFromFeed(reorderedMoods);
+                    // Find all other stories that are NOT from the selected user
+                    const otherUsersMoods = moods.filter(m => m.mood_user_id !== selectedMood.mood_user_id);
+                    
+                    // Combine them for the full playlist: selected user's story first, then the rest
+                    const fullPlaylist = [...reorderedUserStory, ...otherUsersMoods];
+
+                    setViewingStoryFromFeed(fullPlaylist);
                 }}
             />
             <div>
