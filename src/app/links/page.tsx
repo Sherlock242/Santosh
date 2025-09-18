@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Palette, Eye, ChevronsUpDown, MessageSquarePlus, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addLink, getLinks, deleteLink, deleteLinks, createLinkRequest, getLinkRequests, addLinkResponse, deleteLinkRequest, deleteLinkResponse } from '../actions/link.actions';
+import { addLink, getLinks, deleteLink, deleteLinks, createLinkRequest, getLinkRequests, addLinkResponse, deleteLinkRequest, deleteLinkResponse } from '../actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -373,7 +373,7 @@ export default function LinksPage() {
         setIsRequestsLoading(true);
         try {
             const linkRequests = await getLinkRequests({ query, page: pageNum, limit: REQUESTS_PER_PAGE, userId: forUserId });
-            setRequests(pageNum === 1 ? linkRequests as LinkRequest[] : [...requests, ...linkRequests as LinkRequest[]]);
+            setRequests(pageNum === 1 ? linkRequests : [...requests, ...linkRequests]);
             setHasMoreRequests(linkRequests.length === REQUESTS_PER_PAGE);
         } catch (error: any) {
             toast({ title: 'Error fetching requests', description: error.message, variant: 'destructive' });
@@ -631,6 +631,3 @@ export default function LinksPage() {
         </div>
     );
 }
-
-
-    
