@@ -230,7 +230,7 @@ export async function getLinkRequests({ query, page = 1, limit = 10, userId }: {
     return data || [];
 }
 
-export async function addLinkResponse({ requestId, urls }: { requestId: string; urls: string[]; }) {
+export async function addLinkResponse({ requestId, urls, recipientId }: { requestId: string; urls: string[]; recipientId: string; }) {
     const supabase = createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -252,30 +252,14 @@ export async function addLinkResponse({ requestId, urls }: { requestId: string; 
         throw new Error(responseError.message);
     }
     
-    // --- Send Notification using Admin Client ---
-    try {
-        const supabaseAdmin = createSupabaseServerClient(true);
-        const { data: requestData, error: requestError } = await supabaseAdmin
-            .from('link_requests')
-            .select('user_id')
-            .eq('id', requestId)
-            .single();
-
-        if (requestError) {
-            console.error('Notification Error: Could not fetch original request author.', requestError);
-            // Do not throw, as the main action succeeded.
-        } else if (requestData && requestData.user_id !== user.id) {
-            // Use the createNotification helper which uses the user client internally,
-            // but since we are calling it from a server action it's secure.
-            await createNotification({
-                recipient_id: requestData.user_id,
-                actor_id: user.id,
-                type: 'new_link_response',
-                link_request_id: requestId,
-            });
-        }
-    } catch (e) {
-        console.error('Notification Error: An unexpected error occurred.', e);
+    // --- Send Notification ---
+    if (recipientId && user.id !== recipientId) {
+        await createNotification({
+            recipient_id: recipientId,
+            actor_id: user.id,
+            type: 'new_link_response',
+            link_request_id: requestId,
+        });
     }
     
     revalidatePath('/links');
