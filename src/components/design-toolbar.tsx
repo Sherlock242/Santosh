@@ -146,13 +146,9 @@ export const DesignToolbar = (props: DesignToolbarProps) => {
                         placeholder="Add a caption..."
                         value={caption}
                         onChange={(e) => setCaption(e.target.value)}
-                        maxLength={30}
-                        className="pr-12 h-10 md:h-full resize-none text-sm"
+                        className="h-10 md:h-full resize-none text-sm"
                         rows={1}
                      />
-                     <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
-                        {caption.length}/30
-                     </div>
                 </div>
               </div>
             )
