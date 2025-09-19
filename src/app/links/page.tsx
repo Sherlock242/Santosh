@@ -480,13 +480,6 @@ export default function LinksPage() {
 
     const handleLinkClick = (link: LinkEntry) => {
         window.open(link.url, '_blank', 'noopener,noreferrer');
-        // Optimistically update the UI
-        setLinks(prevLinks => 
-            prevLinks.map(l => 
-                l.id === link.id ? { ...l, clicks: (l.clicks || 0) + 1 } : l
-            )
-        );
-
         // Use sendBeacon for reliable, non-blocking request to increment click count
         if (navigator.sendBeacon) {
             const blob = new Blob([JSON.stringify({ linkId: link.id })], { type: 'application/json' });
