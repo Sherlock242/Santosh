@@ -254,7 +254,7 @@ const getCachedExplorePosts = (page: number, limit: number) => cache(
 
         if (likesError) {
             console.error('Error fetching like counts for cache:', likesError);
-            return posts.map(p => ({ ...p, like_count: 0, user: { ...p.user, has_mood: p.user?.moods?.length > 0 } }));
+            return posts.map(post => ({ ...post, like_count: 0, user: { ...post.user, has_mood: post.user?.moods?.length > 0 } }));
         }
 
         const likeCountsMap = new Map(likeCounts.map((l: any) => [l.emoji_id, l.like_count]));
@@ -262,7 +262,7 @@ const getCachedExplorePosts = (page: number, limit: number) => cache(
         return posts.map(post => ({
             ...(post as unknown as EmojiState),
             like_count: likeCountsMap.get(post.id) || 0,
-            user: { ...post.user, has_mood: p.user?.moods?.length > 0 } as any,
+            user: { ...post.user, has_mood: post.user?.moods?.length > 0 } as any,
         }));
     },
     [`explore-posts-${page}-${limit}`],
