@@ -14,7 +14,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { getExplorePosts, searchUsers as searchUsersAction } from '@/app/actions';
 import { deletePost } from '@/app/actions';
 import Image from 'next/image';
-import { updatePostCache } from '@/lib/post-cache';
 import { GoldTick } from '@/components/gold-tick';
 
 const PostView = dynamic(() => 
@@ -64,7 +63,6 @@ export default function ExploreClientPage({ initialPosts }: { initialPosts: Expl
   
   const [allEmojis, setAllEmojis] = useState<ExploreEmoji[]>(initialPosts);
   const [selectedEmojiId, setSelectedEmojiId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user: authUser } = useAuth();
   
@@ -73,45 +71,40 @@ export default function ExploreClientPage({ initialPosts }: { initialPosts: Expl
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   
   const loaderRef = useRef(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const fetchPosts = useCallback(async (pageNum: number, limit = 12) => {
-      if (isFetchingMore) return;
+  const fetchPosts = useCallback(async (pageNum: number) => {
+      if (isFetchingMore || !hasMore) return;
       setIsFetchingMore(true);
+
       try {
+          const limit = 12;
           const newPostsData = await getExplorePosts({ page: pageNum, limit });
           
-          const newPosts: ExploreEmoji[] = newPostsData.map(post => ({
-              ...(post as ExploreEmoji)
-          }));
-
-          updatePostCache(newPosts);
-
-          if (newPosts.length < limit) {
+          if (newPostsData.length < limit) {
               setHasMore(false);
           }
-
-          setAllEmojis(prev => {
-              const existingIds = new Set(prev.map(p => p.id));
-              const uniqueNewPosts = newPosts.filter(p => !existingIds.has(p.id));
-              return [...prev, ...uniqueNewPosts];
-          });
-
-          setPage(pageNum + 1);
-
+          
+          if (newPostsData.length > 0) {
+            setAllEmojis(prev => {
+                const existingIds = new Set(prev.map(p => p.id));
+                const uniqueNewPosts = newPostsData.filter(p => !existingIds.has(p.id));
+                return [...prev, ...uniqueNewPosts as ExploreEmoji[]];
+            });
+            setPage(p => p + 1);
+          }
       } catch (error: any) {
           console.error("Failed to fetch explore posts:", error);
           toast({ title: "Failed to load posts", description: error.message, variant: "destructive" });
       } finally {
           setIsFetchingMore(false);
       }
-  }, [toast, isFetchingMore]);
+  }, [isFetchingMore, hasMore, toast]);
 
   // Infinite scroll observer
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
         const target = entries[0];
-        if (target.isIntersecting && hasMore && !isFetchingMore && !isLoading && !searchQuery) {
+        if (target.isIntersecting && hasMore && !isFetchingMore && !searchQuery) {
            fetchPosts(page);
         }
     }, { root: null, rootMargin: '400px', threshold: 0 });
@@ -126,7 +119,7 @@ export default function ExploreClientPage({ initialPosts }: { initialPosts: Expl
             observer.unobserve(currentLoader);
         }
     }
-  }, [fetchPosts, hasMore, isFetchingMore, isLoading, page, searchQuery]);
+  }, [fetchPosts, hasMore, isFetchingMore, page, searchQuery]);
 
 
   const searchUsers = useCallback(async (query: string) => {
@@ -207,14 +200,12 @@ export default function ExploreClientPage({ initialPosts }: { initialPosts: Expl
            )}
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto no-scrollbar pb-14" ref={scrollContainerRef}>
-        {isLoading ? (
-            <div className="flex h-full w-full flex-col items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        ) : showSearchResults ? (
+      <div className="flex-1 overflow-y-auto no-scrollbar pb-14">
+        {showSearchResults ? (
           <div className="flex flex-col">
-             {searchedUsers.length > 0 ? (
+             {isSearching ? (
+                <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+             ) : searchedUsers.length > 0 ? (
                  searchedUsers.map(user => (
                     <Link key={user.id} href={`/gallery?userId=${user.id}`} className="flex items-center gap-4 px-4 py-2 hover:bg-muted/50">
                        <Avatar className="h-12 w-12 border-2 border-background">
@@ -228,11 +219,9 @@ export default function ExploreClientPage({ initialPosts }: { initialPosts: Expl
                     </Link>
                  ))
              ) : (
-                !isSearching && (
-                    <div className="text-center p-8 text-muted-foreground">
-                        <p>No users found for "{searchQuery}"</p>
-                    </div>
-                )
+                <div className="text-center p-8 text-muted-foreground">
+                    <p>No users found for "{searchQuery}"</p>
+                </div>
              )}
           </div>
         ) : (
@@ -259,3 +248,5 @@ export default function ExploreClientPage({ initialPosts }: { initialPosts: Expl
     </div>
   );
 }
+
+    

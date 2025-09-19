@@ -12,7 +12,6 @@ import dynamic from 'next/dynamic';
 import { getFeedPosts, getFeedMoods } from '../app/actions';
 import MoodStories from '@/components/mood-stories';
 import type { Mood } from '@/components/post-view';
-import { updatePostCache } from '@/lib/post-cache';
 import { PostCard } from './post-card';
 import Link from 'next/link';
 
@@ -37,11 +36,10 @@ interface MoodClientPageProps {
 
 export default function MoodClientPage({ initialMoods, initialPosts }: MoodClientPageProps) {
     const { user } = useAuth();
-    const router = useRouter();
     const { toast } = useToast();
     const [moods, setMoods] = useState<Mood[]>(initialMoods);
     const [feedPosts, setFeedPosts] = useState<FeedPostType[]>(initialPosts);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(initialPosts.length === 0 && initialMoods.length === 0);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
     
     const [page, setPage] = useState(initialPosts.length > 0 ? 2 : 1);
@@ -60,8 +58,6 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             const limit = 5;
             const newPosts = await getFeedPosts({ page: pageNum, limit });
 
-            updatePostCache(newPosts);
-            
             if (newPosts.length < limit) {
                 setHasMore(false);
             }
@@ -70,7 +66,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                 setFeedPosts(prev => {
                     const existingIds = new Set(prev.map(p => p.id));
                     const uniqueNewPosts = newPosts.filter(p => !existingIds.has(p.id));
-                    return [...prev, ...uniqueNewPosts];
+                    return [...prev, ...uniqueNewPosts as FeedPostType[]];
                 });
                 setPage(p => p + 1);
             }
@@ -122,10 +118,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             return;
         }
         
-        // Only show full loading state if there are no posts currently.
-        if (feedPosts.length === 0) {
-            setIsLoading(true);
-        }
+        setIsLoading(true);
 
         try {
             const [moodsData, postsData] = await Promise.all([
@@ -135,7 +128,6 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             
             setMoods(moodsData as Mood[] || []);
             setFeedPosts(postsData || []);
-            updatePostCache(postsData);
             
             const newPage = postsData.length > 0 ? 2 : 1;
             setPage(newPage);
@@ -147,12 +139,14 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         } finally {
             setIsLoading(false);
         }
-    }, [toast, user, feedPosts.length]);
+    }, [toast, user]);
 
     useEffect(() => {
-      // Don't run initial refresh on mount if we have initial data.
-      // This prevents the flicker on first load.
-      if (initialPosts.length === 0 && initialMoods.length === 0) {
+      if (!user) {
+        setIsLoading(false);
+        setFeedPosts([]);
+        setMoods([]);
+      } else if (initialPosts.length === 0 && initialMoods.length === 0) {
         refreshFeed();
       }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -279,3 +273,5 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         </div>
     );
 }
+
+    

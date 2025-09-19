@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
@@ -89,7 +90,6 @@ export default function GalleryClientPage({
     const searchParams = useSearchParams();
     const router = useRouter();
 
-    const [profileUser, setProfileUser] = useState<ProfileUser>(initialProfileUser);
     const [savedEmojis, setSavedEmojis] = useState<GalleryEmoji[]>(initialPosts);
     const [selectedEmojiId, setSelectedEmojiId] = React.useState<string | null>(null);
     
@@ -114,16 +114,17 @@ export default function GalleryClientPage({
         // If user is approved, reload content to show posts.
         if (newStatus === 'approved') {
             fetchPosts(); 
+            setCanViewContent(true);
         } else if (oldStatus === 'approved') {
             // If user unsupports, clear posts for private profiles.
-            if(profileUser?.is_private) {
+            if(initialProfileUser?.is_private) {
                 setSavedEmojis([]);
                 setCanViewContent(false);
             }
         }
-    }, [profileUser]);
+    }, [initialProfileUser]);
 
-    const { supportStatus, isLoading: isSupportLoading, handleSupportToggle } = useSupport(viewingUserId, initialSupportStatus, profileUser?.is_private, undefined, onSupportStatusChange);
+    const { supportStatus, isLoading: isSupportLoading, handleSupportToggle } = useSupport(viewingUserId, initialSupportStatus, initialProfileUser?.is_private, undefined, onSupportStatusChange);
     
     const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
     const [showSignOutConfirm, setShowSignOutConfirm] = React.useState(false);
@@ -134,21 +135,13 @@ export default function GalleryClientPage({
         
         try {
             const newPosts = await getGalleryPosts({ userId: viewingUserId });
-            
-            if (newPosts.length === 0 && profileUser?.is_private && !isOwnProfile && supportStatus !== 'approved') {
-                setCanViewContent(false);
-            } else {
-                setCanViewContent(true);
-            }
-
             setSavedEmojis(newPosts as GalleryEmoji[]);
             
         } catch (error: any) {
             console.error("Failed to load posts:", error);
             toast({ title: "Failed to load posts", description: error.message, variant: 'destructive' });
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [viewingUserId, toast, isOwnProfile, profileUser, supportStatus]);
+    }, [viewingUserId, toast]);
     
     useEffect(() => {
         const fromPayment = searchParams.get('from_payment');
@@ -170,8 +163,8 @@ export default function GalleryClientPage({
                 variant: 'success',
             });
             
+            setSavedEmojis(prev => prev.filter(p => p.id !== emojiId));
             setSelectedEmojiId(null);
-            await fetchPosts();
             
         } catch (error: any) {
             console.error('Failed to delete post:', error);
@@ -217,11 +210,11 @@ export default function GalleryClientPage({
     };
 
     const handleShareProfile = async () => {
-        if (!profileUser) return;
-        const profileUrl = `${window.location.origin}/gallery?userId=${profileUser.id}`;
+        if (!initialProfileUser) return;
+        const profileUrl = `${window.location.origin}/gallery?userId=${initialProfileUser.id}`;
         const shareData = {
-            title: `Check out ${profileUser.name}'s profile on Edengram!`,
-            text: `See all of ${profileUser.name}'s creations on Edengram.`,
+            title: `Check out ${initialProfileUser.name}'s profile on Edengram!`,
+            text: `See all of ${initialProfileUser.name}'s creations on Edengram.`,
             url: profileUrl,
         };
 
@@ -264,10 +257,10 @@ export default function GalleryClientPage({
                         <ArrowLeft />
                     </Button>
                 ) : null }
-                 {profileUser?.is_private && <Lock className="h-4 w-4" />}
+                 {initialProfileUser?.is_private && <Lock className="h-4 w-4" />}
                 <span className="flex items-center gap-1">
-                  {profileUser?.name || 'Profile'}
-                  {profileUser?.is_gold_member && <GoldTick />}
+                  {initialProfileUser?.name || 'Profile'}
+                  {initialProfileUser?.is_gold_member && <GoldTick />}
                 </span>
             </div>
             {isOwnProfile && authUser && (
@@ -314,10 +307,10 @@ export default function GalleryClientPage({
     const postsForView = savedEmojis.map(emoji => ({
         ...emoji,
         user: {
-            id: profileUser?.id || '',
-            name: profileUser?.name || '',
-            picture: profileUser?.picture || '',
-            is_gold_member: profileUser?.is_gold_member,
+            id: initialProfileUser?.id || '',
+            name: initialProfileUser?.name || '',
+            picture: initialProfileUser?.picture || '',
+            is_gold_member: initialProfileUser?.is_gold_member,
         }
     }));
 
@@ -340,8 +333,8 @@ export default function GalleryClientPage({
                              <div className="flex items-center gap-4 md:gap-8">
                                 <div>
                                     <Avatar className="w-20 h-20 md:w-28 md:h-28">
-                                        {profileUser?.picture && <AvatarImage src={profileUser.picture} alt={profileUser.name || ''} data-ai-hint="profile picture" className="rounded-full" />}
-                                        <AvatarFallback>{profileUser?.name?.charAt(0) || 'U'}</AvatarFallback>
+                                        {initialProfileUser?.picture && <AvatarImage src={initialProfileUser.picture} alt={initialProfileUser.name || ''} data-ai-hint="profile picture" className="rounded-full" />}
+                                        <AvatarFallback>{initialProfileUser?.name?.charAt(0) || 'U'}</AvatarFallback>
                                     </Avatar>
                                 </div>
                                 <div className="flex-1 flex justify-around">
@@ -463,3 +456,5 @@ export default function GalleryClientPage({
         </>
     );
 }
+
+    

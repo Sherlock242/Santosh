@@ -4,6 +4,7 @@ import { getGalleryPosts, getSupportStatus, getSupporterCount, getSupportingCoun
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { Loader2 } from 'lucide-react';
 import GalleryClientPage from '@/components/gallery-client-page';
+import { redirect } from 'next/navigation';
 
 async function getProfileUser(userId: string) {
     const supabase = createSupabaseServerClient();
@@ -26,11 +27,8 @@ export default async function GalleryPage({ searchParams }: { searchParams: { us
     const userId = searchParams.userId || authUser?.id;
 
     if (!userId) {
-        return (
-            <div className="flex h-full w-full items-center justify-center">
-                <p>User not found.</p>
-            </div>
-        );
+        // This can happen if a non-logged-in user visits /gallery without a userId
+        return redirect('/');
     }
     
     const isOwnProfile = !!(!searchParams.userId || (authUser && searchParams.userId === authUser.id));
@@ -53,6 +51,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: { us
 
     const canViewContent = !profileUser.is_private || isOwnProfile || initialSupportStatus === 'approved';
 
+    // These can run in parallel
     const [supporterCount, supportingCount, initialPosts] = await Promise.all([
         getSupporterCount(userId),
         getSupportingCount(userId),
@@ -74,5 +73,8 @@ export default async function GalleryPage({ searchParams }: { searchParams: { us
         </Suspense>
     );
 }
+
+    
+
 
     
