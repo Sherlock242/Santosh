@@ -54,6 +54,51 @@ export async function addLink(payload: LinkPayload) {
     revalidatePath('/links');
 }
 
+export async function updateLinkPack(packId: string, payload: LinkPayload) {
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        throw new Error('You must be logged in to update a link pack.');
+    }
+     if (!payload.links || payload.links.length === 0) {
+        throw new Error('You must have at least one link in the pack.');
+    }
+
+    // Use admin client to delete all old links in the pack to handle removed links.
+    // RLS in the 'delete' policy ensures user can only delete their own links based on user_id.
+    const { error: deleteError } = await supabase
+        .from('links')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('pack_id', packId);
+    
+    if (deleteError) {
+        console.error('Error deleting old links in pack:', deleteError);
+        throw new Error('Could not update link pack. Failed to remove old links.');
+    }
+    
+    // Insert the new/updated links.
+    const linksToInsert = payload.links.map((link) => ({
+        user_id: user.id,
+        pack_id: packId,
+        pack_title: payload.title,
+        title: link.subtitle,
+        url: link.url,
+        color: payload.color,
+        clicks: 0, // Clicks are reset on edit.
+    }));
+
+    const { error: insertError } = await supabase.from('links').insert(linksToInsert);
+
+    if (insertError) {
+        console.error('Error inserting new links for pack:', insertError);
+        throw new Error('Could not update link pack. Failed to add new links.');
+    }
+
+    revalidatePath('/links');
+}
+
 export async function getLinks({ query, page = 1, limit = 10, userId }: { query: string; page: number; limit: number; userId?: string; }) {
     const supabase = createSupabaseServerClient();
     

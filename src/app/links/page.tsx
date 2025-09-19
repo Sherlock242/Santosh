@@ -4,9 +4,9 @@ import React, { useState, useEffect, useTransition, useRef, useMemo, useCallback
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Palette, Eye, ChevronsUpDown, MessageSquarePlus, X } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, Link as LinkIcon, Palette, Eye, ChevronsUpDown, MessageSquarePlus, X, MoreHorizontal, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addLink, getLinks, deleteLink, deleteLinks, createLinkRequest, getLinkRequests, addLinkResponse, deleteLinkRequest, deleteLinkResponse } from '../actions';
+import { addLink, getLinks, deleteLink, deleteLinks, createLinkRequest, getLinkRequests, addLinkResponse, deleteLinkRequest, deleteLinkResponse, updateLinkPack } from '../actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +23,7 @@ import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 // --- Types ---
 interface UserProfile {
@@ -52,6 +52,7 @@ interface LinkPack {
     user: UserProfile | null;
     created_at: string;
     user_id: string;
+    color: string;
 }
 
 interface LinkResponse {
@@ -84,7 +85,7 @@ function useDebounce(value: string, delay: number) {
 }
 
 // --- Sub-components ---
-const LinkPackPost = ({ pack, user, handleDeleteLink, handleDeletePack, handleLinkClick }: { pack: LinkPack, user: any, handleDeleteLink: (id: string) => void, handleDeletePack: (ids: string[]) => void, handleLinkClick: (link: LinkEntry) => void }) => {
+const LinkPackPost = ({ pack, user, handleDeleteLink, handleDeletePack, handleLinkClick, onEdit }: { pack: LinkPack, user: any, handleDeleteLink: (id: string) => void, handleDeletePack: (ids: string[]) => void, handleLinkClick: (link: LinkEntry) => void, onEdit: (pack: LinkPack) => void }) => {
     const isOwner = user && user.id === pack.user_id;
     return (
         <Collapsible defaultOpen={true} className="rounded-lg border bg-card p-3 space-y-2">
@@ -105,21 +106,36 @@ const LinkPackPost = ({ pack, user, handleDeleteLink, handleDeletePack, handleLi
                 </div>
                  <div className="flex items-center gap-1">
                     {isOwner && (
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Pack?</AlertDialogTitle>
-                                    <AlertDialogDescription>This will delete the &quot;{pack.title}&quot; pack and all {pack.links.length} links inside it.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDeletePack(pack.links.map(l => l.id))} className="bg-destructive hover:bg-destructive/90">Delete Pack</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
+                       <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onSelect={() => onEdit(pack)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    <span>Edit</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <button className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full text-destructive">
+                                             <Trash2 className="mr-2 h-4 w-4" />
+                                             <span>Delete Pack</span>
+                                        </button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Delete Pack?</AlertDialogTitle>
+                                            <AlertDialogDescription>This will delete the &quot;{pack.title}&quot; pack and all {pack.links.length} links inside it.</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeletePack(pack.links.map(l => l.id))} className="bg-destructive hover:bg-destructive/90">Delete Pack</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     )}
                     <CollapsibleTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
@@ -349,12 +365,13 @@ export default function LinksPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
     const [isPending, startTransition] = useTransition();
-    const [showAddLinkForm, setShowAddLinkForm] = useState(false);
+    const [showForm, setShowForm] = useState(false);
     const [showRequestForm, setShowRequestForm] = useState(false);
 
-    // States for Add Link Form
+    // States for Add/Edit Link Form
+    const [editingPack, setEditingPack] = useState<LinkPack | null>(null);
     const [title, setTitle] = useState('');
-    const [linkItems, setLinkItems] = useState<LinkItem[]>([{ id: 1, subtitle: '', url: '' }]);
+    const [linkItems, setLinkItems] = useState<LinkItem[]>([{ id: Date.now(), subtitle: '', url: '' }]);
     const [color, setColor] = useState('#8A2BE2');
     const colorInputRef = useRef<HTMLInputElement>(null);
 
@@ -404,7 +421,15 @@ export default function LinksPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debouncedSearchQuery, activeTab, user]);
 
-    const handleAddLink = (e: React.FormEvent) => {
+    const resetForm = () => {
+        setEditingPack(null);
+        setTitle('');
+        setLinkItems([{ id: Date.now(), subtitle: '', url: '' }]);
+        setColor('#8A2BE2');
+        setShowForm(false);
+    }
+
+    const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const validLinks = linkItems.filter(item => item.subtitle.trim() && item.url.trim());
         if (validLinks.length === 0) return toast({ title: 'Please fill out at least one link completely.', variant: 'destructive' });
@@ -412,14 +437,18 @@ export default function LinksPage() {
 
         startTransition(async () => {
             try {
-                await addLink({ title, links: validLinks, color });
-                setTitle('');
-                setLinkItems([{ id: 1, subtitle: '', url: '' }]);
-                toast({ title: 'Links added successfully!', variant: 'success' });
-                setShowAddLinkForm(false);
+                const payload = { title, links: validLinks, color };
+                if (editingPack) {
+                    await updateLinkPack(editingPack.id, payload);
+                    toast({ title: 'Pack updated successfully!', variant: 'success' });
+                } else {
+                    await addLink(payload);
+                    toast({ title: 'Links added successfully!', variant: 'success' });
+                }
+                resetForm();
                 refreshCurrentTab();
             } catch (error: any) {
-                toast({ title: 'Error adding links', description: error.message, variant: 'destructive' });
+                toast({ title: 'Error saving links', description: error.message, variant: 'destructive' });
             }
         });
     };
@@ -437,6 +466,15 @@ export default function LinksPage() {
             setLinkItems(linkItems.filter(item => item.id !== id));
         }
     };
+    
+    const handleEdit = (pack: LinkPack) => {
+        setEditingPack(pack);
+        setTitle(pack.title);
+        setLinkItems(pack.links.map((link, index) => ({ id: index, subtitle: link.title, url: link.url })));
+        setColor(pack.color);
+        setShowForm(true);
+        setShowRequestForm(false);
+    }
 
     const handleCreateRequest = (e: React.FormEvent) => {
         e.preventDefault();
@@ -523,6 +561,7 @@ export default function LinksPage() {
                     user: link.user,
                     created_at: link.created_at,
                     user_id: link.user_id,
+                    color: link.color,
                 });
             }
         });
@@ -546,7 +585,7 @@ export default function LinksPage() {
         return (
             <>
                 {linkPacks.map(item => (
-                    <LinkPackPost key={item.id} pack={item} user={user} handleDeleteLink={handleDeleteLink} handleDeletePack={handleDeletePack} handleLinkClick={handleLinkClick} />
+                    <LinkPackPost key={item.id} pack={item} user={user} handleDeleteLink={handleDeleteLink} handleDeletePack={handleDeletePack} handleLinkClick={handleLinkClick} onEdit={handleEdit} />
                 ))}
                 {!isLinksLoading && hasMoreLinks && <Button variant="outline" className="w-full" onClick={() => fetchLinks(debouncedSearchQuery, linksPage + 1, isMyLinksTab ? user?.id : undefined)}>Load More</Button>}
             </>
@@ -580,8 +619,8 @@ export default function LinksPage() {
                         <Button variant="ghost" size="sm"><Plus className="h-4 w-4 mr-2" /> Add New</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <DropdownMenuItem onSelect={() => {setShowRequestForm(false); setShowAddLinkForm(true);}}>Add Link</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => {setShowAddLinkForm(false); setShowRequestForm(true);}}>Request a Link</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => {setShowRequestForm(false); setShowForm(true); setEditingPack(null);}}>Add Link</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => {setShowForm(false); setShowRequestForm(true);}}>Request a Link</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             )}
@@ -608,12 +647,12 @@ export default function LinksPage() {
             </div>
             
             <AnimatePresence>
-            {showAddLinkForm && (
+            {showForm && (
                 <motion.div 
                     className="p-4 md:p-6 border-b"
                     initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                 >
-                    <form onSubmit={handleAddLink} className="space-y-4">
+                    <form onSubmit={handleFormSubmit} className="space-y-4">
                         <div className="flex items-center gap-2">
                              <Input id="title" placeholder="Pack Title (e.g., Wednesday Series)" value={title} onChange={(e) => setTitle(e.target.value)} disabled={isPending} maxLength={200} required />
                              <button type="button" className="p-2 text-muted-foreground hover:text-foreground" onClick={() => colorInputRef.current?.click()}>
@@ -640,8 +679,8 @@ export default function LinksPage() {
                         </Button>
                         
                         <div className='flex gap-2'>
-                            <Button type="submit" className="w-full" disabled={isPending}>{isPending ? <Loader2 className="animate-spin" /> : 'Add Links'}</Button>
-                            <Button type="button" variant="secondary" onClick={() => setShowAddLinkForm(false)}>Cancel</Button>
+                            <Button type="submit" className="w-full" disabled={isPending}>{isPending ? <Loader2 className="animate-spin" /> : (editingPack ? 'Update Links' : 'Add Links')}</Button>
+                            <Button type="button" variant="secondary" onClick={resetForm}>Cancel</Button>
                         </div>
                     </form>
                 </motion.div>
