@@ -262,7 +262,7 @@ const getCachedExplorePosts = (page: number, limit: number) => cache(
         return posts.map(post => ({
             ...(post as unknown as EmojiState),
             like_count: likeCountsMap.get(post.id) || 0,
-            user: { ...post.user, has_mood: post.user?.moods?.length > 0 } as any,
+            user: { ...post.user, has_mood: p.user?.moods?.length > 0 } as any,
         }));
     },
     [`explore-posts-${page}-${limit}`],

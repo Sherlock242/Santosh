@@ -28,3 +28,4 @@ export async function deletePost(emojiId: string) {
     revalidateTag(`gallery:${user.id}`);
     revalidateTag('explore');
 }
+
