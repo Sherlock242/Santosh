@@ -655,7 +655,7 @@ export default function LinksPage() {
                 >
                     <form onSubmit={handleFormSubmit} className="space-y-4">
                         <div className="flex items-center gap-2">
-                             <Input id="title" placeholder="Pack Title (e.g., Wednesday Series)" value={title} onChange={(e) => setTitle(e.target.value)} disabled={isPending} maxLength={200} required />
+                             <Input id="title" placeholder="Pack Title" value={title} onChange={(e) => setTitle(e.target.value)} disabled={isPending} maxLength={200} required />
                              <button type="button" className="p-2 text-muted-foreground hover:text-foreground" onClick={() => colorInputRef.current?.click()}>
                                 <Palette className="h-5 w-5" style={{ color: color }} />
                                 <span className="sr-only">Choose color</span>
