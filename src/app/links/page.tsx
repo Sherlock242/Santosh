@@ -479,13 +479,20 @@ export default function LinksPage() {
     }
 
     const handleLinkClick = (link: LinkEntry) => {
-         fetch('/api/links/increment', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ linkId: link.id }),
-          keepalive: true,
-      }).catch(err => console.error("Failed to increment link click:", err));
-      window.open(link.url, '_blank', 'noopener,noreferrer');
+        window.open(link.url, '_blank', 'noopener,noreferrer');
+        // Use sendBeacon for reliable, non-blocking request to increment click count
+        if (navigator.sendBeacon) {
+            const blob = new Blob([JSON.stringify({ linkId: link.id })], { type: 'application/json' });
+            navigator.sendBeacon('/api/links/increment', blob);
+        } else {
+            // Fallback for older browsers
+            fetch('/api/links/increment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ linkId: link.id }),
+                keepalive: true,
+            }).catch(err => console.error("Failed to increment link click:", err));
+        }
     };
     
     const refreshCurrentTab = () => {
@@ -675,5 +682,3 @@ export default function LinksPage() {
         </div>
     );
 }
-
-    
