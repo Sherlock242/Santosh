@@ -43,6 +43,7 @@ interface LinkEntry {
     clicks: number;
     pack_id: string;
     pack_title: string;
+    sequence: number;
 }
 
 interface LinkPack {
@@ -566,9 +567,9 @@ export default function LinksPage() {
             }
         });
 
-        // Sort links within each pack by creation date (oldest first)
+        // Sort links within each pack by the new sequence number
         packs.forEach(pack => {
-            pack.links.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+            pack.links.sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0));
         });
         
         return [...Array.from(packs.values())].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());

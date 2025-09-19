@@ -32,7 +32,7 @@ export async function addLink(payload: LinkPayload) {
     // A random ID to group these links together as a pack
     const packId = crypto.randomUUID();
 
-    const linksToInsert = payload.links.map((link) => {
+    const linksToInsert = payload.links.map((link, index) => {
         return {
             user_id: user.id,
             pack_id: packId,
@@ -41,6 +41,7 @@ export async function addLink(payload: LinkPayload) {
             url: link.url,
             color: payload.color,
             clicks: 0,
+            sequence: index, // Add sequence number
         };
     });
 
@@ -79,7 +80,7 @@ export async function updateLinkPack(packId: string, payload: LinkPayload) {
     }
     
     // Insert the new/updated links.
-    const linksToInsert = payload.links.map((link) => ({
+    const linksToInsert = payload.links.map((link, index) => ({
         user_id: user.id,
         pack_id: packId,
         pack_title: payload.title,
@@ -87,6 +88,7 @@ export async function updateLinkPack(packId: string, payload: LinkPayload) {
         url: link.url,
         color: payload.color,
         clicks: 0, // Clicks are reset on edit.
+        sequence: index, // Add sequence number
     }));
 
     const { error: insertError } = await supabase.from('links').insert(linksToInsert);
@@ -107,7 +109,7 @@ export async function getLinks({ query, page = 1, limit = 10, userId }: { query:
 
     let linksQuery = supabase
         .from('links')
-        .select(`id, title, url, created_at, user_id, color, clicks, pack_id, pack_title`)
+        .select(`id, title, url, created_at, user_id, color, clicks, pack_id, pack_title, sequence`)
         .order('created_at', { ascending: false })
         .range(from, to);
 
