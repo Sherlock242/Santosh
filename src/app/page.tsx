@@ -25,6 +25,7 @@ function LoginPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isClient, setIsClient] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -32,7 +33,7 @@ function LoginPageContent() {
 
   const handleManualSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAuthLoading(true);
+    setIsSubmitting(true);
     const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -44,7 +45,7 @@ function LoginPageContent() {
             }
         }
     });
-    setAuthLoading(false);
+    setIsSubmitting(false);
     if (error) {
         toast({ title: 'Sign-up Error', description: error.message, variant: 'destructive'});
     } else {
@@ -54,7 +55,7 @@ function LoginPageContent() {
 
   const handleManualSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAuthLoading(true);
+    setIsSubmitting(true);
     try {
         const { error } = await supabase.auth.signInWithPassword({
             email,
@@ -62,12 +63,13 @@ function LoginPageContent() {
         });
         if (error) {
             toast({ title: 'Sign-in Error', description: error.message, variant: 'destructive'});
+            setIsSubmitting(false);
         }
-        // On success, the onAuthStateChange listener in useAuth will handle the redirect.
+        // On success, the onAuthStateChange listener in useAuth will handle the redirect,
+        // so we don't set isSubmitting to false here.
     } catch (error: any) {
          toast({ title: 'Sign-in Error', description: error.message, variant: 'destructive'});
-    } finally {
-        setAuthLoading(false);
+         setIsSubmitting(false);
     }
   }
   
@@ -130,17 +132,17 @@ function LoginPageContent() {
                       <form onSubmit={handleManualSignIn} className="space-y-4 pt-4">
                           <div className="space-y-2 text-left">
                               <Label htmlFor="email-in">Email</Label>
-                              <Input id="email-in" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={!isClient || authLoading} />
+                              <Input id="email-in" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={!isClient || isSubmitting} />
                           </div>
                            <div className="space-y-2 text-left">
                                <div className="flex justify-between items-baseline">
                                 <Label htmlFor="password-in">Password</Label>
                                 <Link href="/forgot-password" passHref className="text-sm text-primary hover:underline">Forgot?</Link>
                                </div>
-                              <Input id="password-in" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={!isClient || authLoading} />
+                              <Input id="password-in" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={!isClient || isSubmitting} />
                           </div>
-                          <Button type="submit" className="w-full" disabled={!isClient || authLoading}>
-                              {isClient && authLoading ? <Loader2 className="animate-spin" /> : 'Sign In'}
+                          <Button type="submit" className="w-full" disabled={!isClient || isSubmitting}>
+                              {isSubmitting ? <Loader2 className="animate-spin" /> : 'Sign In'}
                           </Button>
                       </form>
                   </TabsContent>
@@ -148,18 +150,18 @@ function LoginPageContent() {
                       <form onSubmit={handleManualSignUp} className="space-y-4 pt-4">
                           <div className="space-y-2 text-left">
                               <Label htmlFor="name-up">Name</Label>
-                              <Input id="name-up" type="text" placeholder="Your Name" required value={name} onChange={e => setName(e.target.value)} disabled={!isClient || authLoading} />
+                              <Input id="name-up" type="text" placeholder="Your Name" required value={name} onChange={e => setName(e.target.value)} disabled={!isClient || isSubmitting} />
                           </div>
                           <div className="space-y-2 text-left">
                               <Label htmlFor="email-up">Email</Label>
-                              <Input id="email-up" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={!isClient || authLoading} />
+                              <Input id="email-up" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={!isClient || isSubmitting} />
                           </div>
                            <div className="space-y-2 text-left">
                               <Label htmlFor="password-up">Password</Label>
-                              <Input id="password-up" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={!isClient || authLoading} />
+                              <Input id="password-up" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={!isClient || isSubmitting} />
                           </div>
-                          <Button type="submit" className="w-full" disabled={!isClient || authLoading}>
-                              {isClient && authLoading ? <Loader2 className="animate-spin" /> : 'Sign Up'}
+                          <Button type="submit" className="w-full" disabled={!isClient || isSubmitting}>
+                              {isSubmitting ? <Loader2 className="animate-spin" /> : 'Sign Up'}
                           </Button>
                       </form>
                   </TabsContent>
