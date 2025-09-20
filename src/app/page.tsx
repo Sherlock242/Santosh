@@ -134,9 +134,9 @@ const AIConsciousnessPage = () => {
         </Button>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-0 pb-20">
         <div 
-          className="relative flex items-center justify-center w-48 h-48 md:w-60 md:h-60 cursor-pointer"
+          className="relative flex items-center justify-center w-60 h-60 cursor-pointer"
           onClick={handleListen}
         >
              {/* Nano Particles between ring 2 and 3 */}
@@ -188,7 +188,7 @@ const AIConsciousnessPage = () => {
             </motion.svg>
             
             <motion.div
-                className="absolute w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-purple-600 to-cyan-400 rounded-full"
+                className="absolute w-20 h-20 bg-gradient-to-br from-purple-600 to-cyan-400 rounded-full"
                 animate={{
                     scale: isListening || isSpeaking ? 1.1 : 1,
                     boxShadow: isListening || isSpeaking
