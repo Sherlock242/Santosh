@@ -178,8 +178,8 @@ export default function GalleryClientPage({
     const handleSignOut = async () => {
         setShowSignOutConfirm(false);
         if (!supabase) return;
-        router.replace('/');
         await supabase.auth.signOut();
+        router.push('/login');
     };
     
     const handleDeleteAccount = async () => {
@@ -196,7 +196,7 @@ export default function GalleryClientPage({
             });
 
             await supabase.auth.signOut();
-            router.replace('/');
+            router.push('/login');
             
         } catch (error: any) {
           console.error("Failed to delete account:", error);

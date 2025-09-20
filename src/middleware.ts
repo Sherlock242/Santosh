@@ -65,10 +65,10 @@ export async function middleware(request: NextRequest) {
 
   // Redirect to login if user is not signed in and trying to access a protected route
   if (!user && !isPublicPath) {
-    return NextResponse.redirect(new URL('/', request.url))
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Redirect to mood page if user is signed in and on the login page
+  // Redirect to mood page if user is signed in and on the login page or root page
   if (user && (url.pathname === '/' || url.pathname === '/login')) {
     return NextResponse.redirect(new URL('/mood', request.url))
   }
