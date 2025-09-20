@@ -28,8 +28,8 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MoreHorizontal, ArrowLeft, X, Eye, Loader2 } from 'lucide-react';
-import { motion, animate } from 'framer-motion';
+import { MoreHorizontal, ArrowLeft, X, Eye, Loader2, Trash2 } from 'lucide-react';
+import { motion, animate, useMotionValue } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { removeMood, recordMoodView, getMoodViewers } from '@/app/actions';
