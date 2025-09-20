@@ -28,7 +28,6 @@ const AIConsciousnessPage = () => {
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => {
       setIsSpeaking(false);
-      setAiResponse("Click the orb to start a voice search."); // Reset to default message
     };
     utterance.onerror = () => {
         setIsSpeaking(false);
