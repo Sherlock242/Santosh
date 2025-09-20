@@ -178,7 +178,7 @@ const AIConsciousnessPage = () => {
             </motion.svg>
             
             {/* New Nano Particle Ring */}
-            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '205px', height: '205px' }} initial={{ rotate: 0 }} animate={{ rotate: 360 }} transition={{ duration: 70, repeat: Infinity, ease: 'linear' }}>
+            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '190px', height: '190px' }} initial={{ rotate: 0 }} animate={{ rotate: 360 }} transition={{ duration: 70, repeat: Infinity, ease: 'linear' }}>
                 <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.7)" strokeWidth="1" strokeDasharray="1 10" />
             </motion.svg>
 
@@ -229,3 +229,5 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
+
+    
