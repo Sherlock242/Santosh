@@ -14,15 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import { UserListItem } from './user-list-item';
 import type { UserWithSupportStatus } from '@/app/actions';
 
-const likerListCache: {
-    [key: string]: {
-        items: UserWithSupportStatus[],
-        page: number,
-        hasMore: boolean,
-        scrollPosition: number
-    }
-} = {};
-
 interface LikerListSheetProps {
     open: boolean;
     onOpenChange: (isOpen: boolean) => void;
@@ -31,11 +22,10 @@ interface LikerListSheetProps {
 
 function LikerListSheet({ open, onOpenChange, emojiId }: LikerListSheetProps) {
     const { toast } = useToast();
-    const cacheKey = `likers-${emojiId}`;
 
-    const [likerList, setLikerList] = useState<UserWithSupportStatus[]>(likerListCache[cacheKey]?.items || []);
-    const [page, setPage] = useState(likerListCache[cacheKey]?.page || 1);
-    const [hasMore, setHasMore] = useState(likerListCache[cacheKey]?.hasMore ?? true);
+    const [likerList, setLikerList] = useState<UserWithSupportStatus[]>([]);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
     
     const [isLoading, setIsLoading] = useState(false);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
@@ -54,20 +44,17 @@ function LikerListSheet({ open, onOpenChange, emojiId }: LikerListSheetProps) {
             
             if (users.length < 15) {
                 setHasMore(false);
-                if (likerListCache[cacheKey]) likerListCache[cacheKey].hasMore = false;
             }
 
             setLikerList(prev => {
                 const existingIds = new Set(prev.map(u => u.id));
                 const uniqueNew = users.filter(u => !existingIds.has(u.id as string));
                 const updatedList = pageNum === 1 ? users : [...prev, ...uniqueNew];
-                if (likerListCache[cacheKey]) likerListCache[cacheKey].items = updatedList as UserWithSupportStatus[];
                 return updatedList as UserWithSupportStatus[];
             });
 
             const nextPage = pageNum + 1;
             setPage(nextPage);
-            if (likerListCache[cacheKey]) likerListCache[cacheKey].page = nextPage;
 
         } catch (error) {
             console.error(`Failed to fetch likers:`, error);
@@ -76,46 +63,14 @@ function LikerListSheet({ open, onOpenChange, emojiId }: LikerListSheetProps) {
             if (pageNum === 1) setIsLoading(false);
             setIsFetchingMore(false);
         }
-    }, [emojiId, isFetchingMore, toast, cacheKey]);
+    }, [emojiId, isFetchingMore, toast]);
 
     useEffect(() => {
         if (open && emojiId) {
-            if (!likerListCache[cacheKey]) {
-                likerListCache[cacheKey] = {
-                    items: [],
-                    page: 1,
-                    hasMore: true,
-                    scrollPosition: 0,
-                };
-                fetchLikers(1);
-            } else {
-                setLikerList(likerListCache[cacheKey].items);
-                setPage(likerListCache[cacheKey].page);
-                setHasMore(likerListCache[cacheKey].hasMore);
-                // Restore scroll position
-                setTimeout(() => {
-                    if (scrollContainerRef.current) {
-                        scrollContainerRef.current.scrollTop = likerListCache[cacheKey].scrollPosition;
-                    }
-                }, 0);
-            }
+            fetchLikers(1);
         }
-    }, [open, emojiId, fetchLikers, cacheKey]);
-
-    // Save scroll position
-    useEffect(() => {
-        const scrollable = scrollContainerRef.current;
-        if (!scrollable || !cacheKey) return;
-    
-        const handleScroll = () => {
-            if (likerListCache[cacheKey]) {
-                likerListCache[cacheKey].scrollPosition = scrollable.scrollTop;
-            }
-        };
-    
-        scrollable.addEventListener('scroll', handleScroll, { passive: true });
-        return () => scrollable.removeEventListener('scroll', handleScroll);
-    }, [cacheKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, emojiId]);
 
     // Infinite scroll observer
     useEffect(() => {
@@ -141,9 +96,6 @@ function LikerListSheet({ open, onOpenChange, emojiId }: LikerListSheetProps) {
             : user
         );
         setLikerList(updateList);
-        if (likerListCache[cacheKey]) {
-            likerListCache[cacheKey].items = updateList(likerListCache[cacheKey].items);
-        }
     };
 
     return (
