@@ -31,7 +31,7 @@ export default function RootLayout({
     <html lang="en" className={cn("dark", inter.variable, kalam.variable)}>
       <head>
         <title>Edengram</title>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon.png" />
         <meta name="description" content="Create and share interactive emojis." />
         <meta name="google-adsense-account" content="ca-pub-2882939249270622" />
       </head>
