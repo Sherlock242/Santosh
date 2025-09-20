@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -118,7 +119,7 @@ const AIConsciousnessPage = () => {
 
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         <div className="relative flex items-center justify-center w-64 h-64 md:w-80 md:h-80">
-            {[...Array(3)].map((_, i) => (
+            {[...Array(2)].map((_, i) => (
             <motion.div
                 key={i}
                 className="absolute border-2 border-cyan-400/50 rounded-full"
@@ -213,7 +214,7 @@ const AIConsciousnessPage = () => {
             )}
         </div>
       </div>
-       <div className="flex-shrink-0 flex justify-center pb-8">
+       <div className="flex-shrink-0 flex justify-center pb-8 pt-4">
             <motion.button
             onClick={handleListen}
             className="p-4 rounded-full bg-cyan-400/20 text-cyan-400 border border-cyan-400/50"
