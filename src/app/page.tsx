@@ -168,7 +168,13 @@ const AIConsciousnessPage = () => {
             </AnimatePresence>
 
              {/* Dashed Animated Rings */}
-            {[...Array(2)].map((_, i) => (
+            {[...Array(2)].map((_, i) => {
+                const radius = 140;
+                const circumference = 2 * Math.PI * radius;
+                const outerDashArray = `${circumference / 10} ${circumference / 10}`; // 5 dashes, 5 gaps
+                const innerDashArray = `${20 + i*10} ${30 + i*5}`;
+
+              return (
               <motion.svg
                   key={`ring-svg-${i}`}
                   className="absolute w-full h-full"
@@ -191,14 +197,14 @@ const AIConsciousnessPage = () => {
                   <motion.circle
                       cx="150"
                       cy="150"
-                      r="140"
+                      r={radius}
                       fill="none"
                       stroke="rgba(0, 255, 255, 0.5)"
                       strokeWidth="3"
-                      strokeDasharray={`${20 + i*10} ${30 + i*5}`} // This creates the "cuts"
+                      strokeDasharray={i === 1 ? outerDashArray : innerDashArray}
                   />
               </motion.svg>
-            ))}
+            )})}
             
             <motion.div
                 className="absolute w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-purple-600 to-cyan-400 rounded-full"
@@ -242,3 +248,4 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
+
