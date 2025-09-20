@@ -63,6 +63,7 @@ const AIConsciousnessPage = () => {
     'goodbye': 'Goodbye! Have a great day.',
     'bye': 'Farewell! Come back anytime.',
     'what can you do': "I can search Wikipedia for any topic you're curious about. Just tell me what you want to know.",
+    'how can you help me': "I can search Wikipedia for any topic you're curious about. Just tell me what you want to know.",
     'tell me a joke': "Why don't scientists trust atoms? Because they make up everything!",
     'how old are you': "I don't have an age in the human sense. I'm as old as my last update!",
     'what is the time': `I can't check the current time, but I can search for the history of timekeeping if you'd like.`,
