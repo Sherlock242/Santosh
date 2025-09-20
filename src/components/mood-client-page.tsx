@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -14,6 +13,7 @@ import MoodStories from '@/components/mood-stories';
 import type { Mood } from '@/components/post-view';
 import { PostCard } from './post-card';
 import Link from 'next/link';
+import { Button } from './ui/button';
 
 const PostView = dynamic(
   () => import('@/components/post-view').then(mod => mod.PostView),
