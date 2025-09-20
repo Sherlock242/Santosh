@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, animate } from 'framer-motion';
 import { BrainCircuit, Mic, Sparkles, Volume2, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -129,7 +129,7 @@ const AIConsciousnessPage = () => {
       <header className="absolute top-0 right-0 p-4 z-10">
         <Button asChild variant="ghost" className="text-white hover:bg-gray-800 hover:text-white">
           <Link href="/login">
-            Get Started <ArrowRight className="ml-2 h-4 w-4" />
+            Sign In <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
       </header>
@@ -169,7 +169,7 @@ const AIConsciousnessPage = () => {
 
             {/* Ring 1 (Innermost - 10 cuts) */}
             <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '135px', height: '135px' }} initial={{rotate: 20}} animate={{ rotate: 380 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}>
-                <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.5)" strokeWidth="3" strokeDasharray="60 28.4" />
+                <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.5)" strokeWidth="3" strokeDasharray="68.4 20" />
             </motion.svg>
             
             {/* Ring 2 (Middle - 4 cuts, different sizes) */}
@@ -178,13 +178,13 @@ const AIConsciousnessPage = () => {
             </motion.svg>
             
             {/* New Nano Particle Ring */}
-            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '190px', height: '190px' }} initial={{ rotate: 0 }} animate={{ rotate: 360 }} transition={{ duration: 70, repeat: Infinity, ease: 'linear' }}>
+            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '200px', height: '200px' }} initial={{ rotate: 0 }} animate={{ rotate: 360 }} transition={{ duration: 70, repeat: Infinity, ease: 'linear' }}>
                 <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.7)" strokeWidth="1" strokeDasharray="1 10" />
             </motion.svg>
 
             {/* Ring 3 (Outermost - 5 cuts, different sizes) */}
             <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '240px', height: '240px' }} initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
-                <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.7)" strokeWidth="5" strokeDasharray="80 30 150 60 56" />
+                <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.7)" strokeWidth="5" strokeDasharray="106 70" />
             </motion.svg>
             
             <motion.div
@@ -229,5 +229,3 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
-
-    
