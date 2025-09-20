@@ -179,7 +179,7 @@ const AIConsciousnessPage = () => {
             
             {/* Ring 3 (Outermost - 5 cuts, different sizes) */}
             <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '240px', height: '240px' }} initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
-                <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.7)" strokeWidth="5" strokeDasharray="100 20 60 80 116" />
+                <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.7)" strokeWidth="5" strokeDasharray="80 30 150 60 56" />
             </motion.svg>
             
             <motion.div
