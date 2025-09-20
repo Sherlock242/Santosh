@@ -3,7 +3,6 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
-import { updateUserInCache } from '@/lib/post-cache';
 import { redirect } from 'next/navigation';
 
 // --- User Profile Actions ---
@@ -60,13 +59,6 @@ export async function updateUserProfile(formData: FormData) {
         throw new Error('Failed to update profile.');
     }
     
-    // Also update the user cache to reflect changes immediately on the client
-    if (profileData.picture) {
-        updateUserInCache(user.id, { name: profileData.name, picture: profileData.picture });
-    } else {
-        updateUserInCache(user.id, { name: profileData.name });
-    }
-
     revalidatePath('/gallery');
     revalidatePath('/profile/edit');
 }
@@ -99,8 +91,6 @@ export async function removeUserProfilePicture() {
         }
     }
 
-    // Update cache and revalidate paths
-    updateUserInCache(user.id, { picture: defaultPicture });
     revalidatePath('/gallery');
     revalidatePath('/profile/edit');
 
