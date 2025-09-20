@@ -201,7 +201,7 @@ const AIConsciousnessPage = () => {
             ))}
             
             <motion.div
-                className="absolute w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-purple-600 to-cyan-400 rounded-full"
+                className="absolute w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-purple-600 to-cyan-400 rounded-full"
                 animate={{
                     scale: isListening || isSpeaking ? 1.1 : 1,
                     boxShadow: isListening || isSpeaking
