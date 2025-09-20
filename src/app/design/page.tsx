@@ -84,7 +84,7 @@ const DesignPageContent = () => {
   const [rimuruColor, setRimuruColor] = useState('#3498db');
   const [creatorColor, setCreatorColor] = useState('#333333');
   
-  const [background_color, setBackgroundColor] = useState('#0a0a0a');
+  const [background_color, setBackgroundColor] = useState('#000000');
   const [show_sunglasses, setShowSunglasses] = useState(false);
   const [show_mustache, setShowMustache] = useState(false);
   const [selected_filter, setSelectedFilter] = useState<string | null>(null);
@@ -173,7 +173,7 @@ const DesignPageContent = () => {
     setId(null);
     setModel('emoji');
     setExpression('neutral');
-    setBackgroundColor('#0a0a0a');
+    setBackgroundColor('#000000');
     setEmojiColor('#ffb300');
     setLokiColor('orangered');
     setRimuruColor('#3498db');
