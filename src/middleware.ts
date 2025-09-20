@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const url = request.nextUrl
-  const publicPaths = ['/', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy', '/forgot-password'];
+  const publicPaths = ['/', '/login', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy', '/forgot-password'];
   const isPublicPath = publicPaths.includes(url.pathname) || url.pathname.startsWith('/reset-password');
 
   // Redirect to login if user is not signed in and trying to access a protected route
@@ -69,7 +69,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect to mood page if user is signed in and on the login page
-  if (user && url.pathname === '/') {
+  if (user && (url.pathname === '/' || url.pathname === '/login')) {
     return NextResponse.redirect(new URL('/mood', request.url))
   }
 
