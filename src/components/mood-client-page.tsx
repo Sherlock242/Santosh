@@ -238,7 +238,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     }
 
     return (
-        <div className="pb-14 no-scrollbar">
+        <div className="pb-14 no-scrollbar bg-background">
             <MoodHeader />
             <MoodStories 
                 user={user}
