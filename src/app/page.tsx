@@ -8,6 +8,10 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { searchWikipedia } from './ai/flows/wikipedia-flow';
 
+interface IWindow extends Window {
+  webkitSpeechRecognition: any;
+}
+
 const AIConsciousnessPage = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -16,7 +20,7 @@ const AIConsciousnessPage = () => {
   const [aiResponse, setAiResponse] = useState("Click the orb to start a voice search.");
   const [dots, setDots] = useState('');
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any | null>(null);
 
   const speak = useCallback((text: string) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -90,7 +94,7 @@ const AIConsciousnessPage = () => {
       return;
     }
 
-    const recognition = new window.webkitSpeechRecognition();
+    const recognition = new (window as unknown as IWindow).webkitSpeechRecognition();
     recognitionRef.current = recognition;
     recognition.continuous = false;
     recognition.interimResults = true;
@@ -106,12 +110,12 @@ const AIConsciousnessPage = () => {
       setIsListening(false);
     };
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: any) => {
       console.error('Speech recognition error', event);
       setIsListening(false);
     };
 
-    recognition.onresult = async (event) => {
+    recognition.onresult = async (event: any) => {
       let finalTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
