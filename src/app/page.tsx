@@ -52,6 +52,9 @@ const AIConsciousnessPage = () => {
   }, [])
 
   const etiquetteResponses: { [key: string]: string | string[] } = {
+    'master': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
+    'creator': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
+    'developer': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
     'hello': 'Hello there! How can I help you search for information today?',
     'hi': 'Hi! What can I look up for you?',
     'hey': 'Hey! Ready to search for something?',
