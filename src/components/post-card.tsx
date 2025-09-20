@@ -165,7 +165,7 @@ export const PostCard = ({ post, onSelect, onDelete, onMoodChange, isCardView = 
     }
 
     return (
-        <div className="w-full flex-shrink-0 flex flex-col py-2">
+        <div className="w-full flex-shrink-0 flex flex-col">
             <div className="flex items-center px-4 py-2">
                 <Avatar className="h-8 w-8">
                     {post.user?.picture && <AvatarImage src={post.user.picture} alt={post.user.name || 'User'} data-ai-hint="profile picture" className="rounded-full" />}
