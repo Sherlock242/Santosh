@@ -47,6 +47,29 @@ const AIConsciousnessPage = () => {
     }
   }, [])
 
+  const etiquetteResponses: { [key: string]: string | string[] } = {
+    'hello': 'Hello there! How can I help you search for information today?',
+    'hi': 'Hi! What can I look up for you?',
+    'hey': 'Hey! Ready to search for something?',
+    'how are you': "I'm just a set of algorithms, but I'm functioning perfectly. Thanks for asking! What can I do for you?",
+    'thank you': "You're welcome!",
+    'thanks': "You're most welcome!",
+    'you\'re welcome': 'Glad I could assist!',
+    'what is your name': "I am a voice assistant, created to help you find information.",
+    'who are you': "I'm your voice-powered search assistant.",
+    'good morning': 'Good morning! I hope you have a great start to your day.',
+    'good afternoon': 'Good afternoon! How can I assist you?',
+    'good evening': 'Good evening! Ready to learn something new?',
+    'goodbye': 'Goodbye! Have a great day.',
+    'bye': 'Farewell! Come back anytime.',
+    'what can you do': "I can search Wikipedia for any topic you're curious about. Just tell me what you want to know.",
+    'tell me a joke': "Why don't scientists trust atoms? Because they make up everything!",
+    'how old are you': "I don't have an age in the human sense. I'm as old as my last update!",
+    'what is the time': `I can't check the current time, but I can search for the history of timekeeping if you'd like.`,
+    'are you a robot': "I'm a program, so in a way, yes. But I'm here to help you!",
+    'i love you': "That's very kind of you! I appreciate it.",
+  };
+
 
   const handleListen = () => {
     // If speaking, stop it. If listening, stop it.
@@ -98,9 +121,23 @@ const AIConsciousnessPage = () => {
       if (finalTranscript) {
         setTranscript(finalTranscript);
         setIsListening(false);
-        setIsLoading(true);
         recognition.stop();
-
+        
+        const normalizedTranscript = finalTranscript.toLowerCase().trim().replace(/[.,?_!]/g, '');
+        
+        // Check for an etiquette match
+        const etiquetteMatch = Object.keys(etiquetteResponses).find(key => normalizedTranscript.includes(key));
+        
+        if (etiquetteMatch) {
+            const response = etiquetteResponses[etiquetteMatch];
+            const randomResponse = Array.isArray(response) ? response[Math.floor(Math.random() * response.length)] : response;
+            speak(randomResponse);
+            setIsLoading(false);
+            return;
+        }
+        
+        // If no etiquette match, proceed with search
+        setIsLoading(true);
         try {
           const response = await searchWikipedia({ query: finalTranscript });
           speak(response.summary);
