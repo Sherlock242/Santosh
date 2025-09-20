@@ -262,7 +262,9 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                     setViewingStoryFromFeed(userPlaylist);
                 }}
             />
-            {renderContent()}
+            <div className="bg-background">
+                {renderContent()}
+            </div>
             {!isLoading && hasMore && (
                 <div ref={loaderRef} className="flex justify-center p-4">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
