@@ -1,194 +1,241 @@
 
 'use client';
 
-import React, { Suspense, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BrainCircuit, Mic, Sparkles, Volume2, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { EdengramLogo } from '@/components/edengram-logo';
-import Head from 'next/head';
+import Link from 'next/link';
+import { searchWikipedia } from './ai/flows/wikipedia-flow';
 
-// This component uses client-side hooks.
-function LoginPageContent() {
-  const router = useRouter();
-  const { user, supabase, loading: authLoading, setLoading: setAuthLoading } = useAuth();
-  const { toast } = useToast();
-  
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isClient, setIsClient] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const AIConsciousnessPage = () => {
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [aiResponse, setAiResponse] = useState("Hello, I am Edengram's public consciousness. Ask me anything.");
+  const [dots, setDots] = useState('');
 
-  useEffect(() => {
-    setIsClient(true);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  const speak = useCallback((text: string) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setAiResponse(''); // Clear response after speaking
+    };
+    window.speechSynthesis.speak(utterance);
   }, []);
 
-  const handleManualSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-            data: {
-                name: name,
-                picture: `https://placehold.co/64x64.png?text=${name.charAt(0).toUpperCase()}`
-            }
-        }
-    });
-    setIsSubmitting(false);
-    if (error) {
-        toast({ title: 'Sign-up Error', description: error.message, variant: 'destructive'});
-    } else {
-        toast({ title: 'Check your email', description: 'A confirmation link has been sent to your email address.', variant: 'success'});
-    }
-  }
-
-  const handleManualSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-        if (error) {
-            toast({ title: 'Sign-in Error', description: error.message, variant: 'destructive'});
-            setIsSubmitting(false);
-        }
-        // On success, the onAuthStateChange listener in useAuth will handle the redirect,
-        // so we don't set isSubmitting to false here.
-    } catch (error: any) {
-         toast({ title: 'Sign-in Error', description: error.message, variant: 'destructive'});
-         setIsSubmitting(false);
-    }
-  }
-  
   useEffect(() => {
-    if (user) {
-        router.push('/mood');
-        return;
+    speak(aiResponse);
+  }, []);
+
+
+  const handleListen = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, isClient]);
 
+    if (!('webkitSpeechRecognition' in window)) {
+      alert('Your browser does not support the Web Speech API. Please try Chrome.');
+      return;
+    }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        delayChildren: 0.3,
-        staggerChildren: 0.15,
-      },
-    },
-  };
+    const recognition = new window.webkitSpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        type: 'spring',
-        damping: 15,
-        stiffness: 100,
+    recognition.onstart = () => {
+      setIsListening(true);
+      setTranscript('');
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error', event);
+      setIsListening(false);
+    };
+
+    recognition.onresult = async (event) => {
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        }
       }
-    },
+
+      if (finalTranscript) {
+        setTranscript(finalTranscript);
+        setIsListening(false);
+        setIsLoading(true);
+        recognition.stop();
+
+        try {
+          const response = await searchWikipedia({ query: finalTranscript });
+          setAiResponse(response.summary);
+          speak(response.summary);
+        } catch (error) {
+          console.error('Error fetching from Wikipedia:', error);
+          const errorMessage = "I couldn't find information on that. Please try another topic.";
+          setAiResponse(errorMessage);
+          speak(errorMessage);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    recognition.start();
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots(prev => (prev.length >= 3 ? '' : prev + '.'));
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <>
-      <div className="flex flex-col items-center justify-center h-full text-center p-4 overflow-y-auto">
-        <motion.div 
-          className="flex flex-col items-center justify-center gap-6 w-full max-w-sm"
-          initial="hidden"
-          animate="visible"
-          variants={containerVariants}
-        >
-          <motion.div variants={itemVariants} className="flex items-center justify-center gap-2">
-            <EdengramLogo className="h-12 w-12" />
-            <h1 className="text-4xl font-logo font-normal">
-              Edengram
-            </h1>
-          </motion.div>
+    <div className="flex flex-col items-center justify-center h-screen bg-black text-white p-4 overflow-hidden">
+      <header className="absolute top-0 right-0 p-4">
+        <Button asChild variant="ghost" className="text-white hover:bg-gray-800 hover:text-white">
+          <Link href="/login">
+            Get Started <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      </header>
 
-          <motion.div variants={itemVariants} className="w-full">
-              <Tabs defaultValue="signin" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="signin">Sign In</TabsTrigger>
-                      <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="signin">
-                      <form onSubmit={handleManualSignIn} className="space-y-4 pt-4">
-                          <div className="space-y-2 text-left">
-                              <Label htmlFor="email-in">Email</Label>
-                              <Input id="email-in" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={!isClient || isSubmitting} />
-                          </div>
-                           <div className="space-y-2 text-left">
-                               <div className="flex justify-between items-baseline">
-                                <Label htmlFor="password-in">Password</Label>
-                                <Link href="/forgot-password" passHref className="text-sm text-primary hover:underline">Forgot?</Link>
-                               </div>
-                              <Input id="password-in" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={!isClient || isSubmitting} />
-                          </div>
-                          <Button type="submit" className="w-full" disabled={!isClient || isSubmitting}>
-                              {isSubmitting ? <Loader2 className="animate-spin" /> : 'Sign In'}
-                          </Button>
-                      </form>
-                  </TabsContent>
-                  <TabsContent value="signup">
-                      <form onSubmit={handleManualSignUp} className="space-y-4 pt-4">
-                          <div className="space-y-2 text-left">
-                              <Label htmlFor="name-up">Name</Label>
-                              <Input id="name-up" type="text" placeholder="Your Name" required value={name} onChange={e => setName(e.target.value)} disabled={!isClient || isSubmitting} />
-                          </div>
-                          <div className="space-y-2 text-left">
-                              <Label htmlFor="email-up">Email</Label>
-                              <Input id="email-up" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={!isClient || isSubmitting} />
-                          </div>
-                           <div className="space-y-2 text-left">
-                              <Label htmlFor="password-up">Password</Label>
-                              <Input id="password-up" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={!isClient || isSubmitting} />
-                          </div>
-                          <Button type="submit" className="w-full" disabled={!isClient || isSubmitting}>
-                              {isSubmitting ? <Loader2 className="animate-spin" /> : 'Sign Up'}
-                          </Button>
-                      </form>
-                  </TabsContent>
-              </Tabs>
+      <div className="relative flex items-center justify-center w-64 h-64 md:w-80 md:h-80">
+        {[...Array(3)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute border-2 border-cyan-400/50 rounded-full"
+            style={{
+              width: `${(i + 1) * 80 + 100}px`,
+              height: `${(i + 1) * 80 + 100}px`,
+              rotate: Math.random() * 360,
+            }}
+            animate={{
+              rotate: 360 + Math.random() * 360,
+              scale: [1, 1.05, 1],
+            }}
+            transition={{
+              duration: 15 + i * 10,
+              repeat: Infinity,
+              repeatType: 'loop',
+              ease: 'linear',
+            }}
+          >
+             <motion.div className="absolute w-full h-full rounded-full" style={{
+                borderStyle: 'dashed',
+                borderWidth: '2px',
+                borderColor: 'transparent',
+                borderTopColor: `rgba(0, 255, 255, ${0.2 + i * 0.1})`,
+                rotate: Math.random() * 360,
+             }} />
           </motion.div>
-          
-        </motion.div>
-          <footer className="absolute bottom-4 text-xs text-muted-foreground">
-              <div className="flex gap-4 justify-center flex-wrap px-4">
-                  <Link href="/about" className="hover:text-foreground">About Us</Link>
-                  <Link href="/terms" className="hover:text-foreground">Terms</Link>
-                  <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
-                  <Link href="/blogs" className="hover:text-foreground">Blogs</Link>
-                  <Link href="/contact" className="hover:text-foreground">Contact</Link>
-              </div>
-          </footer>
+        ))}
+        
+        <motion.div
+          className="absolute w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-purple-600 to-cyan-400 rounded-full"
+          animate={{
+            scale: isListening || isSpeaking ? 1.1 : 1,
+            boxShadow: isListening || isSpeaking
+              ? '0 0 40px #0ff, 0 0 20px #8A2BE2'
+              : '0 0 20px #0ff, 0 0 10px #8A2BE2',
+          }}
+          transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+        />
+        
+        <AnimatePresence>
+            {(isListening || isSpeaking) && (
+              <motion.div
+                className="absolute w-full h-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                  {[...Array(20)].map((_, i) => (
+                      <motion.div
+                          key={i}
+                          className="absolute bg-cyan-400 rounded-full"
+                          style={{
+                              width: '4px',
+                              height: '4px',
+                              top: '50%',
+                              left: '50%',
+                              x: '-50%',
+                              y: '-50%',
+                          }}
+                          animate={{
+                              x: `${Math.cos((i / 20) * 2 * Math.PI) * 160}px`,
+                              y: `${Math.sin((i / 20) * 2 * Math.PI) * 160}px`,
+                              scale: [0, 1.5, 0],
+                              opacity: [0, 0.7, 0],
+                          }}
+                          transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              delay: i * 0.1,
+                          }}
+                      />
+                  ))}
+              </motion.div>
+            )}
+        </AnimatePresence>
+
       </div>
-    </>
-  );
-}
 
-// This is the exported page component.
-// It wraps the client component in a Suspense boundary.
-export default function LoginPage() {
-    return (
-        <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-            <LoginPageContent />
-        </Suspense>
-    )
-}
+      <div className="text-center mt-12 h-20 flex flex-col justify-center items-center">
+        {isLoading ? (
+          <Loader2 className="h-8 w-8 animate-spin" />
+        ) : transcript ? (
+          <>
+            <p className="text-gray-400">You said:</p>
+            <p className="text-xl">"{transcript}"</p>
+          </>
+        ) : aiResponse ? (
+          <p className="text-lg text-center max-w-md">{aiResponse}</p>
+        ) : (
+            <p className="text-gray-500">Press the button and speak...</p>
+        )}
+      </div>
+
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+        <motion.button
+          onClick={handleListen}
+          className="p-4 rounded-full bg-cyan-400/20 text-cyan-400 border border-cyan-400/50"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          {isListening ? (
+             <motion.div
+                animate={{ y: [0, -2, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+             >
+                <Mic className="h-8 w-8" />
+             </motion.div>
+          ) : isSpeaking ? (
+             <Volume2 className="h-8 w-8" />
+          ) : (
+            <Mic className="h-8 w-8" />
+          )}
+        </motion.button>
+      </div>
+
+    </div>
+  );
+};
+
+export default AIConsciousnessPage;

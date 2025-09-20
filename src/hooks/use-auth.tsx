@@ -55,9 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             setUser(null);
         } else {
-            // Check for Gold Member status.
-            // A user is Gold if the expiration date is in the future,
-            // OR if they have the legacy `is_gold_member` flag and no expiration date.
             const hasFutureExpiration = profile.gold_member_expires_at ? new Date(profile.gold_member_expires_at) > new Date() : false;
             const isLegacyGold = profile.is_gold_member && !profile.gold_member_expires_at;
             const isGold = hasFutureExpiration || isLegacyGold;
@@ -112,10 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
   
-    const publicPaths = ['/', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy', '/forgot-password', '/reset-password'];
-    const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/reset-password'); // Allow reset-password with params
+    const publicPaths = ['/', '/login', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy', '/forgot-password', '/reset-password'];
+    const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/reset-password');
     
-    if (user && pathname === '/') {
+    if (user && pathname === '/login') {
         router.push('/mood');
     } 
     else if (!user && !isPublicPath) {
@@ -123,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loading, pathname, router]);
   
-  const publicPaths = ['/', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy', '/forgot-password', '/reset-password'];
+  const publicPaths = ['/', '/login', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy', '/forgot-password', '/reset-password'];
   const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/reset-password');
 
   if (loading && !isPublicPath) {
