@@ -45,7 +45,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     const [page, setPage] = useState(initialPosts.length > 0 ? 2 : 1);
     const [hasMore, setHasMore] = useState(initialPosts.length === 5);
 
-    const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+    const [selectedPostIndex, setSelectedPostIndex] = useState<number | null>(null);
     const [viewingStoryFromFeed, setViewingStoryFromFeed] = useState<Mood[] | null>(null);
 
     const loaderRef = useRef(null);
@@ -170,9 +170,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         setViewingStoryFromFeed(null);
     }
     
-    const selectedPostIndex = selectedPostId ? feedPosts.findIndex(p => p.id === selectedPostId) : -1;
-
-    if (selectedPostIndex > -1) {
+    if (selectedPostIndex !== null) {
         const postsForView = feedPosts.map(post => ({
             ...post,
             user: {
@@ -187,7 +185,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             <PostView
                 emojis={postsForView}
                 initialIndex={selectedPostIndex}
-                onClose={() => setSelectedPostId(null)}
+                onClose={() => setSelectedPostIndex(null)}
                 onDelete={handleDeletePost}
                 onMoodChange={refreshMoods}
             />
@@ -220,8 +218,8 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         if (feedPosts.length > 0) {
             return (
                 <div>
-                    {feedPosts.map((post) => (
-                        <PostCard key={post.id} post={post} onSelect={() => setSelectedPostId(post.id)} onDelete={handleDeletePost} onMoodChange={refreshMoods} />
+                    {feedPosts.map((post, index) => (
+                        <PostCard key={post.id} post={post} onSelect={() => setSelectedPostIndex(index)} onDelete={handleDeletePost} onMoodChange={refreshMoods} />
                     ))}
                 </div>
             );
@@ -273,5 +271,3 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         </div>
     );
 }
-
-    

@@ -62,7 +62,7 @@ export default function ExploreClientPage({ initialPosts }: { initialPosts: Expl
   const [isSearching, setIsSearching] = useState(false);
   
   const [allEmojis, setAllEmojis] = useState<ExploreEmoji[]>(initialPosts);
-  const [selectedEmojiId, setSelectedEmojiId] = useState<string | null>(null);
+  const [selectedEmojiIndex, setSelectedEmojiIndex] = useState<number | null>(null);
   const { toast } = useToast();
   const { user: authUser } = useAuth();
   
@@ -162,7 +162,6 @@ export default function ExploreClientPage({ initialPosts }: { initialPosts: Expl
           toast({ title: 'Post Deleted', variant: 'success' });
           
           setAllEmojis(prev => prev.filter(p => p.id !== emojiId));
-          setSelectedEmojiId(null);
           
       } catch (error: any) {
           toast({ title: 'Error Deleting Post', description: error.message, variant: 'destructive' });
@@ -171,15 +170,16 @@ export default function ExploreClientPage({ initialPosts }: { initialPosts: Expl
   
   const showSearchResults = searchQuery.length > 0;
 
-  const selectedEmojiIndex = selectedEmojiId ? allEmojis.findIndex(e => e.id === selectedEmojiId) : -1;
-
-  if (selectedEmojiIndex !== -1) {
+  if (selectedEmojiIndex !== null) {
     return (
         <PostView 
             emojis={allEmojis}
             initialIndex={selectedEmojiIndex}
-            onClose={() => setSelectedEmojiId(null)}
-            onDelete={handleDelete}
+            onClose={() => setSelectedEmojiIndex(null)}
+            onDelete={(id) => {
+                handleDelete(id);
+                setSelectedEmojiIndex(null);
+            }}
         />
     )
   }
@@ -229,8 +229,8 @@ export default function ExploreClientPage({ initialPosts }: { initialPosts: Expl
              {allEmojis.length > 0 ? (
                 <>
                     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 md:gap-4">
-                        {allEmojis.map((emoji) => (
-                            <GalleryThumbnail key={emoji.id} emoji={emoji} onSelect={() => setSelectedEmojiId(emoji.id)} />
+                        {allEmojis.map((emoji, index) => (
+                            <GalleryThumbnail key={emoji.id} emoji={emoji} onSelect={() => setSelectedEmojiIndex(index)} />
                         ))}
                     </div>
                     {hasMore && <div ref={loaderRef} className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>}
@@ -248,5 +248,3 @@ export default function ExploreClientPage({ initialPosts }: { initialPosts: Expl
     </div>
   );
 }
-
-    

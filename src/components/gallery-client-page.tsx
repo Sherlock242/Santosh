@@ -91,7 +91,7 @@ export default function GalleryClientPage({
     const router = useRouter();
 
     const [savedEmojis, setSavedEmojis] = useState<GalleryEmoji[]>(initialPosts);
-    const [selectedEmojiId, setSelectedEmojiId] = React.useState<string | null>(null);
+    const [selectedEmojiIndex, setSelectedEmojiIndex] = React.useState<number | null>(null);
     
     const [supporterCount, setSupporterCount] = React.useState(initialSupporterCount);
     const [supportingCount, setSupportingCount] = React.useState(initialSupportingCount);
@@ -164,7 +164,6 @@ export default function GalleryClientPage({
             });
             
             setSavedEmojis(prev => prev.filter(p => p.id !== emojiId));
-            setSelectedEmojiId(null);
             
         } catch (error: any) {
             console.error('Failed to delete post:', error);
@@ -308,8 +307,6 @@ export default function GalleryClientPage({
     ));
     ProfileHeader.displayName = "ProfileHeader";
     
-    const selectedEmojiIndex = selectedEmojiId ? savedEmojis.findIndex(e => e.id === selectedEmojiId) : -1;
-
     const postsForView = savedEmojis.map(emoji => ({
         ...emoji,
         user: {
@@ -324,99 +321,102 @@ export default function GalleryClientPage({
     return (
         <>
             <div className="flex h-full w-full flex-col overflow-x-hidden">
-            {selectedEmojiIndex > -1 ? (
+                {selectedEmojiIndex !== null ? (
                     <PostView 
                         emojis={postsForView}
                         initialIndex={selectedEmojiIndex}
-                        onClose={() => setSelectedEmojiId(null)}
-                        onDelete={handleDelete}
+                        onClose={() => setSelectedEmojiIndex(null)}
+                        onDelete={(id: string) => {
+                            handleDelete(id);
+                            setSelectedEmojiIndex(null);
+                        }}
                     />
-            ) : (
-                <>
-                    <ProfileHeader />
-                    <div className="flex-1 overflow-y-auto no-scrollbar pb-14">
-                        <div className="p-4 md:p-6">
-                             <div className="flex items-center gap-4 md:gap-8">
-                                <div>
-                                    <Avatar className="w-20 h-20 md:w-28 md:h-28">
-                                        {initialProfileUser?.picture && <AvatarImage src={initialProfileUser.picture} alt={initialProfileUser.name || ''} data-ai-hint="profile picture" className="rounded-full" />}
-                                        <AvatarFallback>{initialProfileUser?.name?.charAt(0) || 'U'}</AvatarFallback>
-                                    </Avatar>
-                                </div>
-                                <div className="flex-1 flex justify-around">
-                                    <div className="text-center">
-                                        <p className="font-bold text-lg md:text-xl">{savedEmojis.length}</p>
-                                        <p className="text-sm text-muted-foreground">posts</p>
+                ) : (
+                    <>
+                        <ProfileHeader />
+                        <div className="flex-1 overflow-y-auto no-scrollbar pb-14">
+                            <div className="p-4 md:p-6">
+                                <div className="flex items-center gap-4 md:gap-8">
+                                    <div>
+                                        <Avatar className="w-20 h-20 md:w-28 md:h-28">
+                                            {initialProfileUser?.picture && <AvatarImage src={initialProfileUser.picture} alt={initialProfileUser.name || ''} data-ai-hint="profile picture" className="rounded-full" />}
+                                            <AvatarFallback>{initialProfileUser?.name?.charAt(0) || 'U'}</AvatarFallback>
+                                        </Avatar>
                                     </div>
-                                    <button className="text-center" onClick={() => canViewContent && setSheetContent('supporters')}>
-                                        <p className="font-bold text-lg md:text-xl">{supporterCount}</p>
-                                        <p className="text-sm text-muted-foreground">supporters</p>
-                                    </button>
-                                     <button className="text-center" onClick={() => canViewContent && setSheetContent('supporting')}>
-                                        <p className="font-bold text-lg md:text-xl">{supportingCount}</p>
-                                        <p className="text-sm text-muted-foreground">supporting</p>
-                                    </button>
+                                    <div className="flex-1 flex justify-around">
+                                        <div className="text-center">
+                                            <p className="font-bold text-lg md:text-xl">{savedEmojis.length}</p>
+                                            <p className="text-sm text-muted-foreground">posts</p>
+                                        </div>
+                                        <button className="text-center" onClick={() => canViewContent && setSheetContent('supporters')}>
+                                            <p className="font-bold text-lg md:text-xl">{supporterCount}</p>
+                                            <p className="text-sm text-muted-foreground">supporters</p>
+                                        </button>
+                                        <button className="text-center" onClick={() => canViewContent && setSheetContent('supporting')}>
+                                            <p className="font-bold text-lg md:text-xl">{supportingCount}</p>
+                                            <p className="text-sm text-muted-foreground">supporting</p>
+                                        </button>
+                                    </div>
+                                </div>
+                            <div className="mt-4 flex gap-2">
+                                    {isOwnProfile ? (
+                                        <>
+                                            <Button asChild variant="secondary" className="flex-1">
+                                                <Link href="/profile/edit">Edit Profile</Link>
+                                            </Button>
+                                            <Button variant="secondary" className="flex-1" onClick={handleShareProfile}>Share profile</Button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Button 
+                                                variant={supportStatus === 'approved' || supportStatus === 'pending' ? "secondary" : "default"} 
+                                                className="flex-1"
+                                                onClick={handleSupportToggle}
+                                                disabled={isSupportLoading}
+                                            >
+                                                {isSupportLoading ? <Loader2 className="animate-spin"/> : (
+                                                    supportStatus === 'approved' ? 'Unsupport' :
+                                                    supportStatus === 'pending' ? 'Pending' : 'Support'
+                                                )}
+                                            </Button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
-                           <div className="mt-4 flex gap-2">
-                                {isOwnProfile ? (
-                                    <>
-                                        <Button asChild variant="secondary" className="flex-1">
-                                            <Link href="/profile/edit">Edit Profile</Link>
-                                        </Button>
-                                        <Button variant="secondary" className="flex-1" onClick={handleShareProfile}>Share profile</Button>
-                                    </>
+
+                            <div className="p-1 md:p-4">
+                                {canViewContent ? (
+                                    savedEmojis.length > 0 ? (
+                                        <>
+                                            <motion.div 
+                                                layout
+                                                className="grid grid-cols-3 md:grid-cols-4 gap-1 md:gap-4"
+                                            >
+                                                {savedEmojis.map((emoji, index) => (
+                                                    <MemoizedThumbnail key={emoji.id} emoji={emoji} onSelect={() => setSelectedEmojiIndex(index)} />
+                                                ))}
+                                            </motion.div>
+                                        </>
+                                    ) : (
+                                        <div className="flex flex-col h-full items-center justify-center text-center p-8 gap-4 text-muted-foreground">
+                                            <div className="border-2 border-foreground rounded-full p-4">
+                                                <Grid3x3 className="h-12 w-12" />
+                                            </div>
+                                            <h2 className="text-2xl font-bold">No Posts Yet</h2>
+                                            {isOwnProfile && <Link href="/design" className="text-primary font-semibold">Create your first post</Link>}
+                                        </div>
+                                    )
                                 ) : (
-                                    <>
-                                        <Button 
-                                            variant={supportStatus === 'approved' || supportStatus === 'pending' ? "secondary" : "default"} 
-                                            className="flex-1"
-                                            onClick={handleSupportToggle}
-                                            disabled={isSupportLoading}
-                                        >
-                                            {isSupportLoading ? <Loader2 className="animate-spin"/> : (
-                                                supportStatus === 'approved' ? 'Unsupport' :
-                                                supportStatus === 'pending' ? 'Pending' : 'Support'
-                                            )}
-                                        </Button>
-                                    </>
+                                    <div className="flex flex-col h-full items-center justify-center text-center p-8 gap-4 text-muted-foreground">
+                                        <Lock className="h-12 w-12" />
+                                        <h2 className="text-xl font-bold text-foreground">This Account is Private</h2>
+                                        <p>Support this user to see their posts.</p>
+                                    </div>
                                 )}
                             </div>
                         </div>
-
-                        <div className="p-1 md:p-4">
-                            {canViewContent ? (
-                                savedEmojis.length > 0 ? (
-                                    <>
-                                        <motion.div 
-                                            layout
-                                            className="grid grid-cols-3 md:grid-cols-4 gap-1 md:gap-4"
-                                        >
-                                            {savedEmojis.map(emoji => (
-                                                <MemoizedThumbnail key={emoji.id} emoji={emoji} onSelect={() => setSelectedEmojiId(emoji.id)} />
-                                            ))}
-                                        </motion.div>
-                                    </>
-                                ) : (
-                                    <div className="flex flex-col h-full items-center justify-center text-center p-8 gap-4 text-muted-foreground">
-                                        <div className="border-2 border-foreground rounded-full p-4">
-                                            <Grid3x3 className="h-12 w-12" />
-                                        </div>
-                                        <h2 className="text-2xl font-bold">No Posts Yet</h2>
-                                        {isOwnProfile && <Link href="/design" className="text-primary font-semibold">Create your first post</Link>}
-                                    </div>
-                                )
-                            ) : (
-                                <div className="flex flex-col h-full items-center justify-center text-center p-8 gap-4 text-muted-foreground">
-                                    <Lock className="h-12 w-12" />
-                                    <h2 className="text-xl font-bold text-foreground">This Account is Private</h2>
-                                    <p>Support this user to see their posts.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </>
-            )}
+                    </>
+                )}
             </div>
             
             {sheetContent && (
@@ -462,5 +462,3 @@ export default function GalleryClientPage({
         </>
     );
 }
-
-    

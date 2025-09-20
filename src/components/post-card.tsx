@@ -27,12 +27,13 @@ const LikerListSheet = dynamic(() => import('@/components/liker-list-sheet'), { 
 
 interface PostCardProps {
     post: PostViewEmoji;
-    onSelect: () => void;
-    onDelete: (id: string) => void;
+    onDelete?: (id: string) => void;
     onMoodChange?: () => void;
+    onSelect?: () => void;
+    isCardView?: boolean;
 }
 
-interface PostViewEmoji extends EmojiState {
+export interface PostViewEmoji extends EmojiState {
     like_count: number;
     is_liked: boolean;
     user: {
@@ -57,7 +58,7 @@ const filters = [
     { name: 'Warm', css: 'sepia(0.3) saturate(1.2) brightness(1.1)' },
 ];
 
-export const PostCard = ({ post, onSelect, onDelete, onMoodChange }: PostCardProps) => {
+export const PostCard = ({ post, onSelect, onDelete, onMoodChange, isCardView = true }: PostCardProps) => {
     const { user } = useAuth();
     const { toast } = useToast();
     const [localLikeCount, setLocalLikeCount] = useState(post.like_count);
@@ -119,9 +120,11 @@ export const PostCard = ({ post, onSelect, onDelete, onMoodChange }: PostCardPro
     const handleDeletePost = async () => {
         setShowDeleteConfirm(false);
         try {
-            await deletePost(post.id);
-            toast({ title: 'Post Deleted', variant: 'success' });
-            onDelete(post.id);
+            if(onDelete) {
+                 await deletePost(post.id);
+                 toast({ title: 'Post Deleted', variant: 'success' });
+                 onDelete(post.id);
+            }
         } catch (error: any) {
              toast({ title: 'Error deleting post', description: error.message, variant: 'destructive' });
         }
@@ -136,7 +139,7 @@ export const PostCard = ({ post, onSelect, onDelete, onMoodChange }: PostCardPro
           feature_offset_x: featureOffsetX,
           feature_offset_y: featureOffsetY,
           setColor: () => {},
-          showPlatform: false, // Don't show platform in cards
+          showPlatform: isCardView, // Show platform only in card view
         };
         switch(emoji.model) {
             case 'creator': return <CreatorMoji {...props} />;
@@ -147,6 +150,20 @@ export const PostCard = ({ post, onSelect, onDelete, onMoodChange }: PostCardPro
         }
     };
     
+    const handleContentClick = () => {
+        if (onSelect) {
+            onSelect();
+        }
+    }
+
+    const handleDoubleClick = () => {
+        if (isCardView && onSelect) {
+            onSelect();
+        } else {
+             likeButtonRef.current?.triggerLike();
+        }
+    }
+
     return (
         <div className="w-full flex-shrink-0 flex flex-col py-2">
             <div className="flex items-center px-4 py-2">
@@ -172,7 +189,7 @@ export const PostCard = ({ post, onSelect, onDelete, onMoodChange }: PostCardPro
                             <Smile className="mr-2 h-4 w-4" />
                             <span>Set as Mood</span>
                         </DropdownMenuItem>
-                         {user?.id === post.user_id && (
+                         {user?.id === post.user_id && onDelete && (
                             <>
                                 <DropdownMenuItem asChild>
                                     <Link href={`/design?emojiId=${post.id}`} className="w-full">
@@ -197,7 +214,8 @@ export const PostCard = ({ post, onSelect, onDelete, onMoodChange }: PostCardPro
                     backgroundColor: post.background_color,
                     filter: activeFilterCss,
                 }}
-                onDoubleClick={() => likeButtonRef.current?.triggerLike()}
+                onClick={handleContentClick}
+                onDoubleClick={handleDoubleClick}
             >
                 {renderEmojiFace(post)}
                  <AnimatePresence>
