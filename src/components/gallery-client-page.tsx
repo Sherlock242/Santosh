@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import type { EmojiState } from '@/app/design/page';
 import { GalleryThumbnail } from '@/components/gallery-thumbnail';
 import { Button } from '@/components/ui/button';
-import { Lock, Grid3x3, Menu, LogOut, Share2, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
+import { Lock, Grid3x3, Menu, LogOut, Share2, Loader2, ArrowLeft, Trash2, KeyRound } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -276,11 +276,17 @@ export default function GalleryClientPage({
                         <SheetHeader className="text-left">
                             <SheetTitle>Menu</SheetTitle>
                         </SheetHeader>
-                        <div className="flex-1 space-y-2">
+                        <div className="flex-1 space-y-2 py-4">
                            <Button variant="ghost" className="w-full justify-start" asChild>
                                 <Link href="/plan">
                                     <GoldTick className="mr-2 h-4 w-4" />
                                     Upgrade to Gold
+                                </Link>
+                           </Button>
+                           <Button variant="ghost" className="w-full justify-start" asChild>
+                                <Link href="/profile/change-password">
+                                    <KeyRound className="mr-2 h-4 w-4" />
+                                    Change Password
                                 </Link>
                            </Button>
                         </div>
