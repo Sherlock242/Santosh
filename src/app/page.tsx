@@ -62,7 +62,7 @@ const AIConsciousnessPage = () => {
     'thank you': "You're welcome!",
     'thanks': "You're most welcome!",
     'you\'re welcome': 'Glad I could assist!',
-    'your name': "My name is Edena",
+    'your name': "I'm Edena, a helping assistant of Edengram.",
     'what is your name': "I'm Edena, a helping assistant of Edengram.",
     'who are you': "I'm Edena, a helping assistant of Edengram.",
     'good morning': 'Good morning! I hope you have a great start to your day.',
