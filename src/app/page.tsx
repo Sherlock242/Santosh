@@ -136,7 +136,7 @@ const AIConsciousnessPage = () => {
 
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         <div 
-          className="relative flex items-center justify-center w-64 h-64 md:w-80 md:h-80 cursor-pointer"
+          className="relative flex items-center justify-center w-48 h-48 md:w-60 md:h-60 cursor-pointer"
           onClick={handleListen}
         >
              {/* Nano Particles */}
@@ -152,8 +152,8 @@ const AIConsciousnessPage = () => {
                             left: '50%',
                         }}
                         initial={{
-                            x: (Math.random() - 0.5) * 450, // Positioned between mid and outer ring
-                            y: (Math.random() - 0.5) * 450,
+                            x: (Math.random() - 0.5) * 340, // Positioned between mid and outer ring
+                            y: (Math.random() - 0.5) * 340,
                             scale: 0,
                         }}
                         animate={{ scale: [0, 1, 0] }}
@@ -168,27 +168,27 @@ const AIConsciousnessPage = () => {
             </AnimatePresence>
 
             {/* Ring 1 (Innermost - 10 cuts) */}
-            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '180px', height: '180px' }} initial={{rotate: 20}} animate={{ rotate: 380 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}>
+            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '135px', height: '135px' }} initial={{rotate: 20}} animate={{ rotate: 380 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}>
                 <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.5)" strokeWidth="3" strokeDasharray="60 28.4" />
             </motion.svg>
             
             {/* Ring 2 (Middle - 4 cuts, different sizes) */}
-            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '250px', height: '250px' }} initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
+            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '190px', height: '190px' }} initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
                 <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.6)" strokeWidth="4" strokeDasharray="150 40 80 110" />
             </motion.svg>
             
             {/* Ring 3 (Outermost - 5 cuts, different sizes) */}
-            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '320px', height: '320px' }} initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
+            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '240px', height: '240px' }} initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
                 <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.7)" strokeWidth="5" strokeDasharray="100 20 60 80 116" />
             </motion.svg>
             
             <motion.div
-                className="absolute w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-purple-600 to-cyan-400 rounded-full"
+                className="absolute w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-purple-600 to-cyan-400 rounded-full"
                 animate={{
                     scale: isListening || isSpeaking ? 1.1 : 1,
                     boxShadow: isListening || isSpeaking
-                    ? '0 0 40px #0ff, 0 0 20px #8A2BE2'
-                    : '0 0 20px #0ff, 0 0 10px #8A2BE2',
+                    ? '0 0 30px #0ff, 0 0 15px #8A2BE2'
+                    : '0 0 15px #0ff, 0 0 8px #8A2BE2',
                 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 15 }}
             />
