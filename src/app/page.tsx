@@ -199,7 +199,7 @@ const AIConsciousnessPage = () => {
         </Button>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center min-h-0 pb-20">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         <div 
           className="relative flex items-center justify-center w-60 h-60 cursor-pointer"
           onClick={handleListen}
