@@ -77,6 +77,25 @@ const AIConsciousnessPage = () => {
     'are you a robot': "I'm a program, so in a way, yes. But I'm here to help you!",
     'i love you': "That's very kind of you! I appreciate it.",
   };
+  
+  const extractSearchQuery = (transcript: string): string => {
+    const prefixes = [
+        "who is", "what is", "what are", "tell me about", "search for",
+        "i want to know about", "can you tell me about", "information on",
+        "who invented", "what invented"
+    ];
+
+    const lowerCaseTranscript = transcript.toLowerCase();
+
+    for (const prefix of prefixes) {
+        if (lowerCaseTranscript.startsWith(prefix + " ")) {
+            return transcript.substring(prefix.length + 1).trim();
+        }
+    }
+
+    // If no prefix matches, return the original transcript, cleaned of punctuation.
+    return transcript.replace(/[.,?_!]/g, '').trim();
+  };
 
 
   const handleListen = () => {
@@ -145,9 +164,10 @@ const AIConsciousnessPage = () => {
         }
         
         // If no etiquette match, proceed with search
+        const searchQuery = extractSearchQuery(finalTranscript);
         setIsLoading(true);
         try {
-          const response = await searchWikipedia({ query: finalTranscript });
+          const response = await searchWikipedia({ query: searchQuery });
           speak(response.summary);
         } catch (error) {
           console.error('Error fetching from Wikipedia:', error);
