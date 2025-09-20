@@ -24,8 +24,11 @@ const AIConsciousnessPage = () => {
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
     
+    setAiResponse(text);
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onstart = () => {
+        setIsSpeaking(true);
+    };
     utterance.onend = () => {
       setIsSpeaking(false);
     };
@@ -100,12 +103,10 @@ const AIConsciousnessPage = () => {
 
         try {
           const response = await searchWikipedia({ query: finalTranscript });
-          setAiResponse(response.summary);
           speak(response.summary);
         } catch (error) {
           console.error('Error fetching from Wikipedia:', error);
           const errorMessage = "I couldn't find information on that. Please try another topic.";
-          setAiResponse(errorMessage);
           speak(errorMessage);
         } finally {
           setIsLoading(false);
@@ -207,7 +208,7 @@ const AIConsciousnessPage = () => {
                         <Loader2 className="h-8 w-8 animate-spin" />
                     ) : isListening ? (
                          <p className="text-lg text-cyan-400">Listening{dots}</p>
-                    ) : transcript ? (
+                    ) : transcript && !aiResponse ? (
                         <p className="text-xl">"{transcript}"</p>
                     ) : aiResponse ? (
                         <p className="text-lg text-center max-w-md">{aiResponse}</p>
