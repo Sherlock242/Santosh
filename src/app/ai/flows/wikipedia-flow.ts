@@ -1,41 +1,49 @@
 
 'use server';
 /**
- * @fileOverview A server action to search Wikipedia and summarize the result.
+ * @fileOverview A Wikipedia search AI agent.
+ *
+ * - searchWikipedia - A function that handles the Wikipedia search process.
+ * - SearchWikipediaInput - The input type for the searchWikipedia function.
+ * - SearchWikipediaOutput - The return type for the searchWikipedia function.
  */
 
-export interface WikipediaSearchInput {
-  query: string;
+import {ai} from '@/ai/genkit';
+import {z} from 'genkit';
+
+const SearchWikipediaInputSchema = z.object({
+  query: z.string().describe('The search query for Wikipedia.'),
+});
+export type SearchWikipediaInput = z.infer<typeof SearchWikipediaInputSchema>;
+
+const SearchWikipediaOutputSchema = z.object({
+  summary: z.string().describe('A concise summary of the Wikipedia article found.'),
+});
+export type SearchWikipediaOutput = z.infer<typeof SearchWikipediaOutputSchema>;
+
+export async function searchWikipedia(input: SearchWikipediaInput): Promise<SearchWikipediaOutput> {
+  return searchWikipediaFlow(input);
 }
 
-export interface WikipediaSearchOutput {
-  summary: string;
-}
+const prompt = ai.definePrompt({
+  name: 'searchWikipediaPrompt',
+  input: {schema: SearchWikipediaInputSchema},
+  output: {schema: SearchWikipediaOutputSchema},
+  prompt: `You are an expert researcher. Your task is to provide a concise summary of the Wikipedia page for the given query.
 
-export async function searchWikipedia(
-  input: WikipediaSearchInput
-): Promise<WikipediaSearchOutput> {
-  const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
-    input.query
-  )}`;
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Edengram/1.0 (contact@edengram.com)',
-      },
-    });
-    if (!response.ok) {
-      return {
-        summary: `I couldn't find a Wikipedia page for "${input.query}". Please try a different search term.`,
-      };
-    }
-    const data = await response.json();
-    const summary = data.extract || 'No summary available for this topic.';
-    return { summary };
-  } catch (error) {
-    console.error('Wikipedia API error:', error);
-    return {
-      summary: 'Sorry, I encountered an error while trying to access Wikipedia.',
-    };
+Query: {{{query}}}
+
+Please provide a summary of the main points from the Wikipedia article. If no article is found, say so.`,
+});
+
+const searchWikipediaFlow = ai.defineFlow(
+  {
+    name: 'searchWikipediaFlow',
+    inputSchema: SearchWikipediaInputSchema,
+    outputSchema: SearchWikipediaOutputSchema,
+  },
+  async (input) => {
+    const {output} = await prompt(input);
+    return output!;
   }
-}
+);
