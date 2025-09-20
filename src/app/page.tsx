@@ -21,22 +21,38 @@ const AIConsciousnessPage = () => {
   const speak = useCallback((text: string) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => {
       setIsSpeaking(false);
       setAiResponse(''); // Clear response after speaking
     };
+    utterance.onerror = () => {
+        setIsSpeaking(false);
+    }
     window.speechSynthesis.speak(utterance);
   }, []);
 
   useEffect(() => {
-    // Temporarily disabling the auto-speak on load as it can be repetitive.
-    // speak(aiResponse);
-  }, []);
+    // Cleanup speechSynthesis on component unmount
+    return () => {
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+    }
+  }, [])
 
 
   const handleListen = () => {
+    // If speaking, stop it. If listening, stop it.
+    if (isSpeaking) {
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+        return;
+    }
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
@@ -118,126 +134,91 @@ const AIConsciousnessPage = () => {
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-        <div className="relative flex items-center justify-center w-64 h-64 md:w-80 md:h-80">
+        <div 
+          className="relative flex items-center justify-center w-64 h-64 md:w-80 md:h-80 cursor-pointer"
+          onClick={handleListen}
+        >
+             {/* Twinkling Particles */}
+            <AnimatePresence>
+                {[...Array(30)].map((_, i) => (
+                    <motion.div
+                        key={`particle-${i}`}
+                        className="absolute bg-cyan-400/50 rounded-full"
+                        style={{
+                            width: `${Math.random() * 3 + 1}px`,
+                            height: `${Math.random() * 3 + 1}px`,
+                            top: '50%',
+                            left: '50%',
+                        }}
+                        initial={{
+                            x: (Math.random() - 0.5) * 280,
+                            y: (Math.random() - 0.5) * 280,
+                            scale: 0,
+                        }}
+                        animate={{ scale: [0, 1, 0] }}
+                        transition={{
+                            duration: Math.random() * 2 + 2,
+                            repeat: Infinity,
+                            delay: Math.random() * 4,
+                            ease: 'easeInOut'
+                        }}
+                    />
+                ))}
+            </AnimatePresence>
+
+            {/* Dashed Animated Rings */}
             {[...Array(2)].map((_, i) => (
-            <motion.div
-                key={i}
-                className="absolute border-2 border-cyan-400/50 rounded-full"
-                style={{
-                width: `${(i + 1) * 80 + 100}px`,
-                height: `${(i + 1) * 80 + 100}px`,
-                rotate: Math.random() * 360,
-                }}
-                animate={{
-                rotate: 360 + Math.random() * 360,
-                scale: [1, 1.05, 1],
-                }}
-                transition={{
-                duration: 15 + i * 10,
-                repeat: Infinity,
-                repeatType: 'loop',
-                ease: 'linear',
-                }}
-            >
-                <motion.div className="absolute w-full h-full rounded-full" style={{
-                    borderStyle: 'dashed',
-                    borderWidth: '2px',
-                    borderColor: 'transparent',
-                    borderTopColor: `rgba(0, 255, 255, ${0.2 + i * 0.1})`,
-                    rotate: Math.random() * 360,
-                }} />
-            </motion.div>
+                <motion.div
+                    key={`ring-${i}`}
+                    className="absolute border-2 border-cyan-400/50 rounded-full"
+                    style={{
+                        width: `${(i + 1) * 80 + 100}px`,
+                        height: `${(i + 1) * 80 + 100}px`,
+                        borderStyle: 'dashed',
+                        borderWidth: '1.5px',
+                        rotate: Math.random() * 360,
+                    }}
+                    animate={{
+                        rotate: (i % 2 === 0 ? 360 : -360) + Math.random() * 360,
+                    }}
+                    transition={{
+                        duration: 20 + i * 15,
+                        repeat: Infinity,
+                        repeatType: 'loop',
+                        ease: 'linear',
+                    }}
+                />
             ))}
             
             <motion.div
-            className="absolute w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-purple-600 to-cyan-400 rounded-full"
-            animate={{
-                scale: isListening || isSpeaking ? 1.1 : 1,
-                boxShadow: isListening || isSpeaking
-                ? '0 0 40px #0ff, 0 0 20px #8A2BE2'
-                : '0 0 20px #0ff, 0 0 10px #8A2BE2',
-            }}
-            transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                className="absolute w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-purple-600 to-cyan-400 rounded-full"
+                animate={{
+                    scale: isListening || isSpeaking ? 1.1 : 1,
+                    boxShadow: isListening || isSpeaking
+                    ? '0 0 40px #0ff, 0 0 20px #8A2BE2'
+                    : '0 0 20px #0ff, 0 0 10px #8A2BE2',
+                }}
+                transition={{ type: 'spring', stiffness: 300, damping: 15 }}
             />
             
-            <AnimatePresence>
-                {(isListening || isSpeaking) && (
-                <motion.div
-                    className="absolute w-full h-full"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                >
-                    {[...Array(20)].map((_, i) => (
-                        <motion.div
-                            key={i}
-                            className="absolute bg-cyan-400 rounded-full"
-                            style={{
-                                width: '4px',
-                                height: '4px',
-                                top: '50%',
-                                left: '50%',
-                                x: '-50%',
-                                y: '-50%',
-                            }}
-                            animate={{
-                                x: `${Math.cos((i / 20) * 2 * Math.PI) * 160}px`,
-                                y: `${Math.sin((i / 20) * 2 * Math.PI) * 160}px`,
-                                scale: [0, 1.5, 0],
-                                opacity: [0, 0.7, 0],
-                            }}
-                            transition={{
-                                duration: 2,
-                                repeat: Infinity,
-                                delay: i * 0.1,
-                            }}
-                        />
-                    ))}
-                </motion.div>
-                )}
-            </AnimatePresence>
-
         </div>
 
-        <div className="text-center mt-8">
+        <div className="text-center mt-8 min-h-[4rem] flex items-center justify-center">
             {isLoading ? (
-            <Loader2 className="h-8 w-8 animate-spin" />
+                <Loader2 className="h-8 w-8 animate-spin" />
             ) : transcript ? (
-            <>
-                <p className="text-gray-400">You said:</p>
                 <p className="text-xl">"{transcript}"</p>
-            </>
             ) : aiResponse ? (
-            <p className="text-lg text-center max-w-md">{aiResponse}</p>
+                <p className="text-lg text-center max-w-md">{aiResponse}</p>
             ) : (
-                <p className="text-gray-500">Press the button and speak...</p>
+                <p className="text-gray-400">Click the orb to start a voice search.</p>
             )}
         </div>
       </div>
-       <div className="flex-shrink-0 flex justify-center pb-8 pt-4">
-            <motion.button
-            onClick={handleListen}
-            className="p-4 rounded-full bg-cyan-400/20 text-cyan-400 border border-cyan-400/50"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            >
-            {isListening ? (
-                <motion.div
-                    animate={{ y: [0, -2, 0] }}
-                    transition={{ duration: 0.5, repeat: Infinity }}
-                >
-                    <Mic className="h-8 w-8" />
-                </motion.div>
-            ) : isSpeaking ? (
-                <Volume2 className="h-8 w-8" />
-            ) : (
-                <Mic className="h-8 w-8" />
-            )}
-            </motion.button>
-      </div>
-
     </div>
   );
 };
 
 export default AIConsciousnessPage;
+
+    
