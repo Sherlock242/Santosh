@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -117,7 +116,7 @@ const AIConsciousnessPage = () => {
         </Button>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-around min-h-0">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         <div className="relative flex items-center justify-center w-64 h-64 md:w-80 md:h-80">
             {[...Array(3)].map((_, i) => (
             <motion.div
@@ -199,7 +198,7 @@ const AIConsciousnessPage = () => {
 
         </div>
 
-        <div className="text-center h-20 flex flex-col justify-center items-center">
+        <div className="text-center mt-8">
             {isLoading ? (
             <Loader2 className="h-8 w-8 animate-spin" />
             ) : transcript ? (
@@ -213,7 +212,8 @@ const AIConsciousnessPage = () => {
                 <p className="text-gray-500">Press the button and speak...</p>
             )}
         </div>
-        <div className="flex-shrink-0 flex justify-center pb-4">
+      </div>
+       <div className="flex-shrink-0 flex justify-center pb-8">
             <motion.button
             onClick={handleListen}
             className="p-4 rounded-full bg-cyan-400/20 text-cyan-400 border border-cyan-400/50"
@@ -233,7 +233,6 @@ const AIConsciousnessPage = () => {
                 <Mic className="h-8 w-8" />
             )}
             </motion.button>
-      </div>
       </div>
 
     </div>
