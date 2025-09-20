@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EdengramLogo } from '@/components/edengram-logo';
-import Head from 'next/head';
+import { Card, CardContent } from '@/components/ui/card';
 
 function LoginPageContent() {
   const router = useRouter();
@@ -127,43 +127,47 @@ function LoginPageContent() {
                       <TabsTrigger value="signin">Sign In</TabsTrigger>
                       <TabsTrigger value="signup">Sign Up</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="signin">
-                      <form onSubmit={handleManualSignIn} className="space-y-4 pt-4">
-                          <div className="space-y-2 text-left">
-                              <Label htmlFor="email-in">Email</Label>
-                              <Input id="email-in" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={!isClient || isSubmitting} />
-                          </div>
-                           <div className="space-y-2 text-left">
-                               <div className="flex justify-between items-baseline">
-                                <Label htmlFor="password-in">Password</Label>
-                                <Link href="/forgot-password" passHref className="text-sm text-primary hover:underline">Forgot?</Link>
-                               </div>
-                              <Input id="password-in" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={!isClient || isSubmitting} />
-                          </div>
-                          <Button type="submit" className="w-full" disabled={!isClient || isSubmitting}>
-                              {isSubmitting ? <Loader2 className="animate-spin" /> : 'Sign In'}
-                          </Button>
-                      </form>
-                  </TabsContent>
-                  <TabsContent value="signup">
-                      <form onSubmit={handleManualSignUp} className="space-y-4 pt-4">
-                          <div className="space-y-2 text-left">
-                              <Label htmlFor="name-up">Name</Label>
-                              <Input id="name-up" type="text" placeholder="Your Name" required value={name} onChange={e => setName(e.target.value)} disabled={!isClient || isSubmitting} />
-                          </div>
-                          <div className="space-y-2 text-left">
-                              <Label htmlFor="email-up">Email</Label>
-                              <Input id="email-up" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={!isClient || isSubmitting} />
-                          </div>
-                           <div className="space-y-2 text-left">
-                              <Label htmlFor="password-up">Password</Label>
-                              <Input id="password-up" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={!isClient || isSubmitting} />
-                          </div>
-                          <Button type="submit" className="w-full" disabled={!isClient || isSubmitting}>
-                              {isSubmitting ? <Loader2 className="animate-spin" /> : 'Sign Up'}
-                          </Button>
-                      </form>
-                  </TabsContent>
+                  <Card className="mt-4 bg-transparent border-none">
+                    <CardContent className="p-0">
+                      <TabsContent value="signin" className="m-0">
+                          <form onSubmit={handleManualSignIn} className="space-y-4 pt-4">
+                              <div className="space-y-2 text-left">
+                                  <Label htmlFor="email-in">Email</Label>
+                                  <Input id="email-in" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={!isClient || isSubmitting} />
+                              </div>
+                              <div className="space-y-2 text-left">
+                                  <div className="flex justify-between items-baseline">
+                                    <Label htmlFor="password-in">Password</Label>
+                                    <Link href="/forgot-password" passHref className="text-sm text-primary hover:underline">Forgot?</Link>
+                                  </div>
+                                  <Input id="password-in" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={!isClient || isSubmitting} />
+                              </div>
+                              <Button type="submit" className="w-full" disabled={!isClient || isSubmitting}>
+                                  {isSubmitting ? <Loader2 className="animate-spin" /> : 'Sign In'}
+                              </Button>
+                          </form>
+                      </TabsContent>
+                      <TabsContent value="signup" className="m-0">
+                          <form onSubmit={handleManualSignUp} className="space-y-4 pt-4">
+                              <div className="space-y-2 text-left">
+                                  <Label htmlFor="name-up">Name</Label>
+                                  <Input id="name-up" type="text" placeholder="Your Name" required value={name} onChange={e => setName(e.target.value)} disabled={!isClient || isSubmitting} />
+                              </div>
+                              <div className="space-y-2 text-left">
+                                  <Label htmlFor="email-up">Email</Label>
+                                  <Input id="email-up" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={!isClient || isSubmitting} />
+                              </div>
+                              <div className="space-y-2 text-left">
+                                  <Label htmlFor="password-up">Password</Label>
+                                  <Input id="password-up" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={!isClient || isSubmitting} />
+                              </div>
+                              <Button type="submit" className="w-full" disabled={!isClient || isSubmitting}>
+                                  {isSubmitting ? <Loader2 className="animate-spin" /> : 'Sign Up'}
+                              </Button>
+                          </form>
+                      </TabsContent>
+                    </CardContent>
+                  </Card>
               </Tabs>
           </motion.div>
           
