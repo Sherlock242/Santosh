@@ -28,7 +28,7 @@ const AIConsciousnessPage = () => {
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => {
       setIsSpeaking(false);
-      setAiResponse(''); // Clear response after speaking
+      setAiResponse("Click the orb to start a voice search."); // Reset to default message
     };
     utterance.onerror = () => {
         setIsSpeaking(false);
@@ -73,6 +73,7 @@ const AIConsciousnessPage = () => {
     recognition.onstart = () => {
       setIsListening(true);
       setTranscript('');
+      setAiResponse('');
     };
 
     recognition.onend = () => {
@@ -166,28 +167,37 @@ const AIConsciousnessPage = () => {
                 ))}
             </AnimatePresence>
 
-            {/* Dashed Animated Rings */}
+             {/* Dashed Animated Rings */}
             {[...Array(2)].map((_, i) => (
-                <motion.div
-                    key={`ring-${i}`}
-                    className="absolute border-2 border-cyan-400/50 rounded-full"
-                    style={{
-                        width: `${(i + 1) * 80 + 100}px`,
-                        height: `${(i + 1) * 80 + 100}px`,
-                        borderStyle: 'dashed',
-                        borderWidth: '1.5px',
-                        rotate: Math.random() * 360,
-                    }}
-                    animate={{
-                        rotate: (i % 2 === 0 ? 360 : -360) + Math.random() * 360,
-                    }}
-                    transition={{
-                        duration: 20 + i * 15,
-                        repeat: Infinity,
-                        repeatType: 'loop',
-                        ease: 'linear',
-                    }}
-                />
+              <motion.svg
+                  key={`ring-svg-${i}`}
+                  className="absolute w-full h-full"
+                  viewBox="0 0 300 300"
+                  style={{
+                      width: `${(i + 1) * 80 + 100}px`,
+                      height: `${(i + 1) * 80 + 100}px`,
+                      rotate: Math.random() * 360
+                  }}
+                  animate={{
+                      rotate: (i % 2 === 0 ? 360 : -360) + Math.random() * 360,
+                  }}
+                  transition={{
+                      duration: 20 + i * 15,
+                      repeat: Infinity,
+                      repeatType: 'loop',
+                      ease: 'linear',
+                  }}
+              >
+                  <motion.circle
+                      cx="150"
+                      cy="150"
+                      r="140"
+                      fill="none"
+                      stroke="rgba(0, 255, 255, 0.5)"
+                      strokeWidth="3"
+                      strokeDasharray={`${20 + i*10} ${30 + i*5}`} // This creates the "cuts"
+                  />
+              </motion.svg>
             ))}
             
             <motion.div
@@ -204,15 +214,27 @@ const AIConsciousnessPage = () => {
         </div>
 
         <div className="text-center mt-8 min-h-[4rem] flex items-center justify-center">
-            {isLoading ? (
-                <Loader2 className="h-8 w-8 animate-spin" />
-            ) : transcript ? (
-                <p className="text-xl">"{transcript}"</p>
-            ) : aiResponse ? (
-                <p className="text-lg text-center max-w-md">{aiResponse}</p>
-            ) : (
-                <p className="text-gray-400">Click the orb to start a voice search.</p>
-            )}
+             <AnimatePresence mode="wait">
+                <motion.div
+                    key={isLoading ? 'loader' : transcript || aiResponse}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    {isLoading ? (
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                    ) : isListening ? (
+                         <p className="text-lg text-cyan-400">Listening{dots}</p>
+                    ) : transcript ? (
+                        <p className="text-xl">"{transcript}"</p>
+                    ) : aiResponse ? (
+                        <p className="text-lg text-center max-w-md">{aiResponse}</p>
+                    ) : (
+                        <p className="text-gray-400">Click the orb to start a voice search.</p>
+                    )}
+                </motion.div>
+            </AnimatePresence>
         </div>
       </div>
     </div>
@@ -220,5 +242,3 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
-
-    
