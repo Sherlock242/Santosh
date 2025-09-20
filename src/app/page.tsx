@@ -139,7 +139,7 @@ const AIConsciousnessPage = () => {
           className="relative flex items-center justify-center w-48 h-48 md:w-60 md:h-60 cursor-pointer"
           onClick={handleListen}
         >
-             {/* Nano Particles */}
+             {/* Nano Particles between ring 2 and 3 */}
             <AnimatePresence>
                 {[...Array(20)].map((_, i) => (
                     <motion.div
@@ -152,8 +152,8 @@ const AIConsciousnessPage = () => {
                             left: '50%',
                         }}
                         initial={{
-                            x: (Math.random() - 0.5) * 340, // Positioned between mid and outer ring
-                            y: (Math.random() - 0.5) * 340,
+                            x: (Math.random() - 0.5) * 220, // Positioned between mid and outer ring
+                            y: (Math.random() - 0.5) * 220,
                             scale: 0,
                         }}
                         animate={{ scale: [0, 1, 0] }}
@@ -173,10 +173,15 @@ const AIConsciousnessPage = () => {
             </motion.svg>
             
             {/* Ring 2 (Middle - 4 cuts, different sizes) */}
-            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '190px', height: '190px' }} initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
+            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '170px', height: '170px' }} initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
                 <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.6)" strokeWidth="4" strokeDasharray="150 40 80 110" />
             </motion.svg>
             
+            {/* New Nano Particle Ring */}
+            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '205px', height: '205px' }} initial={{ rotate: 0 }} animate={{ rotate: 360 }} transition={{ duration: 70, repeat: Infinity, ease: 'linear' }}>
+                <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.7)" strokeWidth="1" strokeDasharray="1 10" />
+            </motion.svg>
+
             {/* Ring 3 (Outermost - 5 cuts, different sizes) */}
             <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '240px', height: '240px' }} initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
                 <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.7)" strokeWidth="5" strokeDasharray="80 30 150 60 56" />
