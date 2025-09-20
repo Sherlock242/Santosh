@@ -117,7 +117,7 @@ const AIConsciousnessPage = () => {
         </Button>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center space-y-8">
+      <div className="flex-1 flex flex-col items-center justify-around min-h-0">
         <div className="relative flex items-center justify-center w-64 h-64 md:w-80 md:h-80">
             {[...Array(3)].map((_, i) => (
             <motion.div
@@ -213,28 +213,27 @@ const AIConsciousnessPage = () => {
                 <p className="text-gray-500">Press the button and speak...</p>
             )}
         </div>
-      </div>
-
-      <div className="flex-shrink-0 flex justify-center pb-4">
-        <motion.button
-          onClick={handleListen}
-          className="p-4 rounded-full bg-cyan-400/20 text-cyan-400 border border-cyan-400/50"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          {isListening ? (
-             <motion.div
-                animate={{ y: [0, -2, 0] }}
-                transition={{ duration: 0.5, repeat: Infinity }}
-             >
+        <div className="flex-shrink-0 flex justify-center pb-4">
+            <motion.button
+            onClick={handleListen}
+            className="p-4 rounded-full bg-cyan-400/20 text-cyan-400 border border-cyan-400/50"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            >
+            {isListening ? (
+                <motion.div
+                    animate={{ y: [0, -2, 0] }}
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                >
+                    <Mic className="h-8 w-8" />
+                </motion.div>
+            ) : isSpeaking ? (
+                <Volume2 className="h-8 w-8" />
+            ) : (
                 <Mic className="h-8 w-8" />
-             </motion.div>
-          ) : isSpeaking ? (
-             <Volume2 className="h-8 w-8" />
-          ) : (
-            <Mic className="h-8 w-8" />
-          )}
-        </motion.button>
+            )}
+            </motion.button>
+      </div>
       </div>
 
     </div>
