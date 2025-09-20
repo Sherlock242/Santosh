@@ -225,7 +225,16 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             );
         }
         
-        return null;
+        return (
+            <div className="flex h-full w-full flex-col items-center justify-center text-center p-10 gap-4">
+                <UserPlus className="h-16 w-16 text-muted-foreground" />
+                <h2 className="text-2xl font-bold">Welcome to Edengram</h2>
+                <p className="text-muted-foreground">Your feed is currently empty. Follow other users to see their posts here.</p>
+                <Button asChild>
+                    <Link href="/explore">Find people to follow</Link>
+                </Button>
+            </div>
+        );
     }
 
     return (
