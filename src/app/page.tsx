@@ -102,14 +102,21 @@ const AIConsciousnessPage = () => {
     "who invented", "what invented", "what's"
   ];
   
-  const extractSearchQuery = (transcript: string): string => {
-    const lowerCaseTranscript = transcript.toLowerCase();
-    for (const prefix of searchPrefixes) {
-        if (lowerCaseTranscript.startsWith(prefix + " ")) {
-            return transcript.substring(prefix.length + 1).trim();
-        }
+  const executeSearch = async (query: string) => {
+    if (!query) {
+        speak("I didn't catch that. What would you like to search for?");
+        return;
     }
-    return transcript.replace(/[.,?_!]/g, '').trim();
+    setIsLoading(true);
+    try {
+      const response = await searchWikipedia({ query });
+      speak(response.summary);
+    } catch (error) {
+      console.error('Error fetching from Wikipedia:', error);
+      speak("I couldn't find information on that. Please try another topic.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
@@ -179,30 +186,37 @@ const AIConsciousnessPage = () => {
             speak(angryResponse, true, false);
             return;
         }
-
-        // 2. Check for prescripted conversational responses
-        const etiquetteMatchKey = Object.keys(etiquetteResponses).find(key => normalizedTranscript.includes(key));
-        if (etiquetteMatchKey) {
-            const isBlushingResponse = etiquetteMatchKey.includes('chatgpt');
-            const response = etiquetteResponses[etiquetteMatchKey];
-            const randomResponse = Array.isArray(response) ? response[Math.floor(Math.random() * response.length)] : response;
-            speak(randomResponse, false, isBlushingResponse);
+        
+        const isChatGPTQuery = normalizedTranscript.includes('chatgpt') || normalizedTranscript.includes('chat gpt');
+        if (isChatGPTQuery && (
+            normalizedTranscript.includes('what do you think about') ||
+            normalizedTranscript.includes('what is your opinion on') ||
+            normalizedTranscript.includes('do you like')
+        )) {
+            speak(etiquetteResponses['what do you think about chatgpt'] as string, false, true);
             return;
         }
 
-        // 3. If no prescripted response, treat as a search query
-        const searchQuery = extractSearchQuery(finalTranscript);
-        setIsLoading(true);
-        try {
-          const response = await searchWikipedia({ query: searchQuery });
-          speak(response.summary);
-        } catch (error) {
-          console.error('Error fetching from Wikipedia:', error);
-          const errorMessage = "I couldn't find information on that. Please try another topic.";
-          speak(errorMessage);
-        } finally {
-          setIsLoading(false);
+        // 2. Check for prescripted conversational responses
+        const etiquetteMatchKey = Object.keys(etiquetteResponses).find(key => normalizedTranscript === key);
+        if (etiquetteMatchKey) {
+            const response = etiquetteResponses[etiquetteMatchKey];
+            const randomResponse = Array.isArray(response) ? response[Math.floor(Math.random() * response.length)] : response;
+            speak(randomResponse);
+            return;
         }
+
+        // 3. Check for prefix-based search
+        for (const prefix of searchPrefixes) {
+            if (normalizedTranscript.startsWith(prefix + " ")) {
+                const searchQuery = finalTranscript.substring(prefix.length + 1).trim();
+                executeSearch(searchQuery);
+                return;
+            }
+        }
+
+        // 4. Fallback to direct search for one-word queries or any other complex sentence
+        executeSearch(finalTranscript);
       }
     };
 
@@ -322,3 +336,4 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
+
