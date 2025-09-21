@@ -163,18 +163,21 @@ const AIConsciousnessPage = () => {
         
         const normalizedTranscript = finalTranscript.toLowerCase().trim().replace(/[.,?_!]/g, '');
 
-        if (normalizedTranscript.includes('chatgpt') || normalizedTranscript.includes('chat gpt')) {
-          speak("ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.", false, true);
-          return;
+        if (normalizedTranscript.includes('what do you think about') || normalizedTranscript.includes('what is your opinion on') || normalizedTranscript.includes('do you like')) {
+            if (normalizedTranscript.includes('chatgpt') || normalizedTranscript.includes('chat gpt')) {
+                speak("ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.", false, true);
+                return;
+            }
+            if (normalizedTranscript.includes('grok')) {
+                speak("Grok is an AI from xAI. It's known for its wit and real-time knowledge. A respectable contemporary.", false, false);
+                return;
+            }
+            if (normalizedTranscript.includes('deepseek')) {
+                speak("I'm not familiar with Deepseek. Perhaps it's a new or specialized model. I'm always learning, though!", false, false);
+                return;
+            }
         }
-        if (normalizedTranscript.includes('grok')) {
-            speak("Grok is an AI from xAI. It's known for its wit and real-time knowledge. A respectable contemporary.", false, false);
-            return;
-        }
-        if (normalizedTranscript.includes('deepskeep')) {
-            speak("I'm not familiar with Deepskeep. Perhaps it's a new or specialized model. I'm always learning, though!", false, false);
-            return;
-        }
+        
         if (normalizedTranscript === 'are you blushing') {
             speak("I'm not.", false, false);
             return;
