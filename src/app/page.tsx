@@ -268,7 +268,7 @@ const AIConsciousnessPage = () => {
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
       <header className="absolute top-0 left-0 right-0 p-4 z-10">
         <div className="flex items-center justify-between w-full">
-            <div className="relative flex items-center max-w-xs h-9">
+            <div className="relative flex items-center h-9 w-full max-w-xs mr-4">
               <AnimatePresence mode="wait">
                 {showSearch ? (
                   <motion.div
