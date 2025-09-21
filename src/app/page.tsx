@@ -164,25 +164,16 @@ const AIConsciousnessPage = () => {
         const normalizedTranscript = finalTranscript.toLowerCase().trim().replace(/[.,?_!]/g, '');
 
         const isOpinionQuestion = normalizedTranscript.includes('what do you think about') || normalizedTranscript.includes('what is your opinion on') || normalizedTranscript.includes('do you like');
-        const justSaidChatGPT = normalizedTranscript === 'chatgpt' || normalizedTranscript === 'chat gpt';
-        const justSaidGrok = normalizedTranscript === 'grok';
-        const justSaidDeepSeek = normalizedTranscript === 'deepseek';
-
-        if (isOpinionQuestion || justSaidChatGPT) {
+        
+        if (isOpinionQuestion) {
           if (normalizedTranscript.includes('chatgpt') || normalizedTranscript.includes('chat gpt')) {
             speak("ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.", false, true);
             return;
           }
-        }
-        
-        if (isOpinionQuestion || justSaidGrok) {
-          if (normalizedTranscript.includes('grok')) {
+           if (normalizedTranscript.includes('grok')) {
             speak("Grok is an AI from xAI. It's known for its wit and real-time knowledge. A respectable contemporary.", false, false);
             return;
           }
-        }
-
-        if (isOpinionQuestion || justSaidDeepSeek) {
           if (normalizedTranscript.includes('deepseek')) {
             speak("I'm not familiar with Deepseek. Perhaps it's a new or specialized model. I'm always learning, though!", false, false);
             return;
