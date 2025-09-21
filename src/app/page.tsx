@@ -63,7 +63,11 @@ const AIConsciousnessPage = () => {
     'creator': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
     'developer': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
     'hello': 'Hello there! How can I help you search for information today?',
+    'hello edena': "Hello! It's good to hear from you. What knowledge are you seeking today?",
     'hi': 'Hi! What can I look up for you?',
+    'hy edena': "Hey there! Ready to search for something?",
+    'hello edena kaisi ho': "I'm a program, so I don't have feelings, but I'm running perfectly! What can I search for you?",
+    'yo edena': "Yo! What's up? Got a topic for me to look up?",
     'hey': 'Hey! Ready to search for something?',
     'how are you': "I'm just a set of algorithms, but I'm functioning perfectly. Thanks for asking! What can I do for you?",
     'thank you': "You're welcome!",
@@ -203,10 +207,9 @@ const AIConsciousnessPage = () => {
             return;
         }
 
-        // 2. Check for prescripted conversational responses
-        const etiquetteMatchKey = Object.keys(etiquetteResponses).find(key => normalizedTranscript === key);
-        if (etiquetteMatchKey) {
-            const response = etiquetteResponses[etiquetteMatchKey];
+        // 2. Check for prescripted conversational responses (exact match)
+        if (etiquetteResponses.hasOwnProperty(normalizedTranscript)) {
+            const response = etiquetteResponses[normalizedTranscript];
             const randomResponse = Array.isArray(response) ? response[Math.floor(Math.random() * response.length)] : response;
             speak(randomResponse);
             return;
@@ -345,6 +348,7 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
+
 
 
 
