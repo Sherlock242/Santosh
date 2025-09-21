@@ -134,6 +134,50 @@ const AIConsciousnessPage = () => {
     }
   };
 
+  const processQuery = async (query: string) => {
+      const normalizedQuery = query.toLowerCase().trim().replace(/[.,?_!]/g, '');
+
+      // 1. Special hardcoded interactions
+      const mentionsAlexa = normalizedQuery.includes('alexa');
+      const mentionsSiri = normalizedQuery.includes('siri');
+      if (normalizedQuery.includes('better than you') && (mentionsAlexa || mentionsSiri)) {
+          let rival = mentionsAlexa && mentionsSiri ? 'alexa or siri' : (mentionsAlexa ? 'alexa' : 'siri');
+          const angryResponse = `A bird brain like you, can't see the true beauty in front of you. Go to your stupid hoe ${rival}, baka.`;
+          speak(angryResponse, true, false);
+          return;
+      }
+      
+      const isChatGPTQuery = normalizedQuery.includes('chatgpt') || normalizedQuery.includes('chat gpt');
+      if (isChatGPTQuery && (
+          normalizedQuery.includes('what do you think about') ||
+          normalizedQuery.includes('what is your opinion on') ||
+          normalizedQuery.includes('do you like')
+      )) {
+          speak(etiquetteResponses['what do you think about chatgpt'] as string, false, true);
+          return;
+      }
+
+      // 2. Prescripted conversational responses
+      if (etiquetteResponses.hasOwnProperty(normalizedQuery)) {
+          const response = etiquetteResponses[normalizedQuery];
+          const randomResponse = Array.isArray(response) ? response[Math.floor(Math.random() * response.length)] : response;
+          speak(randomResponse);
+          return;
+      }
+
+      // 3. Prefix-based search
+      for (const prefix of searchPrefixes) {
+          if (normalizedQuery.startsWith(prefix + " ")) {
+              const searchQuery = query.substring(prefix.length + 1).trim();
+              executeSearch(searchQuery);
+              return;
+          }
+      }
+
+      // 4. Fallback to direct search
+      executeSearch(query);
+  }
+
 
   const handleListen = () => {
     if (isSpeaking) {
@@ -187,50 +231,7 @@ const AIConsciousnessPage = () => {
         setTranscript(finalTranscript);
         setIsListening(false);
         recognition.stop();
-        
-        const normalizedTranscript = finalTranscript.toLowerCase().trim().replace(/[.,?_!]/g, '');
-
-        // --- Start of Logic Flow ---
-
-        // 1. Check for special hardcoded interactions first
-        const mentionsAlexa = normalizedTranscript.includes('alexa');
-        const mentionsSiri = normalizedTranscript.includes('siri');
-        if (normalizedTranscript.includes('better than you') && (mentionsAlexa || mentionsSiri)) {
-            let rival = mentionsAlexa && mentionsSiri ? 'alexa or siri' : (mentionsAlexa ? 'alexa' : 'siri');
-            const angryResponse = `A bird brain like you, can't see the true beauty in front of you. Go to your stupid hoe ${rival}, baka.`;
-            speak(angryResponse, true, false);
-            return;
-        }
-        
-        const isChatGPTQuery = normalizedTranscript.includes('chatgpt') || normalizedTranscript.includes('chat gpt');
-        if (isChatGPTQuery && (
-            normalizedTranscript.includes('what do you think about') ||
-            normalizedTranscript.includes('what is your opinion on') ||
-            normalizedTranscript.includes('do you like')
-        )) {
-            speak(etiquetteResponses['what do you think about chatgpt'] as string, false, true);
-            return;
-        }
-
-        // 2. Check for prescripted conversational responses (exact match)
-        if (etiquetteResponses.hasOwnProperty(normalizedTranscript)) {
-            const response = etiquetteResponses[normalizedTranscript];
-            const randomResponse = Array.isArray(response) ? response[Math.floor(Math.random() * response.length)] : response;
-            speak(randomResponse);
-            return;
-        }
-
-        // 3. Check for prefix-based search
-        for (const prefix of searchPrefixes) {
-            if (normalizedTranscript.startsWith(prefix + " ")) {
-                const searchQuery = finalTranscript.substring(prefix.length + 1).trim();
-                executeSearch(searchQuery);
-                return;
-            }
-        }
-
-        // 4. Fallback to direct search for one-word queries or any other complex sentence
-        executeSearch(finalTranscript);
+        processQuery(finalTranscript);
       }
     };
 
@@ -240,7 +241,7 @@ const AIConsciousnessPage = () => {
   const handleManualSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchText.trim()) {
-      executeSearch(searchText);
+      processQuery(searchText);
       setSearchText('');
     }
     setShowSearch(false);
@@ -268,7 +269,7 @@ const AIConsciousnessPage = () => {
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
       <header className="absolute top-0 left-0 right-0 p-4 z-10">
         <div className="flex items-center justify-between w-full">
-            <div className="relative flex items-center h-9 w-full max-w-xs mr-4">
+            <div className="relative flex items-center h-9 max-w-xs mr-4">
               <AnimatePresence mode="wait">
                 {showSearch ? (
                   <motion.div
@@ -310,7 +311,7 @@ const AIConsciousnessPage = () => {
                 )}
               </AnimatePresence>
             </div>
-            <Button asChild variant="link" className="text-white hover:text-cyan-400 transition-colors duration-300 p-0 h-auto hover:no-underline">
+            <Button asChild variant="link" className="text-white hover:no-underline hover:text-cyan-400 transition-colors duration-300 p-0 h-auto">
               <Link href="/login">
                   Sign In <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
