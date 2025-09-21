@@ -186,7 +186,7 @@ const AIConsciousnessPage = () => {
             return;
         }
 
-        if (normalizedTranscript === 'chatgpt') {
+        if (normalizedTranscript === 'chatgpt' || normalizedTranscript === 'chat gpt') {
             speak("ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.", false, true);
             return;
         }
