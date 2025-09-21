@@ -249,14 +249,6 @@ const AIConsciousnessPage = () => {
 
   return (
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
-      <style>
-        {`
-          @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400&display=swap');
-          .font-jarvis {
-            font-family: 'Orbitron', sans-serif;
-          }
-        `}
-      </style>
       <header className="absolute top-0 left-0 right-0 p-4 z-10 flex items-center justify-between">
         <h1 className="font-jarvis text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600" style={{fontWeight: 400}}>
           EDENA
@@ -353,6 +345,7 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
+
 
 
 
