@@ -64,10 +64,10 @@ const AIConsciousnessPage = () => {
     'developer': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
     'hello': 'Hello there! How can I help you search for information today?',
     'hello edena': "Hello! It's good to hear from you. What knowledge are you seeking today?",
-    'hi': 'Hi! What can I look up for you?',
     'hy edena': "Hey there! Ready to search for something?",
     'hello edena kaisi ho': "I'm a program, so I don't have feelings, but I'm running perfectly! What can I search for you?",
     'yo edena': "Yo! What's up? Got a topic for me to look up?",
+    'hi': 'Hi! What can I look up for you?',
     'hey': 'Hey! Ready to search for something?',
     'how are you': "I'm just a set of algorithms, but I'm functioning perfectly. Thanks for asking! What can I do for you?",
     'thank you': "You're welcome!",
@@ -253,7 +253,7 @@ const AIConsciousnessPage = () => {
   return (
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
       <header className="absolute top-0 left-0 right-0 p-4 z-10 flex items-center justify-between">
-        <h1 className="font-jarvis text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
+        <h1 className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
           EDENA
         </h1>
         <Button asChild variant="ghost" className="text-white hover:bg-gray-800 hover:text-white">
