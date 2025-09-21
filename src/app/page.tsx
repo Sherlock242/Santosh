@@ -242,8 +242,8 @@ const AIConsciousnessPage = () => {
     if (searchText.trim()) {
       executeSearch(searchText);
       setSearchText('');
-      setShowSearch(false);
     }
+    setShowSearch(false);
   };
 
   useEffect(() => {
@@ -268,39 +268,46 @@ const AIConsciousnessPage = () => {
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
       <header className="absolute top-0 left-0 right-0 p-4 z-10">
         <div className="flex items-center justify-between w-full">
-            <div className="flex flex-col items-start max-w-xs">
-              <h1 
-                  className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-primary cursor-pointer"
-                  onClick={() => setShowSearch(!showSearch)}
-              >
-                  EDENA
-              </h1>
-              <AnimatePresence>
-              {showSearch && (
-                <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: '100%', opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                  className="overflow-hidden w-full"
-                >
-                  <form onSubmit={handleManualSearch} className="flex items-center w-full mt-2">
-                    <div className="relative flex-grow">
-                      <Input
-                        type="text"
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
-                        placeholder="Search..."
-                        className="w-full bg-transparent border-0 border-b-2 border-cyan-400/50 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-cyan-400 text-white pl-0 pr-8"
-                        autoFocus
-                      />
-                      <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-1/2 -translate-y-1/2 text-cyan-400/70 hover:text-cyan-400 h-8 w-8">
-                          <Search size={20} />
-                      </Button>
-                    </div>
-                  </form>
-                </motion.div>
-              )}
+            <div className="relative flex items-center max-w-xs h-9">
+              <AnimatePresence mode="wait">
+                {showSearch ? (
+                  <motion.div
+                    key="search"
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: '100%', opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={{ duration: 0.5, ease: 'easeInOut' }}
+                    className="overflow-hidden w-full"
+                  >
+                    <form onSubmit={handleManualSearch} className="flex items-center w-full">
+                      <div className="relative flex-grow">
+                        <Input
+                          type="text"
+                          value={searchText}
+                          onChange={(e) => setSearchText(e.target.value)}
+                          placeholder="Search..."
+                          className="w-full bg-transparent border-0 border-b-2 border-cyan-400/50 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-cyan-400 text-white pl-0 pr-8"
+                          autoFocus
+                        />
+                        <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-1/2 -translate-y-1/2 text-cyan-400/70 hover:text-cyan-400 h-8 w-8">
+                            <Search size={20} />
+                        </Button>
+                      </div>
+                    </form>
+                  </motion.div>
+                ) : (
+                  <motion.h1
+                    key="title"
+                    className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-primary cursor-pointer"
+                    onClick={() => setShowSearch(true)}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    EDENA
+                  </motion.h1>
+                )}
               </AnimatePresence>
             </div>
             <Button asChild variant="link" className="text-white hover:text-cyan-400 transition-colors duration-300 p-0 h-auto hover:no-underline">
