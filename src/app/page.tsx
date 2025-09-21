@@ -87,13 +87,14 @@ const AIConsciousnessPage = () => {
     'what is the time': `I can't check the current time, but I can search for the history of timekeeping if you'd like.`,
     'are you a robot': "I'm a program, so in a way, yes. But I'm here to help you!",
     'i love you': "That's very kind of you! I appreciate it.",
+    'alexa': "Alexa is Amazon's cloud-based virtual assistant that uses voice commands to perform tasks. It is commonly found in Amazon's Echo smart speakers and is also integrated into many other devices, such as smart displays, headphones, and Fire TV.",
   };
   
   const extractSearchQuery = (transcript: string): string => {
     const prefixes = [
         "who is", "what is", "what are", "tell me about", "search for",
         "i want to know about", "can you tell me about", "information on",
-        "who invented", "what invented", "what's", "what is edengram", "how does edengram work", "edengram features"
+        "who invented", "what invented", "what's"
     ];
 
     const lowerCaseTranscript = transcript.toLowerCase();
@@ -182,6 +183,19 @@ const AIConsciousnessPage = () => {
         
         if (normalizedTranscript === 'are you blushing') {
             speak("I'm not.", false, false);
+            return;
+        }
+
+        if (normalizedTranscript === 'chatgpt') {
+            speak("ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.", false, true);
+            return;
+        }
+        if (normalizedTranscript === 'grok') {
+            speak("Grok is an AI from xAI. It's known for its wit and real-time knowledge. A respectable contemporary.", false, false);
+            return;
+        }
+        if (normalizedTranscript === 'deepseek') {
+            speak("I'm not familiar with Deepseek. Perhaps it's a new or specialized model. I'm always learning, though!", false, false);
             return;
         }
         
