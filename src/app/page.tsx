@@ -254,22 +254,22 @@ const AIConsciousnessPage = () => {
   const ring3Color = isAngry ? 'rgba(255, 69, 0, 0.7)' : (isBlushing ? 'rgba(255, 182, 193, 0.7)' : 'rgba(0, 255, 255, 0.7)');
   const orbGradient = isAngry 
     ? 'linear-gradient(to bottom right, #FF4500, #FF8C00)' 
-    : (isBlushing ? 'linear-gradient(to bottom right, #FFC0CB, #FFB6C1)' : 'linear-gradient(to bottom right, #8A2BE2, #00BFFF)');
+    : (isBlushing ? 'linear-gradient(to bottom right, #FFC0CB, #FFB6C1)' : 'linear-gradient(to bottom right, hsl(var(--primary)), #00BFFF)');
   const orbBoxShadow = isAngry
     ? '0 0 30px #FF4500, 0 0 15px #FF8C00'
-    : (isBlushing ? '0 0 30px #FFC0CB, 0 0 15px #FFB6C1' : '0 0 30px #0ff, 0 0 15px #8A2BE2');
+    : (isBlushing ? '0 0 30px #FFC0CB, 0 0 15px #FFB6C1' : '0 0 30px #0ff, 0 0 15px hsl(var(--primary))');
 
 
   return (
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
       <header className="absolute top-0 left-0 right-0 p-4 z-10 flex items-center justify-between">
         <h1 
-          className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 cursor-pointer"
+          className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-primary cursor-pointer"
           onClick={() => setShowSearch(!showSearch)}
         >
           EDENA
         </h1>
-        <Button asChild variant="link" className="text-white hover:text-cyan-400 transition-colors duration-300 p-0 h-auto">
+        <Button asChild variant="link" className="text-white hover:text-cyan-400 transition-colors duration-300 p-0 h-auto hover:no-underline">
           <Link href="/login">
             Sign In <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
@@ -293,7 +293,7 @@ const AIConsciousnessPage = () => {
                 value={manualQuery}
                 onChange={(e) => setManualQuery(e.target.value)}
                 placeholder="Search Wikipedia..."
-                className="w-full bg-black/50 text-white placeholder-gray-500 text-center text-lg h-12 focus:ring-cyan-400 focus:ring-2 border-0"
+                className="w-full bg-black/50 text-white placeholder-gray-500 text-center text-lg h-12 focus:ring-primary focus:ring-2 border-0"
               />
               <Button type="submit" variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
                 <Search />
