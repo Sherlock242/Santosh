@@ -22,8 +22,6 @@ const AIConsciousnessPage = () => {
   const [dots, setDots] = useState('');
   const [isAngry, setIsAngry] = useState(false);
   const [isBlushing, setIsBlushing] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [manualQuery, setManualQuery] = useState('');
 
   const recognitionRef = useRef<any | null>(null);
 
@@ -120,8 +118,6 @@ const AIConsciousnessPage = () => {
         speak("I didn't catch that. What would you like to search for?");
         return;
     }
-    setShowSearch(false);
-    setManualQuery('');
     setIsLoading(true);
     try {
       const response = await searchWikipedia({ query });
@@ -244,11 +240,6 @@ const AIConsciousnessPage = () => {
     return () => clearInterval(interval);
   }, []);
   
-  const handleManualSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    executeSearch(manualQuery);
-  }
-
   const ring1Color = isAngry ? 'rgba(255, 69, 0, 0.5)' : (isBlushing ? 'rgba(255, 182, 193, 0.5)' : 'rgba(0, 255, 255, 0.5)');
   const ring2Color = isAngry ? 'rgba(255, 69, 0, 0.6)' : (isBlushing ? 'rgba(255, 182, 193, 0.6)' : 'rgba(0, 255, 255, 0.6)');
   const ring3Color = isAngry ? 'rgba(255, 69, 0, 0.7)' : (isBlushing ? 'rgba(255, 182, 193, 0.7)' : 'rgba(0, 255, 255, 0.7)');
@@ -264,38 +255,11 @@ const AIConsciousnessPage = () => {
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
       <header className="absolute top-0 left-0 right-0 p-4 z-10">
         <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-4">
-                 <h1 
-                    className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-primary cursor-pointer"
-                    onClick={() => setShowSearch(!showSearch)}
-                >
-                    EDENA
-                </h1>
-                <AnimatePresence>
-                {showSearch && (
-                    <motion.form
-                        onSubmit={handleManualSearch}
-                        initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: '12rem', opacity: 1 }}
-                        exit={{ width: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="relative"
-                    >
-                        <Input 
-                            type="text"
-                            value={manualQuery}
-                            onChange={(e) => setManualQuery(e.target.value)}
-                            placeholder="Search..."
-                            className="bg-transparent text-white placeholder-gray-500 border-0 border-b-2 border-primary/50 focus:ring-0 focus:border-primary transition-all h-8 p-0"
-                            autoFocus
-                        />
-                        <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-white">
-                            <Search className="h-4 w-4"/>
-                        </Button>
-                    </motion.form>
-                )}
-                </AnimatePresence>
-            </div>
+            <h1 
+                className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-primary"
+            >
+                EDENA
+            </h1>
             <Button asChild variant="link" className="text-white hover:text-cyan-400 transition-colors duration-300 p-0 h-auto hover:no-underline">
             <Link href="/login">
                 Sign In <ArrowRight className="ml-2 h-4 w-4" />
