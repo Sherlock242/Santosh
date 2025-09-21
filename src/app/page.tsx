@@ -3,10 +3,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, animate } from 'framer-motion';
-import { BrainCircuit, Mic, Sparkles, Volume2, ArrowRight, Loader2 } from 'lucide-react';
+import { BrainCircuit, Mic, Sparkles, Volume2, ArrowRight, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { searchWikipedia } from './ai/flows/wikipedia-flow';
+import { Input } from '@/components/ui/input';
 
 interface IWindow extends Window {
   webkitSpeechRecognition: any;
@@ -21,6 +22,8 @@ const AIConsciousnessPage = () => {
   const [dots, setDots] = useState('');
   const [isAngry, setIsAngry] = useState(false);
   const [isBlushing, setIsBlushing] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [manualQuery, setManualQuery] = useState('');
 
   const recognitionRef = useRef<any | null>(null);
 
@@ -117,6 +120,8 @@ const AIConsciousnessPage = () => {
         speak("I didn't catch that. What would you like to search for?");
         return;
     }
+    setShowSearch(false);
+    setManualQuery('');
     setIsLoading(true);
     try {
       const response = await searchWikipedia({ query });
@@ -238,6 +243,11 @@ const AIConsciousnessPage = () => {
     }, 500);
     return () => clearInterval(interval);
   }, []);
+  
+  const handleManualSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    executeSearch(manualQuery);
+  }
 
   const ring1Color = isAngry ? 'rgba(255, 69, 0, 0.5)' : (isBlushing ? 'rgba(255, 182, 193, 0.5)' : 'rgba(0, 255, 255, 0.5)');
   const ring2Color = isAngry ? 'rgba(255, 69, 0, 0.6)' : (isBlushing ? 'rgba(255, 182, 193, 0.6)' : 'rgba(0, 255, 255, 0.6)');
@@ -253,12 +263,13 @@ const AIConsciousnessPage = () => {
   return (
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
       <header className="absolute top-0 left-0 right-0 p-4 z-10 flex items-center justify-between">
-        <Link href="/blogs">
-          <h1 className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
-            EDENA
-          </h1>
-        </Link>
-        <Button asChild variant="ghost" className="text-white hover:bg-gray-800 hover:text-white">
+        <h1 
+          className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 cursor-pointer"
+          onClick={() => setShowSearch(!showSearch)}
+        >
+          EDENA
+        </h1>
+        <Button asChild variant="link" className="text-white hover:text-cyan-400 transition-colors duration-300 p-0 h-auto">
           <Link href="/login">
             Sign In <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
@@ -266,6 +277,31 @@ const AIConsciousnessPage = () => {
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+        
+        <AnimatePresence>
+          {showSearch && (
+            <motion.form
+              onSubmit={handleManualSearch}
+              initial={{ y: -50, opacity: 0, scale: 0.9 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: -50, opacity: 0, scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="w-full max-w-sm mb-8 relative"
+            >
+              <Input 
+                type="text"
+                value={manualQuery}
+                onChange={(e) => setManualQuery(e.target.value)}
+                placeholder="Search Wikipedia..."
+                className="w-full bg-black/50 text-white placeholder-gray-500 text-center text-lg h-12 focus:ring-cyan-400 focus:ring-2 border-0"
+              />
+              <Button type="submit" variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                <Search />
+              </Button>
+            </motion.form>
+          )}
+        </AnimatePresence>
+        
         <div 
           className="relative flex items-center justify-center w-[40vw] h-[40vw] md:w-[25vw] md:h-[25vw] max-w-[300px] max-h-[300px] min-w-[240px] min-h-[240px] cursor-pointer"
           onClick={handleListen}
