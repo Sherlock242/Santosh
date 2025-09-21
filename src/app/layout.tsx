@@ -1,3 +1,4 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -6,7 +7,7 @@ import '@/styles/nprogress.css';
 import { BottomBar } from '@/components/bottom-bar';
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from '@/lib/utils';
-import { Inter, Kalam } from 'next/font/google'
+import { Inter, Kalam, Orbitron } from 'next/font/google'
 import { AuthProvider } from '@/hooks/use-auth';
 import React from 'react';
 import { TopLoader } from '@/components/top-loader';
@@ -15,6 +16,7 @@ import { AutoAds } from '@/components/AutoAds';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const kalam = Kalam({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-kalam' })
+const orbitron = Orbitron({ subsets: ['latin'], variable: '--font-jarvis' })
 
 
 export default function RootLayout({
@@ -27,7 +29,7 @@ export default function RootLayout({
   const showNav = !publicPaths.includes(pathname);
 
   return (
-    <html lang="en" className={cn("dark", inter.variable, kalam.variable)}>
+    <html lang="en" className={cn("dark", inter.variable, kalam.variable, orbitron.variable)}>
       <head>
         <title>Edengram</title>
         <link rel="icon" href="/icon.png" />

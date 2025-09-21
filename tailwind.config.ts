@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -13,6 +14,7 @@ export default {
         body: ['Inter', 'sans-serif'],
         logo: ['Kalam', 'cursive'],
         code: ['monospace'],
+        jarvis: ['var(--font-jarvis)', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
