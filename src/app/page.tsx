@@ -94,6 +94,12 @@ const AIConsciousnessPage = () => {
     'do you like chatgpt': "ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.",
     'grok': "Grok is an AI from xAI. It's known for its wit and real-time knowledge. A respectable contemporary.",
     'deepseek': "I'm not familiar with Deepseek. Perhaps it's a new or specialized model. I'm always learning, though!",
+    'who create you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
+    'who created you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
+    'who is your creator': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
+    'who is your developer': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
+    'who make you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
+    'who made you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
   };
 
   const searchPrefixes = [
@@ -347,6 +353,7 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
+
 
 
 
