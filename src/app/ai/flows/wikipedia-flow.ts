@@ -49,7 +49,11 @@ export async function searchWikipedia(input: SearchWikipediaInput): Promise<Sear
 
     if (summary) {
         // Limit summary to a reasonable length
-        return { summary: summary.split('. ').slice(0, 3).join('. ') + '.' };
+        const words = summary.split(' ');
+        if (words.length > 100) {
+            return { summary: words.slice(0, 100).join(' ') + '...' };
+        }
+        return { summary };
     } else {
         return { summary: "I found an article, but it doesn't have a summary. Try being more specific." };
     }
