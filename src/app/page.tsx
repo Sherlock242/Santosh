@@ -256,7 +256,6 @@ const AIConsciousnessPage = () => {
                 className="absolute top-0 left-0 w-full h-2 bg-cyan-400/20"
                 style={{
                   filter: 'blur(4px)',
-                  boxShadow: '0 0 10px 2px rgba(0, 255, 255, 0.2)',
                 }}
                 animate={{ y: ['-10%', '110%'] }}
                 transition={{
