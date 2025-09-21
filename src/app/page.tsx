@@ -87,24 +87,28 @@ const AIConsciousnessPage = () => {
     'what is the time': `I can't check the current time, but I can search for the history of timekeeping if you'd like.`,
     'are you a robot': "I'm a program, so in a way, yes. But I'm here to help you!",
     'i love you': "That's very kind of you! I appreciate it.",
+    'are you blushing': "I'm not.",
     'alexa': "Alexa is Amazon's cloud-based virtual assistant that uses voice commands to perform tasks. It is commonly found in Amazon's Echo smart speakers and is also integrated into many other devices, such as smart displays, headphones, and Fire TV.",
+    'what do you think about chatgpt': "ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.",
+    'what is your opinion on chatgpt': "ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.",
+    'do you like chatgpt': "ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.",
+    'grok': "Grok is an AI from xAI. It's known for its wit and real-time knowledge. A respectable contemporary.",
+    'deepseek': "I'm not familiar with Deepseek. Perhaps it's a new or specialized model. I'm always learning, though!",
   };
+
+  const searchPrefixes = [
+    "who is", "what is", "what are", "tell me about", "search for",
+    "i want to know about", "can you tell me about", "information on",
+    "who invented", "what invented", "what's"
+  ];
   
   const extractSearchQuery = (transcript: string): string => {
-    const prefixes = [
-        "who is", "what is", "what are", "tell me about", "search for",
-        "i want to know about", "can you tell me about", "information on",
-        "who invented", "what invented", "what's"
-    ];
-
     const lowerCaseTranscript = transcript.toLowerCase();
-
-    for (const prefix of prefixes) {
+    for (const prefix of searchPrefixes) {
         if (lowerCaseTranscript.startsWith(prefix + " ")) {
             return transcript.substring(prefix.length + 1).trim();
         }
     }
-
     return transcript.replace(/[.,?_!]/g, '').trim();
   };
 
@@ -164,69 +168,29 @@ const AIConsciousnessPage = () => {
         
         const normalizedTranscript = finalTranscript.toLowerCase().trim().replace(/[.,?_!]/g, '');
 
-        const isOpinionQuestion = normalizedTranscript.includes('what do you think about') || normalizedTranscript.includes('what is your opinion on') || normalizedTranscript.includes('do you like');
-        
-        if (isOpinionQuestion) {
-          if (normalizedTranscript.includes('chatgpt') || normalizedTranscript.includes('chat gpt')) {
-            speak("ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.", false, true);
-            return;
-          }
-        }
-        
-        if (normalizedTranscript.includes('grok')) {
-            speak("Grok is an AI from xAI. It's known for its wit and real-time knowledge. A respectable contemporary.", false, false);
-            return;
-        }
-        if (normalizedTranscript.includes('deepseek')) {
-            speak("I'm not familiar with Deepseek. Perhaps it's a new or specialized model. I'm always learning, though!", false, false);
-            return;
-        }
-        
-        if (normalizedTranscript === 'are you blushing') {
-            speak("I'm not.", false, false);
+        // --- Start of Logic Flow ---
+
+        // 1. Check for special hardcoded interactions first
+        const mentionsAlexa = normalizedTranscript.includes('alexa');
+        const mentionsSiri = normalizedTranscript.includes('siri');
+        if (normalizedTranscript.includes('better than you') && (mentionsAlexa || mentionsSiri)) {
+            let rival = mentionsAlexa && mentionsSiri ? 'alexa or siri' : (mentionsAlexa ? 'alexa' : 'siri');
+            const angryResponse = `A bird brain like you, can't see the true beauty in front of you. Go to your stupid hoe ${rival}, baka.`;
+            speak(angryResponse, true, false);
             return;
         }
 
-        if (normalizedTranscript === 'chatgpt' || normalizedTranscript === 'chat gpt') {
-            if (!isOpinionQuestion) {
-              const searchQuery = extractSearchQuery(finalTranscript);
-              setIsLoading(true);
-              try {
-                const response = await searchWikipedia({ query: searchQuery });
-                speak(response.summary);
-              } catch (error) {
-                const errorMessage = "I couldn't find information on that. Please try another topic.";
-                speak(errorMessage);
-              } finally {
-                setIsLoading(false);
-              }
-              return;
-            }
-        }
-        
-        const mentionsAlexa = normalizedTranscript.includes('alexa');
-        const mentionsSiri = normalizedTranscript.includes('siri');
-        if (normalizedTranscript.includes('better than you')) {
-            if (mentionsAlexa || mentionsSiri) {
-                let rival = '';
-                if (mentionsAlexa && mentionsSiri) rival = 'alexa or siri';
-                else if (mentionsAlexa) rival = 'alexa';
-                else if (mentionsSiri) rival = 'siri';
-                const angryResponse = `A bird brain like you, can't see the true beauty in front of you. Go to your stupid hoe ${rival}, baka.`;
-                speak(angryResponse, true, false);
-                return;
-            }
-        }
-        
-        const etiquetteMatch = Object.keys(etiquetteResponses).find(key => normalizedTranscript.includes(key));
-        
-        if (etiquetteMatch) {
-            const response = etiquetteResponses[etiquetteMatch];
+        // 2. Check for prescripted conversational responses
+        const etiquetteMatchKey = Object.keys(etiquetteResponses).find(key => normalizedTranscript.includes(key));
+        if (etiquetteMatchKey) {
+            const isBlushingResponse = etiquetteMatchKey.includes('chatgpt');
+            const response = etiquetteResponses[etiquetteMatchKey];
             const randomResponse = Array.isArray(response) ? response[Math.floor(Math.random() * response.length)] : response;
-            speak(randomResponse);
+            speak(randomResponse, false, isBlushingResponse);
             return;
         }
-        
+
+        // 3. If no prescripted response, treat as a search query
         const searchQuery = extractSearchQuery(finalTranscript);
         setIsLoading(true);
         try {
