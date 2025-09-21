@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -250,22 +249,6 @@ const AIConsciousnessPage = () => {
           className="relative flex items-center justify-center w-[40vw] h-[40vw] md:w-[25vw] md:h-[25vw] max-w-[300px] max-h-[300px] min-w-[240px] min-h-[240px] cursor-pointer"
           onClick={handleListen}
         >
-             {/* Hologram scanlines */}
-            <div className="absolute inset-0 w-full h-full overflow-hidden rounded-full pointer-events-none">
-              <motion.div
-                className="absolute top-0 left-0 w-full h-2 bg-cyan-400/20"
-                style={{
-                  filter: 'blur(4px)',
-                }}
-                animate={{ y: ['-10%', '110%'] }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: 'linear',
-                  delay: 0.5
-                }}
-              />
-            </div>
              {/* Nano Particles */}
             <AnimatePresence>
                 {[...Array(20)].map((_, i) => (
