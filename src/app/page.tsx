@@ -329,7 +329,7 @@ const AIConsciousnessPage = () => {
                     className="w-[90vw] md:w-auto"
                 >
                     {isLoading ? (
-                        <Loader2 className="h-8 w-8 animate-spin" />
+                        <p className="text-lg text-cyan-400">Thinking{dots}</p>
                     ) : isListening ? (
                          <p className="text-lg text-cyan-400">Listening{dots}</p>
                     ) : transcript && !aiResponse ? (
