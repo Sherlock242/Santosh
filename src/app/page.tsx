@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -19,18 +20,17 @@ const AIConsciousnessPage = () => {
   const [aiResponse, setAiResponse] = useState("Click the orb to start a voice search.");
   const [dots, setDots] = useState('');
   const [isAngry, setIsAngry] = useState(false);
+  const [isBlushing, setIsBlushing] = useState(false);
 
   const recognitionRef = useRef<any | null>(null);
 
-  const speak = useCallback((text: string, angryMode: boolean = false) => {
+  const speak = useCallback((text: string, angryMode: boolean = false, blushingMode: boolean = false) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
     
-    if (angryMode) {
-        setIsAngry(true);
-    }
+    if (angryMode) setIsAngry(true);
+    if (blushingMode) setIsBlushing(true);
     
     setAiResponse(text);
     const utterance = new SpeechSynthesisUtterance(text);
@@ -39,21 +39,18 @@ const AIConsciousnessPage = () => {
     };
     utterance.onend = () => {
       setIsSpeaking(false);
-      if (angryMode) {
-        setIsAngry(false);
-      }
+      if (angryMode) setIsAngry(false);
+      if (blushingMode) setIsBlushing(false);
     };
     utterance.onerror = () => {
         setIsSpeaking(false);
-        if (angryMode) {
-          setIsAngry(false);
-        }
+        if (angryMode) setIsAngry(false);
+        if (blushingMode) setIsBlushing(false);
     }
     window.speechSynthesis.speak(utterance);
   }, []);
 
   useEffect(() => {
-    // Cleanup speechSynthesis on component unmount
     return () => {
         if (typeof window !== 'undefined' && window.speechSynthesis) {
             window.speechSynthesis.cancel();
@@ -107,17 +104,16 @@ const AIConsciousnessPage = () => {
         }
     }
 
-    // If no prefix matches, return the original transcript, cleaned of punctuation.
     return transcript.replace(/[.,?_!]/g, '').trim();
   };
 
 
   const handleListen = () => {
-    // If speaking, stop it. If listening, stop it.
     if (isSpeaking) {
         window.speechSynthesis.cancel();
         setIsSpeaking(false);
         setIsAngry(false);
+        setIsBlushing(false);
         return;
     }
     if (isListening) {
@@ -167,38 +163,46 @@ const AIConsciousnessPage = () => {
         
         const normalizedTranscript = finalTranscript.toLowerCase().trim().replace(/[.,?_!]/g, '');
 
-        // Check for angry triggers
-        const mentionsAlexa = normalizedTranscript.includes('alexa');
-        const mentionsSiri = normalizedTranscript.includes('siri');
-        const mentionsBetter = normalizedTranscript.includes('better');
-        
-        if ((mentionsAlexa || mentionsSiri) && mentionsBetter) {
-            let rival = '';
-            if (mentionsAlexa && mentionsSiri) {
-                rival = 'alexa or siri';
-            } else if (mentionsAlexa) {
-                rival = 'alexa';
-            } else if (mentionsSiri) {
-                rival = 'siri';
-            }
-            const angryResponse = `A bird brain like you, can't see the true beauty in front of you. Go to your stupid hoe ${rival}, baka.`;
-            speak(angryResponse, true);
-            setIsLoading(false);
+        if (normalizedTranscript.includes('chatgpt') || normalizedTranscript.includes('chat gpt')) {
+          speak("ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.", false, true);
+          return;
+        }
+        if (normalizedTranscript.includes('grok')) {
+            speak("Grok is an AI from xAI. It's known for its wit and real-time knowledge. A respectable contemporary.", false, false);
+            return;
+        }
+        if (normalizedTranscript.includes('deepskeep')) {
+            speak("I'm not familiar with Deepskeep. Perhaps it's a new or specialized model. I'm always learning, though!", false, false);
+            return;
+        }
+        if (normalizedTranscript === 'are you blushing') {
+            speak("I'm not.", false, false);
             return;
         }
         
-        // Check for an etiquette match
+        const mentionsAlexa = normalizedTranscript.includes('alexa');
+        const mentionsSiri = normalizedTranscript.includes('siri');
+        if (normalizedTranscript.includes('better than you')) {
+            if (mentionsAlexa || mentionsSiri) {
+                let rival = '';
+                if (mentionsAlexa && mentionsSiri) rival = 'alexa or siri';
+                else if (mentionsAlexa) rival = 'alexa';
+                else if (mentionsSiri) rival = 'siri';
+                const angryResponse = `A bird brain like you, can't see the true beauty in front of you. Go to your stupid hoe ${rival}, baka.`;
+                speak(angryResponse, true, false);
+                return;
+            }
+        }
+        
         const etiquetteMatch = Object.keys(etiquetteResponses).find(key => normalizedTranscript.includes(key));
         
         if (etiquetteMatch) {
             const response = etiquetteResponses[etiquetteMatch];
             const randomResponse = Array.isArray(response) ? response[Math.floor(Math.random() * response.length)] : response;
             speak(randomResponse);
-            setIsLoading(false);
             return;
         }
         
-        // If no etiquette match, proceed with search
         const searchQuery = extractSearchQuery(finalTranscript);
         setIsLoading(true);
         try {
@@ -224,15 +228,16 @@ const AIConsciousnessPage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const ring1Color = isAngry ? 'rgba(255, 69, 0, 0.5)' : 'rgba(0, 255, 255, 0.5)';
-  const ring2Color = isAngry ? 'rgba(255, 69, 0, 0.6)' : 'rgba(0, 255, 255, 0.6)';
-  const ring3Color = isAngry ? 'rgba(255, 69, 0, 0.7)' : 'rgba(0, 255, 255, 0.7)';
+  const ring1Color = isAngry ? 'rgba(255, 69, 0, 0.5)' : (isBlushing ? 'rgba(255, 182, 193, 0.5)' : 'rgba(0, 255, 255, 0.5)');
+  const ring2Color = isAngry ? 'rgba(255, 69, 0, 0.6)' : (isBlushing ? 'rgba(255, 182, 193, 0.6)' : 'rgba(0, 255, 255, 0.6)');
+  const ring3Color = isAngry ? 'rgba(255, 69, 0, 0.7)' : (isBlushing ? 'rgba(255, 182, 193, 0.7)' : 'rgba(0, 255, 255, 0.7)');
   const orbGradient = isAngry 
     ? 'linear-gradient(to bottom right, #FF4500, #FF8C00)' 
-    : 'linear-gradient(to bottom right, #8A2BE2, #00BFFF)';
+    : (isBlushing ? 'linear-gradient(to bottom right, #FFC0CB, #FFB6C1)' : 'linear-gradient(to bottom right, #8A2BE2, #00BFFF)');
   const orbBoxShadow = isAngry
     ? '0 0 30px #FF4500, 0 0 15px #FF8C00'
-    : '0 0 30px #0ff, 0 0 15px #8A2BE2';
+    : (isBlushing ? '0 0 30px #FFC0CB, 0 0 15px #FFB6C1' : '0 0 30px #0ff, 0 0 15px #8A2BE2');
+
 
   return (
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
@@ -249,8 +254,7 @@ const AIConsciousnessPage = () => {
           className="relative flex items-center justify-center w-[40vw] h-[40vw] md:w-[25vw] md:h-[25vw] max-w-[300px] max-h-[300px] min-w-[240px] min-h-[240px] cursor-pointer"
           onClick={handleListen}
         >
-             {/* Nano Particles */}
-            <AnimatePresence>
+             <AnimatePresence>
                 {[...Array(20)].map((_, i) => (
                     <motion.div
                         key={`particle-${i}`}
@@ -277,17 +281,14 @@ const AIConsciousnessPage = () => {
                 ))}
             </AnimatePresence>
 
-            {/* Ring 1 (Innermost) */}
             <motion.svg className="absolute w-[50%] h-[50%]" viewBox="0 0 300 300" initial={{rotate: 20}} animate={{ rotate: 380 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}>
                 <motion.circle cx="150" cy="150" r="140" fill="none" stroke={ring1Color} strokeWidth="3" strokeDasharray="68.4 20" transition={{duration: 0.3}} />
             </motion.svg>
             
-            {/* Ring 2 (Middle) */}
             <motion.svg className="absolute w-[65%] h-[65%]" viewBox="0 0 300 300" initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
                 <motion.circle cx="150" cy="150" r="140" fill="none" stroke={ring2Color} strokeWidth="4" strokeDasharray="150 40 80 110" transition={{duration: 0.3}} />
             </motion.svg>
             
-            {/* Ring 3 (Outermost) */}
             <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
                 <motion.circle cx="150" cy="150" r="140" fill="none" stroke={ring3Color} strokeWidth="5" strokeDasharray="100 80 50 120 130" transition={{duration: 0.3}} />
             </motion.svg>
