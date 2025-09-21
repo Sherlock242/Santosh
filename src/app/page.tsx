@@ -19,14 +19,19 @@ const AIConsciousnessPage = () => {
   const [transcript, setTranscript] = useState('');
   const [aiResponse, setAiResponse] = useState("Click the orb to start a voice search.");
   const [dots, setDots] = useState('');
+  const [isAngry, setIsAngry] = useState(false);
 
   const recognitionRef = useRef<any | null>(null);
 
-  const speak = useCallback((text: string) => {
+  const speak = useCallback((text: string, angryMode: boolean = false) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
+    
+    if (angryMode) {
+        setIsAngry(true);
+    }
     
     setAiResponse(text);
     const utterance = new SpeechSynthesisUtterance(text);
@@ -35,9 +40,15 @@ const AIConsciousnessPage = () => {
     };
     utterance.onend = () => {
       setIsSpeaking(false);
+      if (angryMode) {
+        setIsAngry(false);
+      }
     };
     utterance.onerror = () => {
         setIsSpeaking(false);
+        if (angryMode) {
+          setIsAngry(false);
+        }
     }
     window.speechSynthesis.speak(utterance);
   }, []);
@@ -65,6 +76,9 @@ const AIConsciousnessPage = () => {
     'your name': "I'm Edena, a helping assistant of Edengram.",
     'what is your name': "I'm Edena, a helping assistant of Edengram.",
     'who are you': "I'm Edena, a helping assistant of Edengram.",
+    'what is edengram': "Edengram is a unique social media platform focused on creativity and personal expression. Instead of just photos, you can design and share interactive emojis to show your mood.",
+    'how does edengram work': "It's simple! You can design your own emoji model, set it as your mood for 24 hours, and share it in your gallery. You can follow other users to see their posts and moods in your feed, and explore creations from the entire community.",
+    'edengram features': "Edengram's key features include an emoji designer with customizable shapes, colors, and accessories, a 24-hour mood story system, a public gallery for your creations, and a personalized feed to keep up with friends.",
     'good morning': 'Good morning! I hope you have a great start to your day.',
     'good afternoon': 'Good afternoon! How can I assist you?',
     'good evening': 'Good evening! Ready to learn something new?',
@@ -83,7 +97,7 @@ const AIConsciousnessPage = () => {
     const prefixes = [
         "who is", "what is", "what are", "tell me about", "search for",
         "i want to know about", "can you tell me about", "information on",
-        "who invented", "what invented"
+        "who invented", "what invented", "what's", "what is edengram", "how does edengram work", "edengram features"
     ];
 
     const lowerCaseTranscript = transcript.toLowerCase();
@@ -104,6 +118,7 @@ const AIConsciousnessPage = () => {
     if (isSpeaking) {
         window.speechSynthesis.cancel();
         setIsSpeaking(false);
+        setIsAngry(false);
         return;
     }
     if (isListening) {
@@ -152,6 +167,26 @@ const AIConsciousnessPage = () => {
         recognition.stop();
         
         const normalizedTranscript = finalTranscript.toLowerCase().trim().replace(/[.,?_!]/g, '');
+
+        // Check for angry triggers
+        const mentionsAlexa = normalizedTranscript.includes('alexa');
+        const mentionsSiri = normalizedTranscript.includes('siri');
+        const mentionsBetter = normalizedTranscript.includes('better');
+        
+        if ((mentionsAlexa || mentionsSiri) && mentionsBetter) {
+            let rival = '';
+            if (mentionsAlexa && mentionsSiri) {
+                rival = 'alexa or siri';
+            } else if (mentionsAlexa) {
+                rival = 'alexa';
+            } else if (mentionsSiri) {
+                rival = 'siri';
+            }
+            const angryResponse = `A bird brain like you, can't see the true beauty in front of you. Go to your stupid hoe ${rival}, baka.`;
+            speak(angryResponse, true);
+            setIsLoading(false);
+            return;
+        }
         
         // Check for an etiquette match
         const etiquetteMatch = Object.keys(etiquetteResponses).find(key => normalizedTranscript.includes(key));
@@ -190,6 +225,16 @@ const AIConsciousnessPage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const ring1Color = isAngry ? 'rgba(255, 69, 0, 0.5)' : 'rgba(0, 255, 255, 0.5)';
+  const ring2Color = isAngry ? 'rgba(255, 69, 0, 0.6)' : 'rgba(0, 255, 255, 0.6)';
+  const ring3Color = isAngry ? 'rgba(255, 69, 0, 0.7)' : 'rgba(0, 255, 255, 0.7)';
+  const orbGradient = isAngry 
+    ? 'linear-gradient(to bottom right, #FF4500, #FF8C00)' 
+    : 'linear-gradient(to bottom right, #8A2BE2, #00BFFF)';
+  const orbBoxShadow = isAngry
+    ? '0 0 30px #FF4500, 0 0 15px #FF8C00'
+    : '0 0 30px #0ff, 0 0 15px #8A2BE2';
+
   return (
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
       <header className="absolute top-0 right-0 p-4 z-10">
@@ -202,10 +247,27 @@ const AIConsciousnessPage = () => {
 
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         <div 
-          className="relative flex items-center justify-center w-60 h-60 cursor-pointer"
+          className="relative flex items-center justify-center w-[40vw] h-[40vw] md:w-[25vw] md:h-[25vw] max-w-[300px] max-h-[300px] min-w-[240px] min-h-[240px] cursor-pointer"
           onClick={handleListen}
         >
-             {/* Nano Particles between ring 2 and 3 */}
+             {/* Hologram scanlines */}
+            <div className="absolute inset-0 w-full h-full overflow-hidden rounded-full pointer-events-none">
+              <motion.div
+                className="absolute top-0 left-0 w-full h-2 bg-cyan-400/20"
+                style={{
+                  filter: 'blur(4px)',
+                  boxShadow: '0 0 10px 2px rgba(0, 255, 255, 0.2)',
+                }}
+                animate={{ y: ['-10%', '110%'] }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: 'linear',
+                  delay: 0.5
+                }}
+              />
+            </div>
+             {/* Nano Particles */}
             <AnimatePresence>
                 {[...Array(20)].map((_, i) => (
                     <motion.div
@@ -218,7 +280,7 @@ const AIConsciousnessPage = () => {
                             left: '50%',
                         }}
                         initial={{
-                            x: (Math.random() - 0.5) * 220, // Positioned between mid and outer ring
+                            x: (Math.random() - 0.5) * 220,
                             y: (Math.random() - 0.5) * 220,
                             scale: 0,
                         }}
@@ -233,32 +295,30 @@ const AIConsciousnessPage = () => {
                 ))}
             </AnimatePresence>
 
-            {/* Ring 1 (Innermost - 10 cuts) */}
-            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '135px', height: '135px' }} initial={{rotate: 20}} animate={{ rotate: 380 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}>
-                <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.5)" strokeWidth="3" strokeDasharray="68.4 20" />
+            {/* Ring 1 (Innermost) */}
+            <motion.svg className="absolute w-[50%] h-[50%]" viewBox="0 0 300 300" initial={{rotate: 20}} animate={{ rotate: 380 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}>
+                <motion.circle cx="150" cy="150" r="140" fill="none" stroke={ring1Color} strokeWidth="3" strokeDasharray="68.4 20" transition={{duration: 0.3}} />
             </motion.svg>
             
-            {/* Ring 2 (Middle - 4 cuts, different sizes) */}
-            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '170px', height: '170px' }} initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
-                <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.6)" strokeWidth="4" strokeDasharray="150 40 80 110" />
+            {/* Ring 2 (Middle) */}
+            <motion.svg className="absolute w-[65%] h-[65%]" viewBox="0 0 300 300" initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
+                <motion.circle cx="150" cy="150" r="140" fill="none" stroke={ring2Color} strokeWidth="4" strokeDasharray="150 40 80 110" transition={{duration: 0.3}} />
             </motion.svg>
             
-            {/* Ring 3 (Outermost - 5 cuts, different sizes) */}
-            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" style={{ width: '260px', height: '260px' }} initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
-                <motion.circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 255, 255, 0.7)" strokeWidth="5" strokeDasharray="100 80 50 120 130" />
+            {/* Ring 3 (Outermost) */}
+            <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
+                <motion.circle cx="150" cy="150" r="140" fill="none" stroke={ring3Color} strokeWidth="5" strokeDasharray="100 80 50 120 130" transition={{duration: 0.3}} />
             </motion.svg>
             
             <motion.div
-                className="absolute w-20 h-20 bg-gradient-to-br from-purple-600 to-cyan-400 rounded-full"
+                className="absolute w-[30%] h-[30%] rounded-full"
+                style={{ background: orbGradient }}
                 animate={{
                     scale: isListening || isSpeaking ? 1.1 : 1,
-                    boxShadow: isListening || isSpeaking
-                    ? '0 0 30px #0ff, 0 0 15px #8A2BE2'
-                    : '0 0 15px #0ff, 0 0 8px #8A2BE2',
+                    boxShadow: orbBoxShadow,
                 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 15, duration: 0.3 }}
             />
-            
         </div>
 
         <div className="text-center mt-8 min-h-[4rem] flex items-center justify-center">
@@ -269,6 +329,7 @@ const AIConsciousnessPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3 }}
+                    className="w-[90vw] md:w-auto"
                 >
                     {isLoading ? (
                         <Loader2 className="h-8 w-8 animate-spin" />
@@ -277,7 +338,7 @@ const AIConsciousnessPage = () => {
                     ) : transcript && !aiResponse ? (
                         <p className="text-xl">"{transcript}"</p>
                     ) : aiResponse ? (
-                        <p className="text-lg text-center max-w-md">{aiResponse}</p>
+                        <p className="text-lg text-center md:max-w-md">{aiResponse}</p>
                     ) : (
                         <p className="text-gray-400">Click the orb to start a voice search.</p>
                     )}
@@ -290,5 +351,3 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
-
-    
