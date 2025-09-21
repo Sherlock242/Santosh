@@ -253,9 +253,11 @@ const AIConsciousnessPage = () => {
   return (
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
       <header className="absolute top-0 left-0 right-0 p-4 z-10 flex items-center justify-between">
-        <h1 className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
-          EDENA
-        </h1>
+        <Link href="/blogs">
+          <h1 className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
+            EDENA
+          </h1>
+        </Link>
         <Button asChild variant="ghost" className="text-white hover:bg-gray-800 hover:text-white">
           <Link href="/login">
             Sign In <ArrowRight className="ml-2 h-4 w-4" />
