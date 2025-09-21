@@ -171,14 +171,15 @@ const AIConsciousnessPage = () => {
             speak("ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.", false, true);
             return;
           }
-           if (normalizedTranscript.includes('grok')) {
+        }
+        
+        if (normalizedTranscript.includes('grok')) {
             speak("Grok is an AI from xAI. It's known for its wit and real-time knowledge. A respectable contemporary.", false, false);
             return;
-          }
-          if (normalizedTranscript.includes('deepseek')) {
+        }
+        if (normalizedTranscript.includes('deepseek')) {
             speak("I'm not familiar with Deepseek. Perhaps it's a new or specialized model. I'm always learning, though!", false, false);
             return;
-          }
         }
         
         if (normalizedTranscript === 'are you blushing') {
@@ -187,16 +188,20 @@ const AIConsciousnessPage = () => {
         }
 
         if (normalizedTranscript === 'chatgpt' || normalizedTranscript === 'chat gpt') {
-            speak("ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.", false, true);
-            return;
-        }
-        if (normalizedTranscript === 'grok') {
-            speak("Grok is an AI from xAI. It's known for its wit and real-time knowledge. A respectable contemporary.", false, false);
-            return;
-        }
-        if (normalizedTranscript === 'deepseek') {
-            speak("I'm not familiar with Deepseek. Perhaps it's a new or specialized model. I'm always learning, though!", false, false);
-            return;
+            if (!isOpinionQuestion) {
+              const searchQuery = extractSearchQuery(finalTranscript);
+              setIsLoading(true);
+              try {
+                const response = await searchWikipedia({ query: searchQuery });
+                speak(response.summary);
+              } catch (error) {
+                const errorMessage = "I couldn't find information on that. Please try another topic.";
+                speak(errorMessage);
+              } finally {
+                setIsLoading(false);
+              }
+              return;
+            }
         }
         
         const mentionsAlexa = normalizedTranscript.includes('alexa');
