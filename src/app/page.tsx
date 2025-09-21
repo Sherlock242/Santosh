@@ -262,45 +262,49 @@ const AIConsciousnessPage = () => {
 
   return (
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
-      <header className="absolute top-0 left-0 right-0 p-4 z-10 flex items-center justify-between">
-        <h1 
-          className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-primary cursor-pointer"
-          onClick={() => setShowSearch(!showSearch)}
-        >
-          EDENA
-        </h1>
-        <Button asChild variant="link" className="text-white hover:text-cyan-400 transition-colors duration-300 p-0 h-auto hover:no-underline">
-          <Link href="/login">
-            Sign In <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
+      <header className="absolute top-0 left-0 right-0 p-4 z-10">
+        <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-4">
+                 <h1 
+                    className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-primary cursor-pointer"
+                    onClick={() => setShowSearch(!showSearch)}
+                >
+                    EDENA
+                </h1>
+                <AnimatePresence>
+                {showSearch && (
+                    <motion.form
+                        onSubmit={handleManualSearch}
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: '12rem', opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="relative"
+                    >
+                        <Input 
+                            type="text"
+                            value={manualQuery}
+                            onChange={(e) => setManualQuery(e.target.value)}
+                            placeholder="Search..."
+                            className="bg-transparent text-white placeholder-gray-500 border-0 border-b-2 border-primary/50 focus:ring-0 focus:border-primary transition-all h-8 p-0"
+                            autoFocus
+                        />
+                        <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-white">
+                            <Search className="h-4 w-4"/>
+                        </Button>
+                    </motion.form>
+                )}
+                </AnimatePresence>
+            </div>
+            <Button asChild variant="link" className="text-white hover:text-cyan-400 transition-colors duration-300 p-0 h-auto hover:no-underline">
+            <Link href="/login">
+                Sign In <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+            </Button>
+        </div>
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-        
-        <AnimatePresence>
-          {showSearch && (
-            <motion.form
-              onSubmit={handleManualSearch}
-              initial={{ y: -50, opacity: 0, scale: 0.9 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: -50, opacity: 0, scale: 0.9 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="w-full max-w-sm mb-8 relative"
-            >
-              <Input 
-                type="text"
-                value={manualQuery}
-                onChange={(e) => setManualQuery(e.target.value)}
-                placeholder="Search Wikipedia..."
-                className="w-full bg-black/50 text-white placeholder-gray-500 text-center text-lg h-12 focus:ring-primary focus:ring-2 border-0"
-              />
-              <Button type="submit" variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
-                <Search />
-              </Button>
-            </motion.form>
-          )}
-        </AnimatePresence>
         
         <div 
           className="relative flex items-center justify-center w-[40vw] h-[40vw] md:w-[25vw] md:h-[25vw] max-w-[300px] max-h-[300px] min-w-[240px] min-h-[240px] cursor-pointer"
