@@ -268,7 +268,7 @@ const AIConsciousnessPage = () => {
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
       <header className="absolute top-0 left-0 right-0 p-4 z-10">
         <div className="flex items-center justify-between w-full">
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-start max-w-xs">
               <h1 
                   className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-primary cursor-pointer"
                   onClick={() => setShowSearch(!showSearch)}
@@ -282,7 +282,7 @@ const AIConsciousnessPage = () => {
                   animate={{ width: '100%', opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ duration: 0.5, ease: 'easeInOut' }}
-                  className="overflow-hidden"
+                  className="overflow-hidden w-full"
                 >
                   <form onSubmit={handleManualSearch} className="flex items-center w-full mt-2">
                     <div className="relative flex-grow">
