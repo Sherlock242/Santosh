@@ -3,70 +3,54 @@
 /**
  * @fileOverview The primary AI assistant for Edena.
  *
- * This flow uses a tool-based approach to answer user queries. It can
- * search Wikipedia to provide information on a wide range of topics.
+ * This flow intelligently routes user queries to either the Wikipedia
+ * search service or the Open Library book search service.
  */
 
-import { ai } from '@/app/ai/genkit';
 import { searchWikipedia } from './wikipedia-flow';
-import { z } from 'zod';
+import { searchOpenLibrary } from './book-search-flow';
 
-const EdenaInputSchema = z.object({
-  query: z.string(),
-});
+export interface EdenaInput {
+  query: string;
+}
 
-const EdenaOutputSchema = z.object({
-  answer: z.string(),
-});
+export interface EdenaOutput {
+  answer: string;
+}
 
-export type EdenaInput = z.infer<typeof EdenaInputSchema>;
-export type EdenaOutput = z.infer<typeof EdenaOutputSchema>;
-
-const wikipediaTool = ai.defineTool(
-  {
-    name: 'searchWikipedia',
-    description: 'Search Wikipedia for a given query.',
-    input: {
-      schema: z.object({ query: z.string() }),
-    },
-    output: {
-      schema: z.object({ summary: z.string() }),
-    },
-  },
-  async (input) => searchWikipedia(input)
-);
-
-const edenaAssistantPrompt = ai.definePrompt({
-  name: 'edenaAssistantPrompt',
-  tools: [wikipediaTool],
-  input: { schema: EdenaInputSchema },
-  output: { schema: EdenaOutputSchema },
-  prompt: `
-    You are Edena, a helpful AI assistant integrated into the Edengram application.
-    Your goal is to answer the user's query accurately and concisely.
-    If you need to look up information to answer the question, use the provided Wikipedia tool.
-    Do not invent information. If you cannot find an answer, say so.
-    
-    User Query: {{{query}}}
-  `,
-});
-
-const edenaFlow = ai.defineFlow(
-  {
-    name: 'edenaFlow',
-    inputSchema: EdenaInputSchema,
-    outputSchema: EdenaOutputSchema,
-  },
-  async (input) => {
-    const llmResponse = await edenaAssistantPrompt(input);
-    const output = llmResponse.output();
-    if (!output) {
-      throw new Error("The model did not return a valid response.");
-    }
-    return output;
-  }
-);
+// List of keywords that suggest a book-related search
+const bookKeywords = [
+    'book', 'author', 'novel', 'read', 'wrote', 'published', 'summary of'
+];
 
 export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
-  return edenaFlow(input);
+  const { query } = input;
+  const lowerCaseQuery = query.toLowerCase();
+
+  // Check if the query is likely about a book
+  const isBookQuery = bookKeywords.some(keyword => lowerCaseQuery.includes(keyword));
+
+  try {
+    let result;
+    if (isBookQuery) {
+      // If it seems like a book query, try the Open Library first
+      result = await searchOpenLibrary({ query });
+    } else {
+      // Otherwise, search Wikipedia
+      result = await searchWikipedia({ query });
+    }
+    
+    return { answer: result.summary };
+
+  } catch (error) {
+    console.error('Edena assistant error:', error);
+    // As a fallback, always try Wikipedia if the primary choice fails
+    try {
+        const fallbackResult = await searchWikipedia({ query });
+        return { answer: fallbackResult.summary };
+    } catch (fallbackError) {
+        console.error('Edena fallback error:', fallbackError);
+        return { answer: "I'm having trouble connecting to my knowledge bases right now. Please try again later." };
+    }
+  }
 }

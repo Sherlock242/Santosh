@@ -7,6 +7,8 @@ import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { searchWikipedia } from './ai/flows/wikipedia-flow';
+import { edenaAssistant } from './ai/flows/edena-flow';
+import { searchOpenLibrary } from './ai/flows/book-search-flow';
 import { Input } from '@/components/ui/input';
 
 interface IWindow extends Window {
@@ -117,7 +119,9 @@ const AIConsciousnessPage = () => {
     "who invented", "what invented", "what's"
   ];
   
-  const executeSearch = async (query: string) => {
+  const bookSearchPrefixes = ["book about", "find a book on", "who wrote", "book by"];
+
+  const executeSearch = async (query: string, searchType: 'wikipedia' | 'book' = 'wikipedia') => {
     if (!query) {
         speak("I didn't catch that. What would you like to search for?");
         return;
@@ -126,11 +130,24 @@ const AIConsciousnessPage = () => {
     setTranscript(''); // Clear transcript to show 'Thinking...'
     setAiResponse('');
     try {
-      const response = await searchWikipedia({ query });
+        let response;
+        if (searchType === 'book') {
+            response = await searchOpenLibrary({ query });
+        } else {
+             const assistantResponse = await edenaAssistant({ query });
+             response = { summary: assistantResponse.answer };
+        }
       speak(response.summary);
     } catch (error) {
-      console.error('Error fetching from Wikipedia:', error);
-      speak("I couldn't find information on that. Please try another topic.");
+      console.error('Error during search:', error);
+      // Fallback to simple Wikipedia search on Genkit failure
+      try {
+        const fallbackResponse = await searchWikipedia({ query });
+        speak(fallbackResponse.summary);
+      } catch (fallbackError) {
+        console.error('Fallback search failed:', fallbackError);
+        speak("I'm having trouble connecting to my knowledge bases. Please try again later.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -174,6 +191,14 @@ const AIConsciousnessPage = () => {
           return;
       }
 
+      for (const prefix of bookSearchPrefixes) {
+          if (normalizedQuery.startsWith(prefix + " ")) {
+              const searchQuery = query.substring(prefix.length + 1).trim();
+              executeSearch(searchQuery, 'book');
+              return;
+          }
+      }
+      
       for (const prefix of searchPrefixes) {
           if (normalizedQuery.startsWith(prefix + " ")) {
               const searchQuery = query.substring(prefix.length + 1).trim();
