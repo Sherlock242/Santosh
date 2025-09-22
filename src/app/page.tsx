@@ -2,8 +2,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence, animate } from 'framer-motion';
-import { BrainCircuit, Mic, Sparkles, Volume2, ArrowRight, Loader2, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { searchWikipedia } from './ai/flows/wikipedia-flow';
@@ -26,6 +26,8 @@ const AIConsciousnessPage = () => {
   const [showSearch, setShowSearch] = useState(false);
 
   const recognitionRef = useRef<any | null>(null);
+  const searchFormRef = useRef<HTMLFormElement>(null);
+  const orbRef = useRef<HTMLDivElement>(null);
 
   const speak = useCallback((text: string, angryMode: boolean = false, blushingMode: boolean = false) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -138,7 +140,6 @@ const AIConsciousnessPage = () => {
       const originalQuery = query.trim();
       const normalizedQuery = query.toLowerCase().trim().replace(/[.,?_!]/g, '');
       
-      // 0. Check for "edena say" command first
       const sayCommandRegex = /^edena\s+say\s+"([^"]+)"/i;
       const sayMatch = originalQuery.match(sayCommandRegex);
       if (sayMatch && sayMatch[1]) {
@@ -147,7 +148,6 @@ const AIConsciousnessPage = () => {
           return;
       }
 
-      // 1. Special hardcoded interactions
       const mentionsAlexa = normalizedQuery.includes('alexa');
       const mentionsSiri = normalizedQuery.includes('siri');
       if (normalizedQuery.includes('better than you') && (mentionsAlexa || mentionsSiri)) {
@@ -167,7 +167,6 @@ const AIConsciousnessPage = () => {
           return;
       }
 
-      // 2. Prescripted conversational responses
       if (etiquetteResponses.hasOwnProperty(normalizedQuery)) {
           const response = etiquetteResponses[normalizedQuery];
           const randomResponse = Array.isArray(response) ? response[Math.floor(Math.random() * response.length)] : response;
@@ -175,7 +174,6 @@ const AIConsciousnessPage = () => {
           return;
       }
 
-      // 3. Prefix-based search
       for (const prefix of searchPrefixes) {
           if (normalizedQuery.startsWith(prefix + " ")) {
               const searchQuery = query.substring(prefix.length + 1).trim();
@@ -184,7 +182,6 @@ const AIConsciousnessPage = () => {
           }
       }
 
-      // 4. Fallback to direct search
       executeSearch(query);
   }
 
@@ -257,6 +254,22 @@ const AIConsciousnessPage = () => {
     setShowSearch(false);
   };
 
+  const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!showSearch) {
+      return;
+    }
+
+    const target = e.target as Node;
+
+    const isClickOnSearch = searchFormRef.current?.contains(target);
+    const isClickOnOrb = orbRef.current?.contains(target);
+
+    if (!isClickOnSearch && !isClickOnOrb) {
+      setShowSearch(false);
+    }
+  };
+
+
   useEffect(() => {
     const interval = setInterval(() => {
       setDots(prev => (prev.length >= 3 ? '' : prev + '.'));
@@ -276,7 +289,7 @@ const AIConsciousnessPage = () => {
 
 
   return (
-    <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden">
+    <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden" onClick={handleContainerClick}>
       <header className="absolute top-0 left-0 right-0 p-4 z-10">
         <div className="flex items-center justify-between w-full">
             <div className="relative flex items-center h-9 max-w-xs mr-4">
@@ -290,7 +303,7 @@ const AIConsciousnessPage = () => {
                     transition={{ duration: 0.5, ease: 'easeInOut' }}
                     className="overflow-hidden w-full"
                   >
-                    <form onSubmit={handleManualSearch} className="flex items-center w-full">
+                    <form onSubmit={handleManualSearch} ref={searchFormRef} className="flex items-center w-full">
                       <div className="relative flex-grow">
                         <Input
                           type="text"
@@ -310,7 +323,7 @@ const AIConsciousnessPage = () => {
                   <motion.h1
                     key="title"
                     className="font-jarvis text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-primary cursor-pointer"
-                    onClick={() => setShowSearch(true)}
+                    onClick={(e) => { e.stopPropagation(); setShowSearch(true); }}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -323,7 +336,7 @@ const AIConsciousnessPage = () => {
             </div>
             <Button asChild variant="link" className="text-white hover:no-underline hover:text-cyan-400 transition-colors duration-300 p-0 h-auto">
               <Link href="/login">
-                  Sign In <ArrowRight className="ml-2 h-4 w-4" />
+                  Sign In
               </Link>
             </Button>
         </div>
@@ -332,8 +345,9 @@ const AIConsciousnessPage = () => {
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         
         <div 
+          ref={orbRef}
           className="relative flex items-center justify-center w-[40vw] h-[40vw] md:w-[25vw] md:h-[25vw] max-w-[300px] max-h-[300px] min-w-[240px] min-h-[240px] cursor-pointer"
-          onClick={handleListen}
+          onClick={(e) => { e.stopPropagation(); handleListen(); }}
         >
              <AnimatePresence>
                 {[...Array(20)].map((_, i) => (
