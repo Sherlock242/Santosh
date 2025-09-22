@@ -44,7 +44,7 @@ const spellingPrefixes = [
   "correctly write the spelling of", "can you give the spelling of", "help me spell",
   "what’s the spelling for", "what’s the spelling like for", "how do I spell",
   "correct spelling version of", "alternative spelling of", "spelling please", "word spelling for",
-  "correctly spelled", "the spelling of the word", "correct"
+  "correctly spelled", "the spelling of the word"
 ];
 
 const dictionaryPrefixes = [
@@ -99,13 +99,14 @@ const generalKnowledgePrefixes = [
     "application of", "case study of", "what does the word ___ refer to"
 ];
 
-function stripPrefix(query: string, prefix: string): string {
-    if (prefix.includes("___")) {
-        const parts = prefix.split("___");
-        const after = query.substring(parts[0].length);
-        return after.substring(0, after.length - parts[1].length).trim();
+function stripPrefix(query: string, prefixes: string[]): string | null {
+    const lowerCaseQuery = query.toLowerCase();
+    for (const prefix of prefixes) {
+        if (lowerCaseQuery.startsWith(prefix.toLowerCase() + ' ')) {
+            return query.substring(prefix.length).trim();
+        }
     }
-    return query.substring(prefix.length).trim();
+    return null;
 }
 
 
@@ -115,29 +116,27 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
 
   let coreQuery = query;
   let queryType: 'dictionary' | 'book' | 'article' | 'spelling' | 'general' = 'general';
+  let processed = false;
   
   // Check for spelling prefixes first, as they are very specific
-  for (const prefix of spellingPrefixes) {
-      if (lowerCaseQuery.startsWith(prefix.replace('___', '').trim().split(' ')[0])) {
-          coreQuery = stripPrefix(query, prefix);
-          queryType = 'spelling';
-          break;
-      }
+  const spellingCoreQuery = stripPrefix(query, spellingPrefixes);
+  if (spellingCoreQuery) {
+      coreQuery = spellingCoreQuery;
+      queryType = 'spelling';
+      processed = true;
   }
 
   // If not spelling, check for dictionary prefixes
-  if (queryType !== 'spelling') {
-      for (const prefix of dictionaryPrefixes) {
-          const placeholderPrefix = prefix.replace('___', '').trim();
-          if (lowerCaseQuery.startsWith(placeholderPrefix.split(' ')[0]) && lowerCaseQuery.includes(placeholderPrefix.split(' ').slice(-1)[0])) {
-              coreQuery = stripPrefix(query, prefix);
-              queryType = 'dictionary';
-              break;
-          }
+  if (!processed) {
+      const dictionaryCoreQuery = stripPrefix(query, dictionaryPrefixes);
+      if (dictionaryCoreQuery) {
+          coreQuery = dictionaryCoreQuery;
+          queryType = 'dictionary';
+          processed = true;
       }
   }
   
-  if (queryType !== 'spelling' && queryType !== 'dictionary') {
+  if (!processed) {
       const isBookQuery = bookKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       const isArticleQuery = articleKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       
@@ -147,10 +146,9 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
           queryType = 'article';
       }
       
-      for (const prefix of generalKnowledgePrefixes) {
-          if (lowerCaseQuery.startsWith(prefix.replace('___', '').trim())) {
-              coreQuery = stripPrefix(query, prefix);
-          }
+      const generalCoreQuery = stripPrefix(query, generalKnowledgePrefixes);
+      if (generalCoreQuery) {
+          coreQuery = generalCoreQuery;
       }
   }
 
