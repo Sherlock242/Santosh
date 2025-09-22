@@ -135,7 +135,17 @@ const AIConsciousnessPage = () => {
   };
 
   const processQuery = async (query: string) => {
+      const originalQuery = query.trim();
       const normalizedQuery = query.toLowerCase().trim().replace(/[.,?_!]/g, '');
+      
+      // 0. Check for "edena say" command first
+      const sayCommandRegex = /^edena\s+say\s+"([^"]+)"/i;
+      const sayMatch = originalQuery.match(sayCommandRegex);
+      if (sayMatch && sayMatch[1]) {
+          const textToSpeak = sayMatch[1];
+          speak(textToSpeak);
+          return;
+      }
 
       // 1. Special hardcoded interactions
       const mentionsAlexa = normalizedQuery.includes('alexa');
