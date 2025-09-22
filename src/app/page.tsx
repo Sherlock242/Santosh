@@ -258,7 +258,7 @@ const AIConsciousnessPage = () => {
   const handleManualSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchText.trim()) {
-      processQuery(searchText);
+      processQuery(searchText.trim());
       setSearchText('');
     }
     setShowSearch(false);
