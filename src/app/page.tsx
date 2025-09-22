@@ -209,7 +209,6 @@ const AIConsciousnessPage = () => {
     recognitionRef.current = recognition;
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = 'en-US';
 
     recognition.onstart = () => {
       setIsListening(true);
