@@ -4,7 +4,7 @@
  * @fileOverview The primary AI assistant for Edena.
  *
  * This flow intelligently routes user queries to the appropriate
- * knowledge base (Wikipedia, Open Library, Internet Archive, Dictionary, or Spell Checker)
+ * knowledge base (Wikipedia, Open Library, Internet Archive, Dictionary, or Grammar Checker)
  * by identifying and stripping common prefixes from the query.
  */
 
@@ -12,6 +12,7 @@ import { searchWikipedia } from './wikipedia-flow';
 import { searchOpenLibrary } from './book-search-flow';
 import { searchInternetArchive } from './article-search-flow';
 import { searchDictionary } from './dictionary-flow';
+import { correctGrammar } from './grammar-flow';
 
 
 export interface EdenaInput {
@@ -31,7 +32,7 @@ const articleKeywords = [
 ];
 
 const dictionaryPrefixes = [
-    "define", "definition of", "meaning of", "what is", "what exactly is", "what does ___ mean",
+    "define", "definition of", "meaning of", "what is the meaning of", "what exactly is", "what does ___ mean",
     "explain", "explain the meaning of", "describe", "give me the definition of", "please define",
     "can you define", "provide a definition of", "what do you mean by", "clarify",
     "in simple terms what is", "i need the meaning of", "how do you define",
@@ -41,8 +42,14 @@ const dictionaryPrefixes = [
     "could you define", "definition for", "what exactly does ___ mean"
 ];
 
+const grammarPrefixes = [
+    "correct the grammar of", "fix the grammar of", "check the grammar of", "grammar check", "is this grammatically correct",
+    "correct this sentence:", "fix this sentence:", "can you correct this", "correct my grammar", "proofread this:"
+];
+
+
 const generalKnowledgePrefixes = [
-    "tell me about", "can you tell me about", "please tell me about", "share info about",
+    "who is", "what is", "tell me about", "can you tell me about", "please tell me about", "share info about",
     "i want to know about", "i need to know about", "provide details on", "give me information on",
     "information about", "teach me about", "explain about", "can you explain about",
     "tell me something about", "provide facts about", "please share details about",
@@ -62,7 +69,7 @@ const generalKnowledgePrefixes = [
     "chronology of", "development of", "story of", "the first", "the last", "the beginning of",
     "the end of", "early history of", "ancient history of", "modern history of", "legacy of",
     "impact of", "outcome of", "result of", "importance of",
-    "who is", "who was", "biography of", "life of", "about", "career of", "works of",
+    "who was", "biography of", "life of", "about", "career of", "works of",
     "achievements of", "contributions of", "accomplishments of", "success of", "failures of",
     "family of", "childhood of", "education of", "birthplace of", "early life of", "death of",
     "cause of death of", "popularity of", "why is ___ famous",
@@ -85,8 +92,13 @@ const generalKnowledgePrefixes = [
 function stripPrefix(query: string, prefixes: string[]): string | null {
     const lowerCaseQuery = query.toLowerCase();
     for (const prefix of prefixes) {
-        if (lowerCaseQuery.startsWith(prefix.toLowerCase() + ' ')) {
-            return query.substring(prefix.length).trim();
+        const lowerCasePrefix = prefix.replace(/_/g, ' ').toLowerCase();
+        if (lowerCaseQuery.startsWith(lowerCasePrefix)) {
+            // Find the actual prefix from the original list to get the correct length
+            const originalPrefix = prefixes.find(p => p.replace(/_/g, ' ').toLowerCase() === lowerCasePrefix);
+            if (originalPrefix) {
+                return query.substring(originalPrefix.length).trim();
+            }
         }
     }
     return null;
@@ -98,15 +110,23 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   const lowerCaseQuery = query.toLowerCase();
 
   let coreQuery = query;
-  let queryType: 'dictionary' | 'book' | 'article' | 'general' = 'general';
+  let queryType: 'dictionary' | 'book' | 'article' | 'general' | 'grammar' = 'general';
   let processed = false;
 
-  // Check for dictionary prefixes first
-  const dictionaryCoreQuery = stripPrefix(query, dictionaryPrefixes);
-  if (dictionaryCoreQuery) {
-      coreQuery = dictionaryCoreQuery;
-      queryType = 'dictionary';
+  const grammarCoreQuery = stripPrefix(query, grammarPrefixes);
+  if (grammarCoreQuery) {
+      coreQuery = grammarCoreQuery;
+      queryType = 'grammar';
       processed = true;
+  }
+
+  if (!processed) {
+      const dictionaryCoreQuery = stripPrefix(query, dictionaryPrefixes);
+      if (dictionaryCoreQuery) {
+          coreQuery = dictionaryCoreQuery;
+          queryType = 'dictionary';
+          processed = true;
+      }
   }
   
   if (!processed) {
@@ -128,6 +148,9 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   try {
     let result;
     switch(queryType) {
+        case 'grammar':
+            result = await correctGrammar({ sentence: coreQuery });
+            break;
         case 'dictionary':
             result = await searchDictionary({ query: coreQuery });
             break;
