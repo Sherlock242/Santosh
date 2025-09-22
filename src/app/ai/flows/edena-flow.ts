@@ -3,9 +3,9 @@
 /**
  * @fileOverview The primary AI assistant for Edena.
  *
- * This flow intelligently routes user queries to either the Wikipedia
- * search service, the Open Library book search service, or the Internet Archive
- * article search service.
+ * This flow intelligently routes user queries to the appropriate
+ * knowledge base (Wikipedia, Open Library, Internet Archive, or Dictionary)
+ * by identifying and stripping common prefixes from the query.
  */
 
 import { searchWikipedia } from './wikipedia-flow';
@@ -22,108 +22,157 @@ export interface EdenaOutput {
   answer: string;
 }
 
-// List of keywords that suggest a book-related search
+// Keyword Lists for routing
 const bookKeywords = [
-    'book', 'author', 'novel', 'read', 'wrote', 'published', 'summary of'
+    'book', 'author', 'novel', 'read', 'wrote', 'published'
 ];
-
-// List of keywords that suggest an article-related search
 const articleKeywords = [
     'article', 'paper', 'journal', 'document', 'report', 'study on'
 ];
 
-// List of keywords that suggest a dictionary-related search
-const dictionaryKeywords = [
-    'define in simple words',
-    'in simple terms, what is',
-    'how would you define',
-    'what’s the definition of',
-    'provide a definition of',
-    'give me the definition of',
-    'what does the word',
-    'explain the meaning of',
-    'give an explanation of',
-    'what is the meaning of',
-    'tell me the meaning of',
-    'what do you understand by',
-    'what do you mean by',
-    'could you explain',
-    'what does',
-    'what exactly is',
-    'define the term',
-    'can you define',
-    'please define',
-    'definition of',
-    'clarify',
-    'describe',
-    'explain',
-    'meaning of',
-    'tell me about',
-    'define',
-    'what is',
-    'what are',
-    'mean',
+// Comprehensive list of prefixes provided by the user
+const dictionaryPrefixes = [
+    "define", "definition of", "meaning of", "what is", "what exactly is", "what does ___ mean",
+    "explain", "explain the meaning of", "describe", "give me the definition of", "please define",
+    "can you define", "provide a definition of", "what do you mean by", "clarify",
+    "in simple terms what is", "i need the meaning of", "how do you define",
+    "tell me the definition of", "meaning for", "what’s the meaning of",
+    "can you tell me what ___ means", "what’s another word for", "the term ___ means what",
+    "define the word", "explain what ___ stands for", "how would you describe",
+    "could you define", "definition for", "what exactly does ___ mean"
 ];
+
+const generalKnowledgePrefixes = [
+    // General Info
+    "tell me about", "can you tell me about", "please tell me about", "share info about",
+    "i want to know about", "i need to know about", "provide details on", "give me information on",
+    "information about", "teach me about", "explain about", "can you explain about",
+    "tell me something about", "provide facts about", "please share details about",
+    "give me some information about", "what can you tell me about", "can you provide info on",
+    "details of", "facts on", "share details on", "explain to me about", "talk about",
+    "tell me everything about", "overview of", "what should i know about",
+    "can you give me more details about", "tell me the story of",
+    "i would like to know about", "please explain about", "give me knowledge about",
+    "share what you know about", "i’m curious about", "could you tell me about",
+    "please share info on", "explain more about", "provide me details about",
+    "what information do you have on",
+
+    // History / Events
+    "history of", "background of", "origin of", "who created", "who started", "who discovered",
+    "who invented", "who wrote", "who made", "when was", "when did ___ happen", "when did ___ start",
+    "when did ___ end", "where did ___ happen", "where did ___ originate", "where was ___ invented",
+    "why is ___ important", "why did ___ happen", "why was ___ created", "how did ___ happen",
+    "how was ___ discovered", "how was ___ invented", "timeline of", "events of", "key events in",
+    "chronology of", "development of", "story of", "the first", "the last", "the beginning of",
+    "the end of", "early history of", "ancient history of", "modern history of", "legacy of",
+    "impact of", "outcome of", "result of", "importance of",
+
+    // People / Biographical
+    "who is", "who was", "biography of", "life of", "about", "career of", "works of",
+    "achievements of", "contributions of", "accomplishments of", "success of", "failures of",
+    "family of", "childhood of", "education of", "birthplace of", "early life of", "death of",
+    "cause of death of", "popularity of", "why is ___ famous",
+    "awards of", "honors of", "facts about", "tell me about the life of", "career history of",
+    "influence of",
+
+    // Comparisons & Explanations
+    "difference between", "compare", "contrast ___ with", "similarities between",
+    "how is ___ different from", "how is ___ similar to", "which is better", "pros and cons of",
+    "advantages of", "disadvantages of", "benefits of", "uses of", "applications of",
+    "function of", "purpose of", "role of", "value of", "contribution of", "effect of",
+    "what is the role of", "why use", "how is ___ used", "examples of", "types of",
+    "kinds of", "categories of", "characteristics of", "features of",
+
+    // Miscellaneous
+    "summary of", "abstract of", "outline of", "key points of", "main idea of", "short note on",
+    "brief explanation of", "full form of", "abbreviation of", "expansion of", "acronym of",
+    "symbol of", "motto of", "meaning behind", "significance of", "explanation for",
+    "concept of", "theory of", "philosophy of", "principle of", "law of", "rule of",
+    "equation of", "formula of", "definition and example of", "example of", "explain with example",
+    "application of", "case study of", "what does the word ___ refer to"
+];
+
+/**
+ * Strips a given prefix from a query string.
+ * Handles special cases like "what does ___ mean".
+ * @param query The user's input string.
+ * @param prefix The prefix to remove.
+ * @returns The cleaned query.
+ */
+function stripPrefix(query: string, prefix: string): string {
+    if (prefix.includes("___")) {
+        const parts = prefix.split("___");
+        const after = query.substring(parts[0].length);
+        return after.substring(0, after.length - parts[1].length).trim();
+    }
+    return query.substring(prefix.length).trim();
+}
+
 
 export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   const { query } = input;
   const lowerCaseQuery = query.toLowerCase();
 
-  // Check if the query is likely about a book, article, definition, or general topic
-  const isBookQuery = bookKeywords.some(keyword => lowerCaseQuery.includes(keyword));
-  const isArticleQuery = articleKeywords.some(keyword => lowerCaseQuery.includes(keyword));
-  const isDictionaryQuery = dictionaryKeywords.some(keyword => lowerCaseQuery.startsWith(keyword) || lowerCaseQuery.endsWith(keyword));
+  let coreQuery = query;
+  let queryType: 'dictionary' | 'book' | 'article' | 'general' = 'general';
+  
+  // 1. Check for dictionary prefixes first, as they are most specific
+  for (const prefix of dictionaryPrefixes) {
+    const placeholderPrefix = prefix.replace('___', '').trim();
+    if (lowerCaseQuery.startsWith(placeholderPrefix.split(' ')[0]) && lowerCaseQuery.includes(placeholderPrefix.split(' ').slice(-1)[0])) {
+         coreQuery = stripPrefix(query, prefix);
+         queryType = 'dictionary';
+         break;
+    }
+  }
+
+  // If not a dictionary query, check for other types
+  if (queryType !== 'dictionary') {
+      const isBookQuery = bookKeywords.some(keyword => lowerCaseQuery.includes(keyword));
+      const isArticleQuery = articleKeywords.some(keyword => lowerCaseQuery.includes(keyword));
+      
+      if (isBookQuery) {
+          queryType = 'book';
+      } else if (isArticleQuery) {
+          queryType = 'article';
+      }
+      
+      // Strip general knowledge prefixes if no other type was matched
+      for (const prefix of generalKnowledgePrefixes) {
+          if (lowerCaseQuery.startsWith(prefix.replace('___', '').trim())) {
+              coreQuery = stripPrefix(query, prefix);
+              // Don't break, allow more specific (longer) prefixes to match
+          }
+      }
+  }
 
   try {
     let result;
-    if (isDictionaryQuery) {
-        // Extract the word to be defined
-        let wordToDefine = query;
-        let keywordUsed = '';
-
-        for (const keyword of dictionaryKeywords) {
-            if (lowerCaseQuery.startsWith(keyword.replace(/\s+$/, ''))) {
-                wordToDefine = query.substring(keyword.length).trim();
-                keywordUsed = keyword;
-                break;
-            }
-            if (lowerCaseQuery.endsWith(keyword.replace(/^\s+/, ''))) {
-                 wordToDefine = query.substring(0, query.length - keyword.length).trim();
-                 keywordUsed = keyword;
-                 break;
-            }
-        }
-        
-        // Special case for "[word] definition"
-        if (lowerCaseQuery.endsWith(' definition')) {
-            wordToDefine = query.substring(0, query.length - ' definition'.length).trim();
-        }
-        
-        // Special case for "what does X mean"
-        if (keywordUsed === 'what does' && lowerCaseQuery.endsWith(' mean')) {
-             wordToDefine = wordToDefine.replace(/mean$/i, '').trim();
-        }
-
-
-        result = await searchDictionary({ query: wordToDefine });
-    } else if (isBookQuery) {
-      // If it seems like a book query, try the Open Library first
-      result = await searchOpenLibrary({ query });
-    } else if (isArticleQuery) {
-      // If it seems like an article query, try the Internet Archive
-      result = await searchInternetArchive({ query });
-    } else {
-      // Otherwise, search Wikipedia
-      result = await searchWikipedia({ query });
+    switch(queryType) {
+        case 'dictionary':
+            result = await searchDictionary({ query: coreQuery });
+            break;
+        case 'book':
+            result = await searchOpenLibrary({ query: coreQuery });
+            break;
+        case 'article':
+            result = await searchInternetArchive({ query: coreQuery });
+            break;
+        case 'general':
+        default:
+             // If no specific keyword was found but a general prefix was stripped, use it.
+             // Otherwise, the original query is used.
+            result = await searchWikipedia({ query: coreQuery });
+            break;
     }
     
     return { answer: result.summary };
 
   } catch (error) {
-    console.error('Edena assistant error:', error);
-    // As a fallback, always try Wikipedia if the primary choice fails
+    console.error(`Edena assistant error for type ${queryType}:`, error);
+    // Fallback to Wikipedia with the core query if any other search fails
     try {
-        const fallbackResult = await searchWikipedia({ query });
+        const fallbackResult = await searchWikipedia({ query: coreQuery });
         return { answer: fallbackResult.summary };
     } catch (fallbackError) {
         console.error('Edena fallback error:', fallbackError);
