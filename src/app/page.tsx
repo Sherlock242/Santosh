@@ -10,6 +10,7 @@ import { searchWikipedia } from './ai/flows/wikipedia-flow';
 import { edenaAssistant } from './ai/flows/edena-flow';
 import { searchOpenLibrary } from './ai/flows/book-search-flow';
 import { Input } from '@/components/ui/input';
+import { searchInternetArchive } from './ai/flows/article-search-flow';
 
 interface IWindow extends Window {
   webkitSpeechRecognition: any;
@@ -121,7 +122,10 @@ const AIConsciousnessPage = () => {
   
   const bookSearchPrefixes = ["book about", "find a book on", "who wrote", "book by"];
 
-  const executeSearch = async (query: string, searchType: 'wikipedia' | 'book' = 'wikipedia') => {
+  const articleSearchPrefixes = ["article on", "find an article about", "document on"];
+
+
+  const executeSearch = async (query: string) => {
     if (!query) {
         speak("I didn't catch that. What would you like to search for?");
         return;
@@ -130,17 +134,11 @@ const AIConsciousnessPage = () => {
     setTranscript(''); // Clear transcript to show 'Thinking...'
     setAiResponse('');
     try {
-        let response;
-        if (searchType === 'book') {
-            response = await searchOpenLibrary({ query });
-        } else {
-             const assistantResponse = await edenaAssistant({ query });
-             response = { summary: assistantResponse.answer };
-        }
-      speak(response.summary);
+        const assistantResponse = await edenaAssistant({ query });
+        speak(assistantResponse.answer);
     } catch (error) {
       console.error('Error during search:', error);
-      // Fallback to simple Wikipedia search on Genkit failure
+      // Fallback to simple Wikipedia search on assistant failure
       try {
         const fallbackResponse = await searchWikipedia({ query });
         speak(fallbackResponse.summary);
@@ -191,22 +189,7 @@ const AIConsciousnessPage = () => {
           return;
       }
 
-      for (const prefix of bookSearchPrefixes) {
-          if (normalizedQuery.startsWith(prefix + " ")) {
-              const searchQuery = query.substring(prefix.length + 1).trim();
-              executeSearch(searchQuery, 'book');
-              return;
-          }
-      }
-      
-      for (const prefix of searchPrefixes) {
-          if (normalizedQuery.startsWith(prefix + " ")) {
-              const searchQuery = query.substring(prefix.length + 1).trim();
-              executeSearch(searchQuery);
-              return;
-          }
-      }
-
+      // No pre-scripted response matched, so hand it off to the assistant.
       executeSearch(query);
   }
 
