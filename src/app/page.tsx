@@ -11,6 +11,7 @@ import { edenaAssistant } from './ai/flows/edena-flow';
 import { searchOpenLibrary } from './ai/flows/book-search-flow';
 import { Input } from '@/components/ui/input';
 import { searchInternetArchive } from './ai/flows/article-search-flow';
+import { searchDictionary } from './ai/flows/dictionary-flow';
 
 interface IWindow extends Window {
   webkitSpeechRecognition: any;
@@ -123,6 +124,8 @@ const AIConsciousnessPage = () => {
   const bookSearchPrefixes = ["book about", "find a book on", "who wrote", "book by"];
 
   const articleSearchPrefixes = ["article on", "find an article about", "document on"];
+  
+  const dictionaryPrefixes = ["define", "what is the meaning of", "meaning of"];
 
 
   const executeSearch = async (query: string) => {

@@ -11,6 +11,7 @@
 import { searchWikipedia } from './wikipedia-flow';
 import { searchOpenLibrary } from './book-search-flow';
 import { searchInternetArchive } from './article-search-flow';
+import { searchDictionary } from './dictionary-flow';
 
 
 export interface EdenaInput {
@@ -31,17 +32,37 @@ const articleKeywords = [
     'article', 'paper', 'journal', 'document', 'report', 'study on'
 ];
 
+// List of keywords that suggest a dictionary-related search
+const dictionaryKeywords = [
+    'define', 'definition of', 'meaning of', 'what does', 'mean'
+];
+
 export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   const { query } = input;
   const lowerCaseQuery = query.toLowerCase();
 
-  // Check if the query is likely about a book, article, or general topic
+  // Check if the query is likely about a book, article, definition, or general topic
   const isBookQuery = bookKeywords.some(keyword => lowerCaseQuery.includes(keyword));
   const isArticleQuery = articleKeywords.some(keyword => lowerCaseQuery.includes(keyword));
+  const isDictionaryQuery = dictionaryKeywords.some(keyword => lowerCaseQuery.startsWith(keyword));
 
   try {
     let result;
-    if (isBookQuery) {
+    if (isDictionaryQuery) {
+        // Extract the word to be defined
+        let wordToDefine = query;
+        for (const keyword of dictionaryKeywords) {
+            if (lowerCaseQuery.startsWith(keyword)) {
+                wordToDefine = query.substring(keyword.length).trim();
+                break;
+            }
+        }
+        // A special case for "what does X mean"
+        if (lowerCaseQuery.startsWith('what does') && lowerCaseQuery.endsWith('mean')) {
+             wordToDefine = wordToDefine.replace(/mean$/i, '').trim();
+        }
+        result = await searchDictionary({ query: wordToDefine });
+    } else if (isBookQuery) {
       // If it seems like a book query, try the Open Library first
       result = await searchOpenLibrary({ query });
     } else if (isArticleQuery) {
