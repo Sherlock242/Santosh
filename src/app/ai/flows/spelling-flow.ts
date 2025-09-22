@@ -9,7 +9,8 @@
  */
 
 import nspell from 'nspell';
-import dictionary from 'dictionary-en';
+import fs from 'fs/promises';
+import path from 'path';
 
 export interface SpellCheckInput {
   word: string;
@@ -21,19 +22,31 @@ export interface SpellCheckOutput {
 
 let spell: any;
 
+// Asynchronously load the dictionary files
+async function loadDictionary() {
+  try {
+    const affPath = path.join(process.cwd(), 'node_modules', 'dictionary-en', 'index.aff');
+    const dicPath = path.join(process.cwd(), 'node_modules', 'dictionary-en', 'index.dic');
+    
+    const [aff, dic] = await Promise.all([
+      fs.readFile(affPath, 'utf-8'),
+      fs.readFile(dicPath, 'utf-8')
+    ]);
+
+    return { aff, dic };
+  } catch (error) {
+    console.error('Failed to load dictionary files:', error);
+    throw new Error('Could not load dictionary files for spell checker.');
+  }
+}
+
 async function getSpellChecker() {
   if (spell) {
     return spell;
   }
-  return new Promise((resolve, reject) => {
-    dictionary((err: Error | null, dict: any) => {
-      if (err) {
-        return reject(err);
-      }
-      spell = nspell(dict);
-      resolve(spell);
-    });
-  });
+  const { aff, dic } = await loadDictionary();
+  spell = nspell(aff, dic);
+  return spell;
 }
 
 export async function correctSpelling(input: SpellCheckInput): Promise<SpellCheckOutput> {
