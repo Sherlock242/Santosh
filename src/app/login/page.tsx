@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, HelpCircle } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -109,8 +109,8 @@ function LoginPageContent() {
     <>
       <div className="flex flex-col items-center justify-center h-full text-center p-4 overflow-y-auto">
         <Link href="/" passHref>
-          <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-muted-foreground hover:text-primary rounded-full">
-            <HelpCircle />
+          <Button variant="ghost" size="icon" className="absolute top-4 left-4 text-muted-foreground hover:text-primary rounded-full">
+            <ArrowLeft />
           </Button>
         </Link>
         <motion.div 
