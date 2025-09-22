@@ -34,7 +34,35 @@ const articleKeywords = [
 
 // List of keywords that suggest a dictionary-related search
 const dictionaryKeywords = [
-    'define', 'definition of', 'meaning of', 'what does', 'mean'
+    'define in simple words',
+    'in simple terms, what is',
+    'how would you define',
+    'what’s the definition of',
+    'provide a definition of',
+    'give me the definition of',
+    'what does the word',
+    'explain the meaning of',
+    'give an explanation of',
+    'what is the meaning of',
+    'tell me the meaning of',
+    'what do you understand by',
+    'what do you mean by',
+    'could you explain',
+    'what does',
+    'what exactly is',
+    'define the term',
+    'can you define',
+    'please define',
+    'definition of',
+    'clarify',
+    'describe',
+    'explain',
+    'meaning of',
+    'tell me about',
+    'define',
+    'what is',
+    'what are',
+    'mean',
 ];
 
 export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
@@ -44,23 +72,39 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   // Check if the query is likely about a book, article, definition, or general topic
   const isBookQuery = bookKeywords.some(keyword => lowerCaseQuery.includes(keyword));
   const isArticleQuery = articleKeywords.some(keyword => lowerCaseQuery.includes(keyword));
-  const isDictionaryQuery = dictionaryKeywords.some(keyword => lowerCaseQuery.startsWith(keyword));
+  const isDictionaryQuery = dictionaryKeywords.some(keyword => lowerCaseQuery.startsWith(keyword) || lowerCaseQuery.endsWith(keyword));
 
   try {
     let result;
     if (isDictionaryQuery) {
         // Extract the word to be defined
         let wordToDefine = query;
+        let keywordUsed = '';
+
         for (const keyword of dictionaryKeywords) {
-            if (lowerCaseQuery.startsWith(keyword)) {
+            if (lowerCaseQuery.startsWith(keyword.replace(/\s+$/, ''))) {
                 wordToDefine = query.substring(keyword.length).trim();
+                keywordUsed = keyword;
                 break;
             }
+            if (lowerCaseQuery.endsWith(keyword.replace(/^\s+/, ''))) {
+                 wordToDefine = query.substring(0, query.length - keyword.length).trim();
+                 keywordUsed = keyword;
+                 break;
+            }
         }
-        // A special case for "what does X mean"
-        if (lowerCaseQuery.startsWith('what does') && lowerCaseQuery.endsWith('mean')) {
+        
+        // Special case for "[word] definition"
+        if (lowerCaseQuery.endsWith(' definition')) {
+            wordToDefine = query.substring(0, query.length - ' definition'.length).trim();
+        }
+        
+        // Special case for "what does X mean"
+        if (keywordUsed === 'what does' && lowerCaseQuery.endsWith(' mean')) {
              wordToDefine = wordToDefine.replace(/mean$/i, '').trim();
         }
+
+
         result = await searchDictionary({ query: wordToDefine });
     } else if (isBookQuery) {
       // If it seems like a book query, try the Open Library first
