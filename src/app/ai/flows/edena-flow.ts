@@ -4,7 +4,7 @@
  * @fileOverview The primary AI assistant for Edena.
  *
  * This flow intelligently routes user queries to the appropriate
- * knowledge base (Wikipedia, Open Library, Internet Archive, Dictionary, or Grammar Checker)
+ * knowledge base (Wikipedia, Open Library, Internet Archive, or Dictionary)
  * by identifying and stripping common prefixes from the query.
  */
 
@@ -12,7 +12,6 @@ import { searchWikipedia } from './wikipedia-flow';
 import { searchOpenLibrary } from './book-search-flow';
 import { searchInternetArchive } from './article-search-flow';
 import { searchDictionary } from './dictionary-flow';
-import { correctGrammar } from './grammar-flow';
 
 
 export interface EdenaInput {
@@ -40,11 +39,6 @@ const dictionaryPrefixes = [
     "can you tell me what ___ means", "what’s another word for", "the term ___ means what",
     "define the word", "explain what ___ stands for", "how would you describe",
     "could you define", "definition for", "what exactly does ___ mean"
-];
-
-const grammarPrefixes = [
-    "correct the grammar of", "fix the grammar of", "check the grammar of", "grammar check", "is this grammatically correct",
-    "correct this sentence:", "fix this sentence:", "can you correct this", "correct my grammar", "proofread this:"
 ];
 
 
@@ -110,15 +104,9 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   const lowerCaseQuery = query.toLowerCase();
 
   let coreQuery = query;
-  let queryType: 'dictionary' | 'book' | 'article' | 'general' | 'grammar' = 'general';
+  let queryType: 'dictionary' | 'book' | 'article' | 'general' = 'general';
   let processed = false;
 
-  const grammarCoreQuery = stripPrefix(query, grammarPrefixes);
-  if (grammarCoreQuery) {
-      coreQuery = grammarCoreQuery;
-      queryType = 'grammar';
-      processed = true;
-  }
 
   if (!processed) {
       const dictionaryCoreQuery = stripPrefix(query, dictionaryPrefixes);
@@ -148,9 +136,6 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   try {
     let result;
     switch(queryType) {
-        case 'grammar':
-            result = await correctGrammar({ sentence: coreQuery });
-            break;
         case 'dictionary':
             result = await searchDictionary({ query: coreQuery });
             break;
