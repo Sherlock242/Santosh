@@ -12,7 +12,6 @@ import { searchWikipedia } from './wikipedia-flow';
 import { searchOpenLibrary } from './book-search-flow';
 import { searchInternetArchive } from './article-search-flow';
 import { searchDictionary } from './dictionary-flow';
-import { correctSpelling } from './spelling-flow';
 
 
 export interface EdenaInput {
@@ -29,22 +28,6 @@ const bookKeywords = [
 ];
 const articleKeywords = [
     'article', 'paper', 'journal', 'document', 'report', 'study on'
-];
-
-const spellingPrefixes = [
-  "correct the spelling of", "spell", "spelling of", "how to spell", "please spell",
-  "can you spell", "how do you spell", "give me the spelling of", "show me how to spell",
-  "what is the spelling of", "proper spelling of", "tell me how to spell", "correctly spell",
-  "correct spelling for", "provide the spelling of", "show the spelling of", "tell me the spelling of",
-  "write the spelling of", "how is", "spell check", "check spelling of", "fix the spelling of",
-  "can you correct the spelling of", "correct my spelling of", "am I spelling", "is this the correct spelling of",
-  "what’s the right spelling of", "give the correct spelling of", "spelled like", "how should I spell",
-  "how to correctly spell", "correct spelling please", "spell the word", "spell out",
-  "how can I spell", "confirm spelling of", "verify spelling of", "spelling correction for",
-  "correctly write the spelling of", "can you give the spelling of", "help me spell",
-  "what’s the spelling for", "what’s the spelling like for", "how do I spell",
-  "correct spelling version of", "alternative spelling of", "spelling please", "word spelling for",
-  "correctly spelled", "the spelling of the word"
 ];
 
 const dictionaryPrefixes = [
@@ -115,25 +98,15 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   const lowerCaseQuery = query.toLowerCase();
 
   let coreQuery = query;
-  let queryType: 'dictionary' | 'book' | 'article' | 'spelling' | 'general' = 'general';
+  let queryType: 'dictionary' | 'book' | 'article' | 'general' = 'general';
   let processed = false;
-  
-  // Check for spelling prefixes first, as they are very specific
-  const spellingCoreQuery = stripPrefix(query, spellingPrefixes);
-  if (spellingCoreQuery) {
-      coreQuery = spellingCoreQuery;
-      queryType = 'spelling';
-      processed = true;
-  }
 
-  // If not spelling, check for dictionary prefixes
-  if (!processed) {
-      const dictionaryCoreQuery = stripPrefix(query, dictionaryPrefixes);
-      if (dictionaryCoreQuery) {
-          coreQuery = dictionaryCoreQuery;
-          queryType = 'dictionary';
-          processed = true;
-      }
+  // Check for dictionary prefixes first
+  const dictionaryCoreQuery = stripPrefix(query, dictionaryPrefixes);
+  if (dictionaryCoreQuery) {
+      coreQuery = dictionaryCoreQuery;
+      queryType = 'dictionary';
+      processed = true;
   }
   
   if (!processed) {
@@ -155,9 +128,6 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   try {
     let result;
     switch(queryType) {
-        case 'spelling':
-            result = await correctSpelling({ word: coreQuery });
-            break;
         case 'dictionary':
             result = await searchDictionary({ query: coreQuery });
             break;
