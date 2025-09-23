@@ -28,16 +28,22 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MoreHorizontal, ArrowLeft, X, Eye, Loader2, Trash2 } from 'lucide-react';
+import { MoreHorizontal, ArrowLeft, X, Eye, Loader2, Trash2, Heart, Send } from 'lucide-react';
 import { motion, animate, useMotionValue } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { removeMood, recordMoodView, getMoodViewers } from '@/app/actions';
+import { removeMood, recordMoodView, getMoodViewers, setMood } from '@/app/actions';
 import { TimeRemaining } from './time-remaining';
 import dynamic from 'next/dynamic';
 import { UserListItem } from './user-list-item';
 import { GoldTick } from './gold-tick';
 import { PostCard } from './post-card';
+import { LikeButton } from './like-button';
+import { Face } from './emoji-face';
+import { ClockFace } from './loki-face';
+import { RimuruFace } from './rimuru-face';
+import { CreatorMoji } from './creator-moji';
+
 
 const LikerListSheet = dynamic(() => import('@/components/liker-list-sheet'), { ssr: false });
 
@@ -94,7 +100,21 @@ interface PostViewProps {
   isMoodView?: boolean;
 }
 
-const MoodContent = memo(({ emoji, onInteraction, onClose }: { emoji: Mood, onInteraction: (action: 'next' | 'prev') => void, onClose: () => void }) => {
+const filters = [
+    { name: 'None', css: 'none' },
+    { name: 'Sepia', css: 'sepia(1)' },
+    { name: 'Grayscale', css: 'grayscale(1)' },
+    { name: 'Invert', css: 'invert(1)' },
+    { name: 'Hue-Rotate', css: 'hue-rotate(90deg)' },
+    { name: 'Contrast', css: 'contrast(1.5)' },
+    { name: 'Saturate', css: 'saturate(2)' },
+    { name: 'Vintage', css: 'sepia(0.5) saturate(1.5) contrast(0.9)' },
+    { name: 'Cool', css: 'contrast(1.1) brightness(1.1) hue-rotate(-15deg)' },
+    { name: 'Warm', css: 'sepia(0.3) saturate(1.2) brightness(1.1)' },
+];
+
+
+const MoodContent = memo(({ emoji, onInteraction, onClose, onMoodChange }: { emoji: Mood, onInteraction: (action: 'next' | 'prev') => void, onClose: (action?: 'delete_current') => void, onMoodChange?: () => void }) => {
     const { user } = useAuth();
     const { toast } = useToast();
     const progressWidth = useMotionValue('0%');
@@ -103,6 +123,50 @@ const MoodContent = memo(({ emoji, onInteraction, onClose }: { emoji: Mood, onIn
     const [isViewersSheetOpen, setIsViewersSheetOpen] = useState(false);
     const [isFetchingViewers, setIsFetchingViewers] = useState(false);
     const postAuthor = emoji.mood_user;
+
+    const [localLikeCount, setLocalLikeCount] = useState(emoji.like_count);
+    const [isLikedState, setIsLikedState] = useState(emoji.is_liked);
+    const [showHeartIcon, setShowHeartIcon] = useState(false);
+    const likeButtonRef = useRef<{ triggerLike: () => void }>(null);
+
+    const featureOffsetX = useMotionValue(emoji.feature_offset_x || 0);
+    const featureOffsetY = useMotionValue(emoji.feature_offset_y || 0);
+    const activeFilterCss = filters.find(f => f.name === emoji.selected_filter)?.css || 'none';
+
+    const handleLikeAnimation = useCallback(() => {
+        setShowHeartIcon(true);
+    }, []);
+
+    useEffect(() => {
+        if (showHeartIcon) {
+            const timer = setTimeout(() => setShowHeartIcon(false), 600);
+            return () => clearTimeout(timer);
+        }
+    }, [showHeartIcon]);
+    
+    const handleDoubleClick = () => {
+        likeButtonRef.current?.triggerLike();
+    }
+    
+    const handleSetMoodClick = async () => {
+        if (!user) return;
+        try {
+            await setMood(emoji.id);
+            toast({
+                title: "Mood Updated!",
+                description: "Your new mood has been set.",
+                variant: "success",
+            });
+            onMoodChange?.();
+        } catch (error: any) {
+             toast({
+                title: "Error setting mood",
+                description: error.message,
+                variant: "destructive",
+            });
+        }
+    };
+
 
     const startAnimation = useCallback(() => {
         progressWidth.set('0%');
@@ -147,12 +211,28 @@ const MoodContent = memo(({ emoji, onInteraction, onClose }: { emoji: Mood, onIn
       }
     };
 
-    const handleRemoveMood = async () => {
-        // This function is now passed up to the parent `PostView` to handle state updates
-    }
-    
+    const renderEmojiFace = (emoji: EmojiState) => {
+        const props = {
+          ...emoji,
+          color: emoji.emoji_color,
+          isDragging: false,
+          isInteractive: false,
+          feature_offset_x: featureOffsetX,
+          feature_offset_y: featureOffsetY,
+          setColor: () => {},
+          showPlatform: false,
+        };
+        switch(emoji.model) {
+            case 'creator': return <CreatorMoji {...props} />;
+            case 'loki': return <ClockFace {...props} />;
+            case 'rimuru': return <RimuruFace {...props} />;
+            case 'emoji':
+            default: return <Face {...props} />;
+        }
+    };
+
     return (
-        <div className="w-full h-full flex flex-col bg-black relative">
+        <div className="w-full h-full flex flex-col bg-black relative" onDoubleClick={handleDoubleClick}>
              <div className="absolute top-0 left-0 right-0 p-3 z-20">
                  <div className="w-full bg-gray-500/50 rounded-full h-1">
                     <motion.div 
@@ -182,14 +262,14 @@ const MoodContent = memo(({ emoji, onInteraction, onClose }: { emoji: Mood, onIn
                                         <span>Viewers</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => (onClose as any)('delete_current')}>
+                                    <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => onClose('delete_current')}>
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         <span>Remove Mood</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         )}
-                        <button onClick={onClose} className="text-white">
+                        <button onClick={() => onClose()} className="text-white">
                             <X size={24} />
                         </button>
                     </div>
@@ -201,7 +281,29 @@ const MoodContent = memo(({ emoji, onInteraction, onClose }: { emoji: Mood, onIn
                 <div className="flex-1" onClick={() => onInteraction('next')}></div>
             </div>
             
-            <PostCard post={emoji as PostViewEmoji} isCardView={false}/>
+            <div 
+                className="flex-1 flex items-center justify-center min-h-0 relative"
+                style={{ 
+                    backgroundColor: emoji.background_color,
+                    filter: activeFilterCss,
+                }}
+            >
+                {renderEmojiFace(emoji)}
+            </div>
+
+            <div className="absolute bottom-4 left-4 z-20 flex items-center gap-4">
+                 <LikeButton 
+                    ref={likeButtonRef}
+                    postId={emoji.id} 
+                    initialLikes={localLikeCount} 
+                    isInitiallyLiked={isLikedState} 
+                    onLikeCountChange={setLocalLikeCount}
+                    onIsLikedChange={setIsLikedState}
+                    onLikeAnimation={handleLikeAnimation}
+                />
+                <Send className="h-6 w-6 cursor-pointer text-white" onClick={handleSetMoodClick} />
+            </div>
+
 
             <Sheet open={isViewersSheetOpen} onOpenChange={setIsViewersSheetOpen}>
               <SheetContent side="bottom" className="max-h-[80%] flex flex-col">
@@ -313,7 +415,8 @@ export function PostView({
         <motion.div className="fixed inset-0 h-full w-full bg-black z-50">
             <MoodContent 
                 emoji={currentMood} 
-                onInteraction={handleInteraction} 
+                onInteraction={handleInteraction}
+                onMoodChange={onMoodChange}
                 onClose={(action?: any) => {
                     if (action === 'delete_current') {
                         handleMoodDeletion(currentMood);
