@@ -5,7 +5,7 @@
  *
  * This flow intelligently routes user queries to the appropriate
  * knowledge base (Wikipedia, Open Library, Internet Archive, or Dictionary)
- * by identifying and stripping common prefixes from the query.
+ * or provides canned responses for Edengram-specific questions.
  */
 
 import { searchWikipedia } from './wikipedia-flow';
@@ -22,6 +22,125 @@ export interface EdenaOutput {
   answer: string;
 }
 
+// --- Edengram-Specific Dialogues ---
+
+const edengramResponses = {
+  WHAT_IS_EDENGRAM: "Edengram is a unique social media platform focused on creativity and personal expression. Instead of just photos, you can design and share interactive emojis to show your mood.",
+  FEATURES_OF_EDENGRAM: "Edengram's key features include an emoji designer with customizable shapes, colors, and accessories, a 24-hour mood story system, a public gallery for your creations, and a personalized feed to keep up with friends.",
+  HOW_EDENGRAM_WORKS: "It's simple! You can design your own emoji model, set it as your mood for 24 hours, and share it in your gallery. You can follow other users to see their posts and moods in your feed, and explore creations from the entire community.",
+  HOW_EDENGRAM_HELPS: "Edengram helps you express your daily mood in a creative and visual way, beyond simple text. It offers a lightweight, storage-friendly social experience focused on interaction and fun, not data-heavy content.",
+  GENERAL_APP_INFO: "This is Edengram, a social media platform where you create and share interactive emojis to express your mood and connect with others in a fun, visual way."
+};
+
+const edengramPrefixes = {
+  WHAT_IS_EDENGRAM: [
+    "what is edengram", "can you define edengram", "tell me about edengram", "what do you mean by edengram",
+    "give me details about edengram", "explain edengram to me", "what exactly is edengram", "what is the full meaning of edengram",
+    "what type of app is edengram", "describe edengram", "what’s edengram all about", "is edengram an app or a website",
+    "can you explain what edengram is", "please define edengram", "what’s the meaning of edengram",
+    "what category of app is edengram", "what industry does edengram belong to", "tell me the basics of edengram",
+    "i want to know about edengram", "give me the introduction of edengram", "provide an overview of edengram",
+    "what kind of platform is edengram", "tell me what edengram does", "explain the idea behind edengram",
+    "can you describe what edengram offers", "what’s the story of edengram", "tell me more about edengram",
+    "what do you call edengram", "what is the definition of edengram", "how do you define edengram",
+    "what type of service is edengram", "what makes edengram unique", "how would you describe edengram",
+    "can you explain edengram in simple words", "what kind of tool is edengram", "what is the goal of edengram",
+    "what is edengram known for", "what is the concept of edengram", "can you summarize edengram",
+    "what’s the vision of edengram", "how do you introduce edengram", "can you give me a definition of edengram",
+    "what kind of website is edengram", "what’s the basic idea of edengram", "tell me in detail about edengram",
+    "can you tell me the purpose of edengram", "how would you explain edengram to a beginner", "what’s the short meaning of edengram",
+    "what is edengram meant for", "why is it called edengram"
+  ],
+  FEATURES_OF_EDENGRAM: [
+    "what are the features of edengram", "list features of edengram", "what can i do on edengram", "tell me the functions of edengram",
+    "what does edengram offer", "what tools are inside edengram", "show me edengram’s features", "explain the functions of edengram",
+    "can you list all features of edengram", "what does edengram include", "what features make edengram different",
+    "what functionalities are in edengram", "tell me about edengram’s tools", "what kind of features does edengram provide",
+    "highlight features of edengram", "describe edengram’s features", "what benefits does edengram have", "show me what edengram can do",
+    "what are the main features of edengram", "can you tell me all edengram features", "what unique features does edengram provide",
+    "what services does edengram include", "what do users get in edengram", "tell me the advantages of edengram",
+    "what comes with edengram", "what’s special about edengram", "give me the feature list of edengram", "show me all edengram tools",
+    "what options are available in edengram", "what modules are in edengram", "tell me about edengram’s advantages",
+    "what makes edengram powerful", "what can edengram handle", "can you explain edengram’s offerings", "show me everything edengram provides",
+    "what makes edengram stand out", "what are the highlights of edengram", "how does edengram’s feature set look",
+    "what resources are inside edengram", "what is available in edengram", "tell me about edengram’s packages",
+    "show me edengram’s capabilities", "what’s the scope of edengram features", "which features are most useful in edengram",
+    "what can i achieve using edengram", "what extra features are inside edengram", "what do people use edengram for",
+    "give me details of edengram features", "what functionalities stand out in edengram", "what does edengram allow me to do"
+  ],
+  HOW_EDENGRAM_WORKS: [
+    "how does edengram work", "explain how edengram works", "tell me the working of edengram", "how can i use edengram",
+    "show me how to use edengram", "how do people use edengram",
+    "what is the process of edengram", "how does edengram function", "explain the functionality of edengram",
+    "how can i start using edengram", "how do beginners use edengram", "how to operate edengram",
+    "give me steps on how edengram works", "tell me how to navigate edengram", "how do i get started with edengram",
+    "how does edengram perform tasks", "show me the process of edengram", "explain the system of edengram",
+    "what’s the workflow of edengram", "how is edengram used", "how to run edengram", "how do i try edengram",
+    "how to experience edengram", "how does edengram provide results", "how can i see edengram in action",
+    "how exactly does edengram operate", "how does the edengram platform work", "tell me about edengram’s process",
+    "how to explore edengram", "how do i access edengram features", "what is the usage of edengram",
+    "how does edengram handle users", "how to practice using edengram", "how does edengram deliver outputs",
+    "what steps does edengram follow", "how do i test edengram", "how is edengram accessed",
+    "how does edengram’s system function", "how to interact with edengram", "how does edengram operate behind the scenes",
+    "how do i experience edengram’s functions", "can you show me how edengram works", "how does edengram execute tasks",
+    "how do i begin using edengram", "how to understand edengram working", "how does edengram make things work",
+    "tell me how to use edengram step by step", "how do i learn to use edengram"
+  ],
+  HOW_EDENGRAM_HELPS: [
+    "how does edengram help me", "in what way does edengram support users", "how does edengram make my work easier",
+    "how can edengram assist me", "tell me how edengram supports people", "how does edengram provide help",
+    "what kind of support does edengram offer", "how is edengram helpful", "can edengram guide me",
+    "how does edengram improve my work", "how can edengram benefit me", "why should i rely on edengram",
+    "what type of assistance does edengram give", "how does edengram make life easier", "how does edengram save my time",
+    "how does edengram help beginners", "how does edengram support businesses", "in what way does edengram help daily tasks",
+    "how does edengram assist learning", "how does edengram help students", "how does edengram guide professionals",
+    "can edengram solve my problems", "how does edengram make things better", "what is the support system of edengram",
+    "how does edengram help organizations", "how can edengram reduce effort", "how does edengram improve efficiency",
+    "how does edengram help save money", "can edengram act as my assistant", "how does edengram guide decision-making",
+    "how does edengram provide solutions", "how does edengram support productivity", "in what ways does edengram give benefits",
+    "how does edengram empower users", "can edengram help with daily tasks", "how does edengram assist in planning",
+    "how does edengram support growth", "how does edengram improve workflow", "can edengram help with learning grammar",
+    "how does edengram help in research", "how can edengram support my goals", "how does edengram make work faster",
+    "how does edengram reduce stress", "what role does edengram play in support", "how does edengram act as a helper",
+    "how does edengram give assistance", "how does edengram help in daily usage", "how does edengram support communication",
+    "in what situations does edengram help", "how does edengram simplify tasks"
+  ],
+  GENERAL_APP_INFO: [
+    "what is this app all about", "what is this website", "tell me about this app", "what is this platform",
+    "what do you mean by this app", "can you explain this website", "what is the purpose of this app",
+    "what is this application", "what is this software", "tell me the meaning of this website", "what do you call this app",
+    "what exactly is this site", "can you define this platform", "what is this service", "what is this program",
+    "explain this website", "what is this tool", "tell me more about this app", "what’s this app used for",
+    "what is this online service", "how do you define this app", "what is the function of this website",
+    "what is this site about", "can you tell me about this app", "please explain this software", "what is this internet app",
+    "what is this digital tool", "tell me about this platform", "what’s the purpose of this site", "how do people use this app",
+    "what is this page about", "can you explain this service", "what is this portal", "what’s this app designed for",
+    "what kind of website is this", "what kind of application is this", "what kind of tool is this",
+    "what kind of software is this", "what kind of service is this", "tell me in detail about this app",
+    "what is this product", "explain what this app is", "what’s this site meant for", "what is the concept of this app",
+    "tell me the basics of this website", "what’s this program", "what kind of platform is this",
+    "can you tell me the definition of this app", "what do you mean by this software", "what’s this thing online",
+    "what is this webpage", "explain the purpose of this site", "what is this online system", "what is this online tool",
+    "tell me the introduction of this app", "what’s this application for", "can you define this program",
+    "what’s the meaning of this platform", "what’s this digital product", "what is this account for", "what’s this new app",
+    "tell me more about this website", "what’s this internet software", "what’s the name of this website",
+    "explain what this tool does", "what’s this software about", "what’s this site called", "what kind of page is this",
+    "can you describe this app", "what’s the objective of this app", "what’s this service designed to do",
+    "what is this online platform about", "what is this product for", "what is this site meant to provide",
+    "what’s this program used for", "what is this software intended for", "tell me the overview of this site",
+    "can you tell me this site’s use", "what is this webpage’s purpose", "what’s this app all about in detail",
+    "what does this site mean", "can you explain what this app does", "what’s this online program",
+    "what’s this digital service", "tell me how this app works", "what’s this site created for",
+    "what kind of website am i on", "what’s the goal of this app", "what is this platform about",
+    "what’s the reason for this website", "what is this portal used for", "can you describe this online service",
+    "what’s this online website", "what’s the role of this app", "what’s this new platform", "what is this software for",
+    "what’s this digital app", "what is this app", "what is this site", "tell me what this app is",
+    "how does this app work", "how does this website work"
+  ]
+};
+
+// --- General Knowledge & Etiquette Dialogues ---
+
 // Keyword Lists for routing
 const bookKeywords = [
     'book', 'author', 'novel', 'read', 'wrote', 'published'
@@ -34,7 +153,6 @@ const dictionaryPrefixes = [
     "define", "definition of", "what's the definition of", "meaning of", "what is the meaning of",
     "what does ___ mean", "define the word"
 ];
-
 
 const generalKnowledgePrefixes = [
     "who is", "what is", "tell me about", "can you tell me about", "please tell me about", "share info about",
@@ -95,8 +213,17 @@ function stripPrefix(query: string, prefixes: string[]): string | null {
 
 export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   const { query } = input;
-  const lowerCaseQuery = query.toLowerCase();
+  const lowerCaseQuery = query.toLowerCase().trim().replace(/[?]$/, '');
 
+  // --- 1. Check for Edengram-specific questions first ---
+  for (const [category, prefixes] of Object.entries(edengramPrefixes)) {
+      if (prefixes.includes(lowerCaseQuery)) {
+          return { answer: edengramResponses[category as keyof typeof edengramResponses] };
+      }
+  }
+
+
+  // --- 2. If not an Edengram question, proceed with general knowledge routing ---
   let coreQuery = query;
   let queryType: 'dictionary' | 'book' | 'article' | 'general' = 'general';
   let processed = false;
