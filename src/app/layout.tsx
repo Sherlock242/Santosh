@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { cn } from '@/lib/utils';
 import { Inter, Kalam, Orbitron } from 'next/font/google'
 import { AuthProvider } from '@/hooks/use-auth';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TopLoader } from '@/components/top-loader';
 import { MainSidebar } from '@/components/main-sidebar';
 import { AutoAds } from '@/components/AutoAds';
@@ -27,6 +27,22 @@ export default function RootLayout({
   const pathname = usePathname();
   const publicPaths = ['/', '/login', '/auth/callback', '/terms', '/about', '/privacy', '/blogs', '/contact', '/cancellation-policy', '/forgot-password', '/reset-password'];
   const showNav = !publicPaths.includes(pathname);
+
+  useEffect(() => {
+    const handleChunkLoadError = (event: Event) => {
+      const error = (event as ErrorEvent).error;
+      if (error && (error.name === 'ChunkLoadError' || (typeof error.message === 'string' && /Loading chunk .* failed/i.test(error.message)))) {
+        console.warn('ChunkLoadError detected, forcing page reload.');
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('error', handleChunkLoadError);
+
+    return () => {
+      window.removeEventListener('error', handleChunkLoadError);
+    };
+  }, []);
 
   return (
     <html lang="en" className={cn("dark", inter.variable, kalam.variable, orbitron.variable)}>
