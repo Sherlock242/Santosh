@@ -12,6 +12,7 @@ import { searchWikipedia } from './wikipedia-flow';
 import { searchOpenLibrary } from './book-search-flow';
 import { searchInternetArchive } from './article-search-flow';
 import { searchDictionary } from './dictionary-flow';
+import { correctGrammar } from './grammar-flow';
 
 
 export interface EdenaInput {
@@ -30,15 +31,15 @@ const articleKeywords = [
     'article', 'paper', 'journal', 'document', 'report', 'study on'
 ];
 
+const grammarPrefixes = [
+    "correct the grammar of", "fix this sentence:", "grammar check", "proofread this:",
+    "check the grammar of", "is this grammatically correct:", "correct my grammar:",
+    "correct this sentence:", "check my grammar for", "review this sentence:"
+];
+
 const dictionaryPrefixes = [
-    "define", "definition of", "meaning of", "what is the meaning of", "what exactly is", "what does ___ mean",
-    "explain", "explain the meaning of", "describe", "give me the definition of", "please define",
-    "can you define", "provide a definition of", "what do you mean by", "clarify",
-    "in simple terms what is", "i need the meaning of", "how do you define",
-    "tell me the definition of", "meaning for", "what’s the meaning of",
-    "can you tell me what ___ means", "what’s another word for", "the term ___ means what",
-    "define the word", "explain what ___ stands for", "how would you describe",
-    "could you define", "definition for", "what exactly does ___ mean"
+    "define", "definition of", "what's the definition of", "meaning of", "what is the meaning of",
+    "what does ___ mean", "define the word"
 ];
 
 
@@ -104,10 +105,18 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   const lowerCaseQuery = query.toLowerCase();
 
   let coreQuery = query;
-  let queryType: 'dictionary' | 'book' | 'article' | 'general' = 'general';
+  let queryType: 'dictionary' | 'book' | 'article' | 'grammar' | 'general' = 'general';
   let processed = false;
 
+  // Highest priority: Grammar check
+  const grammarCoreQuery = stripPrefix(query, grammarPrefixes);
+  if (grammarCoreQuery) {
+      coreQuery = grammarCoreQuery;
+      queryType = 'grammar';
+      processed = true;
+  }
 
+  // Second priority: Dictionary check
   if (!processed) {
       const dictionaryCoreQuery = stripPrefix(query, dictionaryPrefixes);
       if (dictionaryCoreQuery) {
@@ -117,6 +126,7 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
       }
   }
   
+  // General knowledge and topic-based routing
   if (!processed) {
       const isBookQuery = bookKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       const isArticleQuery = articleKeywords.some(keyword => lowerCaseQuery.includes(keyword));
@@ -136,6 +146,9 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   try {
     let result;
     switch(queryType) {
+        case 'grammar':
+            result = await correctGrammar({ sentence: coreQuery });
+            break;
         case 'dictionary':
             result = await searchDictionary({ query: coreQuery });
             break;

@@ -12,6 +12,7 @@ import { searchOpenLibrary } from './ai/flows/book-search-flow';
 import { Input } from '@/components/ui/input';
 import { searchInternetArchive } from './ai/flows/article-search-flow';
 import { searchDictionary } from './ai/flows/dictionary-flow';
+import { correctGrammar } from './ai/flows/grammar-flow';
 
 interface IWindow extends Window {
   webkitSpeechRecognition: any;
@@ -114,19 +115,6 @@ const AIConsciousnessPage = () => {
     'who make you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
     'who made you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
   };
-
-  const searchPrefixes = [
-    "who is", "what is", "what are", "tell me about", "search for",
-    "i want to know about", "can you tell me about", "information on",
-    "who invented", "what invented", "what's"
-  ];
-  
-  const bookSearchPrefixes = ["book about", "find a book on", "who wrote", "book by"];
-
-  const articleSearchPrefixes = ["article on", "find an article about", "document on"];
-  
-  const dictionaryPrefixes = ["define", "what is the meaning of", "meaning of"];
-
 
   const executeSearch = async (query: string) => {
     if (!query) {
