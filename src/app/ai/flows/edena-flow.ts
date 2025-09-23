@@ -235,6 +235,8 @@ const generalKnowledgePrefixes = [
     "concept of", "theory of", "philosophy of", "principle of", "law of", "rule of",
     "equation of", "formula of", "definition and example of", "example of", "explain with example",
     "application of", "case study of", "what does the word ___ refer to",
+    // Hindi (Romanized)
+    "kaun hai", "kya hai", "mujhe ___ ke bare mein batao", "kya aap mujhe ___ ke bare mein bata sakte hain", "kripya mujhe ___ ke bare mein bataen",
     // Hindi (Devanagari)
     "कौन है", "क्या है", "मुझे ___ के बारे में बताओ", "आप मुझे ___ के बारे में बता सकते हैं", "कृपया मुझे ___ के बारे में बताएं", "___ के बारे में जानकारी साझा करें",
     "मैं ___ के बारे में जानना चाहता हूँ", "मुझे ___ के बारे में जानना है", "___ पर विवरण प्रदान करें", "___ पर मुझे जानकारी दें",
@@ -273,7 +275,7 @@ const generalKnowledgePrefixes = [
     "___ का प्रतीक", "___ का आदर्श वाक्य", "___ के पीछे का अर्थ", "___ का महत्व", "___ के लिए स्पष्टीकरण",
     "___ की अवधारणा", "___ का सिद्धांत", "___ کا فلسفہ", "___ का सिद्धांत", "___ का नियम", "___ का नियम",
     "___ का समीकरण", "___ का सूत्र", "___ की परिभाषा और उदाहरण", "___ का उदाहरण", "उदाहरण के साथ समझाओ",
-    "___ کا اطلاق", "___ کا کیس اسٹڈی", "___ शब्द का क्या अर्थ ہے"
+    "___ کا اطلاق", "___ का केस اسٹڈی", "___ शब्द का क्या अर्थ है"
 ];
 
 
