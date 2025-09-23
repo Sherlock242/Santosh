@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A utility for searching articles using the Internet Archive API.

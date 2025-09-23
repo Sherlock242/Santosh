@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A utility for searching for word definitions using a free dictionary API.
