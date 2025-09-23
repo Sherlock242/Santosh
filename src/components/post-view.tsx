@@ -291,20 +291,6 @@ const MoodContent = memo(({ emoji, onInteraction, onClose, onMoodChange }: { emo
                 {renderEmojiFace(emoji)}
             </div>
 
-            <div className="absolute bottom-4 left-4 z-20 flex items-center gap-4">
-                 <LikeButton 
-                    ref={likeButtonRef}
-                    postId={emoji.id} 
-                    initialLikes={localLikeCount} 
-                    isInitiallyLiked={isLikedState} 
-                    onLikeCountChange={setLocalLikeCount}
-                    onIsLikedChange={setIsLikedState}
-                    onLikeAnimation={handleLikeAnimation}
-                />
-                <Send className="h-6 w-6 cursor-pointer text-white" onClick={handleSetMoodClick} />
-            </div>
-
-
             <Sheet open={isViewersSheetOpen} onOpenChange={setIsViewersSheetOpen}>
               <SheetContent side="bottom" className="max-h-[80%] flex flex-col">
                 <SheetHeader>
