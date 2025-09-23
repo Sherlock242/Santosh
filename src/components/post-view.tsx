@@ -98,6 +98,7 @@ interface PostViewProps {
   onDelete?: (id: string) => void;
   onMoodChange?: () => void;
   isMoodView?: boolean;
+  onMarkMoodAsViewed?: (moodId: number) => void;
 }
 
 const filters = [
@@ -114,7 +115,7 @@ const filters = [
 ];
 
 
-const MoodContent = memo(({ emoji, onInteraction, onClose, onMoodChange, onMarkAsViewed }: { emoji: Mood, onInteraction: (action: 'next' | 'prev') => void, onClose: (action?: 'delete_current') => void, onMoodChange?: () => void, onMarkAsViewed: () => void }) => {
+const MoodContent = memo(({ emoji, onInteraction, onClose, onMarkMoodAsViewed }: { emoji: Mood, onInteraction: (action: 'next' | 'prev') => void, onClose: (action?: 'delete_current') => void, onMarkMoodAsViewed: (moodId: number) => void }) => {
     const { user } = useAuth();
     const { toast } = useToast();
     const progressWidth = useMotionValue('0%');
@@ -141,12 +142,12 @@ const MoodContent = memo(({ emoji, onInteraction, onClose, onMoodChange, onMarkA
         startAnimation();
         if (!emoji.is_viewed) {
              recordMoodView(emoji.mood_id);
-             onMarkAsViewed();
+             onMarkMoodAsViewed(emoji.mood_id);
         }
         return () => {
           animationControlsRef.current?.stop();
         }
-    }, [emoji.mood_id, emoji.is_viewed, startAnimation, onMarkAsViewed]);
+    }, [emoji.mood_id, emoji.is_viewed, startAnimation, onMarkMoodAsViewed]);
 
      useEffect(() => {
         if (isViewersSheetOpen) {
@@ -295,6 +296,7 @@ export function PostView({
     onDelete, 
     onMoodChange,
     isMoodView = false,
+    onMarkMoodAsViewed,
 }: PostViewProps) {
   
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -351,17 +353,6 @@ export function PostView({
     }
   }
 
-  const handleMarkAsViewed = useCallback((moodId: number) => {
-    setLocalEmojis(prev =>
-        prev.map(emoji =>
-            ('mood_id' in emoji && emoji.mood_id === moodId)
-                ? { ...emoji, is_viewed: true }
-                : emoji
-        )
-    );
-  }, []);
-
-
   if (isMoodView) {
     const currentMood = localEmojis[currentIndex] as Mood | undefined;
     if (!currentMood) {
@@ -373,8 +364,7 @@ export function PostView({
             <MoodContent 
                 emoji={currentMood} 
                 onInteraction={handleInteraction}
-                onMoodChange={onMoodChange}
-                onMarkAsViewed={() => handleMarkAsViewed(currentMood.mood_id)}
+                onMarkMoodAsViewed={onMarkMoodAsViewed!}
                 onClose={(action?: any) => {
                     if (action === 'delete_current') {
                         handleMoodDeletion(currentMood);

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -155,20 +156,16 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
     const handleDeletePost = (postId: string) => {
         setFeedPosts(prev => prev.filter(p => p.id !== postId));
     };
-    
-    const handleOnCloseMood = (updatedViewedMoods?: Mood[]) => {
-        if (updatedViewedMoods) {
-            const viewedMoodIds = new Set(updatedViewedMoods.filter(m => m.is_viewed).map(m => m.mood_id));
-            setMoods(currentMoods => 
-                currentMoods.map(mood => 
-                    viewedMoodIds.has(mood.mood_id)
-                        ? { ...mood, is_viewed: true }
-                        : mood
-                )
-            );
-        }
-        setViewingStoryFromFeed(null);
-    }
+
+    const handleMarkMoodAsViewed = useCallback((moodId: number) => {
+        setMoods(currentMoods => 
+            currentMoods.map(mood => 
+                mood.mood_id === moodId
+                    ? { ...mood, is_viewed: true }
+                    : mood
+            )
+        );
+    }, []);
     
     if (selectedPostIndex !== null) {
         const postsForView = feedPosts.map(post => ({
@@ -197,9 +194,10 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             <PostView 
                 emojis={viewingStoryFromFeed}
                 initialIndex={0}
-                onClose={handleOnCloseMood}
+                onClose={() => setViewingStoryFromFeed(null)}
                 isMoodView={true}
                 onMoodChange={refreshMoods}
+                onMarkMoodAsViewed={handleMarkMoodAsViewed}
                 onDelete={(moodId) => {
                     setMoods(moods.filter(m => m.mood_id !== parseInt(moodId)));
                 }}
