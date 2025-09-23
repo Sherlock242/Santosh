@@ -69,18 +69,10 @@ const AIConsciousnessPage = () => {
         return;
     }
     setIsLoading(true);
-    setTranscript(''); // Clear transcript to show 'Thinking...'
+    setTranscript('');
     setAiResponse('');
     
     try {
-        const sayCommandRegex = /^edena\s+say\s+"([^"]+)"/i;
-        const sayMatch = query.match(sayCommandRegex);
-        if (sayMatch && sayMatch[1]) {
-            const textToSpeak = sayMatch[1];
-            speak(textToSpeak);
-            return;
-        }
-
         const assistantResponse = await edenaAssistant({ query });
         
         let angry = false;
@@ -318,7 +310,7 @@ const AIConsciousnessPage = () => {
         <div className="text-center mt-8 min-h-[4rem] flex items-center justify-center">
              <AnimatePresence mode="wait">
                 <motion.div
-                    key={isLoading ? 'loader' : transcript || aiResponse}
+                    key={isLoading ? 'loader' : aiResponse}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
@@ -329,8 +321,6 @@ const AIConsciousnessPage = () => {
                         <p className="text-lg text-cyan-400">Thinking{dots}</p>
                     ) : isListening ? (
                          <p className="text-lg text-cyan-400">Listening{dots}</p>
-                    ) : transcript && !aiResponse ? (
-                        <p className="text-xl">"{transcript}"</p>
                     ) : aiResponse ? (
                         <p className="text-lg text-center md:max-w-md">{aiResponse}</p>
                     ) : (
