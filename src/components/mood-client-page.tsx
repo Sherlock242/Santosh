@@ -194,7 +194,12 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             <PostView 
                 emojis={viewingStoryFromFeed}
                 initialIndex={0}
-                onClose={() => setViewingStoryFromFeed(null)}
+                onClose={(updatedMoods) => {
+                    setViewingStoryFromFeed(null);
+                    if (updatedMoods) {
+                        setMoods(updatedMoods);
+                    }
+                }}
                 isMoodView={true}
                 onMoodChange={refreshMoods}
                 onMarkMoodAsViewed={handleMarkMoodAsViewed}
@@ -217,7 +222,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             return (
                 <div>
                     {feedPosts.map((post, index) => (
-                        <PostCard key={post.id} post={post} onSelect={() => setSelectedPostIndex(index)} onDelete={handleDeletePost} onMoodChange={refreshMoods} />
+                        <PostCard key={post.id} post={post} onDelete={handleDeletePost} onMoodChange={refreshMoods} />
                     ))}
                 </div>
             );
@@ -246,15 +251,14 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                     const selectedMood = moods[index];
                     if (!selectedMood) return;
 
+                    // Create a playlist starting from the selected user's first unviewed story
                     const userStoryMoods = moods.filter(m => m.mood_user_id === selectedMood.mood_user_id);
+                    const firstUnviewedIndex = userStoryMoods.findIndex(m => !m.is_viewed);
+                    const startIndex = firstUnviewedIndex !== -1 ? firstUnviewedIndex : 0;
                     
-                    const startIndexInUserStory = userStoryMoods.findIndex(m => m.mood_id === selectedMood.mood_id);
-
-                    if (startIndexInUserStory === -1) return;
-
                     const userPlaylist = [
-                        ...userStoryMoods.slice(startIndexInUserStory),
-                        ...userStoryMoods.slice(0, startIndexInUserStory)
+                        ...userStoryMoods.slice(startIndex),
+                        ...userStoryMoods.slice(0, startIndex)
                     ];
 
                     setViewingStoryFromFeed(userPlaylist);
