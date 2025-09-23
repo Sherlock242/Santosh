@@ -23,6 +23,9 @@ export async function correctGrammar(input: GrammarInput): Promise<GrammarOutput
   let sentence = input.sentence.trim();
   const originalSentence = sentence;
 
+  // Rule 0: Clean up punctuation issues like spaces before commas.
+  sentence = sentence.replace(/\s+,/g, ',');
+
   // Basic cleaning
   sentence = sentence.replace(/\s+/g, ' ');
 
