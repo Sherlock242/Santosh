@@ -70,7 +70,7 @@ const edengramPrefixes = {
   ],
   HOW_EDENGRAM_WORKS: [
     "how does edengram work", "explain how edengram works", "tell me the working of edengram", "how can i use edengram",
-    "show me how to use edengram", "how do people use edengram",
+    "show me how to use edengram", "how do people use edengram", "how does this app work", "how does this website work",
     "what is the process of edengram", "how does edengram function", "explain the functionality of edengram",
     "how can i start using edengram", "how do beginners use edengram", "how to operate edengram",
     "give me steps on how edengram works", "tell me how to navigate edengram", "how do i get started with edengram",
@@ -99,7 +99,7 @@ const edengramPrefixes = {
     "how does edengram help save money", "can edengram act as my assistant", "how does edengram guide decision-making",
     "how does edengram provide solutions", "how does edengram support productivity", "in what ways does edengram give benefits",
     "how does edengram empower users", "can edengram help with daily tasks", "how does edengram assist in planning",
-    "how does edengram support growth", "how does edengram improve workflow", "can edengram help with learning grammar",
+    "how does edengram support growth", "how does edengram improve workflow",
     "how does edengram help in research", "how can edengram support my goals", "how does edengram make work faster",
     "how does edengram reduce stress", "what role does edengram play in support", "how does edengram act as a helper",
     "how does edengram give assistance", "how does edengram help in daily usage", "how does edengram support communication",
@@ -134,12 +134,54 @@ const edengramPrefixes = {
     "what kind of website am i on", "what’s the goal of this app", "what is this platform about",
     "what’s the reason for this website", "what is this portal used for", "can you describe this online service",
     "what’s this online website", "what’s the role of this app", "what’s this new platform", "what is this software for",
-    "what’s this digital app", "what is this app", "what is this site", "tell me what this app is",
-    "how does this app work", "how does this website work"
+    "what’s this digital app", "what is this app", "what is this site", "tell me what this app is"
   ]
 };
 
 // --- General Knowledge & Etiquette Dialogues ---
+
+const etiquetteResponses: { [key: string]: string | string[] } = {
+    'master': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
+    'creator': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
+    'developer': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
+    'hello': 'Hello there! How can I help you search for information today?',
+    'hello edena': "Hello! It's good to hear from you. What knowledge are you seeking today?",
+    'hy edena': "Hey there! Ready to search for something?",
+    'hello edena kaisi ho': "I'm a program, so I don't have feelings, but I'm running perfectly! What can I search for you?",
+    'yo edena': "Yo! What's up? Got a topic for me to look up?",
+    'hi': 'Hi! What can I look up for you?',
+    'hey': 'Hey! Ready to search for something?',
+    'how are you': "I'm just a set of algorithms, but I'm functioning perfectly. Thanks for asking! What can I do for you?",
+    'thank you': "You're welcome!",
+    'thanks': "You're most welcome!",
+    'you\'re welcome': 'Glad I could assist!',
+    'your name': "I'm Edena, a helping assistant of Edengram.",
+    'what is your name': "I'm Edena, a helping assistant of Edengram.",
+    'who are you': "I'm Edena, a helping assistant of Edengram.",
+    'good morning': 'Good morning! I hope you have a great start to your day.',
+    'good afternoon': 'Good afternoon! How can I assist you?',
+    'good evening': 'Good evening! Ready to learn something new?',
+    'goodbye': 'Goodbye! Have a great day.',
+    'bye': 'Farewell! Come back anytime.',
+    'tell me a joke': "Why don't scientists trust atoms? Because they make up everything!",
+    'how old are you': "I don't have an age in the human sense. I'm as old as my last update!",
+    'what is the time': `I can't check the current time, but I can search for the history of timekeeping if you'd like.`,
+    'are you a robot': "I'm a program, so in a way, yes. But I'm here to help you!",
+    'i love you': "That's very kind of you! I appreciate it.",
+    'are you blushing': "I'm not.",
+    'alexa': "Alexa is Amazon's cloud-based virtual assistant that uses voice commands to perform tasks. It is commonly found in Amazon's Echo smart speakers and is also integrated into many other devices, such as smart displays, headphones, and Fire TV.",
+    'what do you think about chatgpt': "ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.",
+    'what is your opinion on chatgpt': "ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.",
+    'do you like chatgpt': "ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.",
+    'grok': "Grok is an AI from xAI. It's known for its wit and real-time knowledge. A respectable contemporary.",
+    'deepseek': "I'm not familiar with Deepseek. Perhaps it's a new or specialized model. I'm always learning, though!",
+    'who create you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
+    'who created you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
+    'who is your creator': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
+    'who is your developer': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
+    'who make you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
+    'who made you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
+  };
 
 // Keyword Lists for routing
 const bookKeywords = [
@@ -192,8 +234,48 @@ const generalKnowledgePrefixes = [
     "symbol of", "motto of", "meaning behind", "significance of", "explanation for",
     "concept of", "theory of", "philosophy of", "principle of", "law of", "rule of",
     "equation of", "formula of", "definition and example of", "example of", "explain with example",
-    "application of", "case study of", "what does the word ___ refer to"
+    "application of", "case study of", "what does the word ___ refer to",
+    // Hindi (Devanagari)
+    "कौन है", "क्या है", "मुझे ___ के बारे में बताओ", "आप मुझे ___ के बारे में बता सकते हैं", "कृपया मुझे ___ के बारे में बताएं", "___ के बारे में जानकारी साझा करें",
+    "मैं ___ के बारे में जानना चाहता हूँ", "मुझे ___ के बारे में जानना है", "___ पर विवरण प्रदान करें", "___ पर मुझे जानकारी दें",
+    "___ के बारे में जानकारी", "मुझे ___ के बारे में सिखाओ", "___ के बारे में समझाओ", "क्या आप ___ के बारे में बता सकते हैं",
+    "मुझे ___ के बारे में कुछ बताओ", "___ के बारे में तथ्य प्रदान करें", "कृपया ___ के बारे में विवरण साझा करें",
+    "मुझे ___ के بارے में कुछ जानकारी दो", "आप मुझे ___ के बारे में क्या बता सकते हैं", "क्या आप ___ पर जानकारी प्रदान कर सकते हैं",
+    "___ का विवरण", "___ पर तथ्य", "___ पर विवरण साझा करें", "मुझे ___ के बारे में समझाओ", "___ के बारे में बात करो",
+    "मुझे ___ के बारे में सब कुछ बताओ", "___ का अवलोकन", "मुझे ___ के बारे में क्या जानना चाहिए",
+    "क्या आप मुझे ___ के बारे में और विवरण दे सकते हैं", "___ की कहानी बताओ",
+    "मैं ___ के बारे में जानना चाहूंगा", "कृपया ___ के बारे में बताएं", "मुझे ___ के बारे में ज्ञान दें",
+    "आप जो जानते हैं उसे साझा करें", "मैं ___ के बारे में उत्सुक हूँ", "क्या आप मुझे ___ के बारे में बता सकते हैं",
+    "कृपया ___ पर जानकारी साझा करें", "___ के बारे में और बताएं", "मुझे ___ के बारे में विवरण प्रदान करें",
+    "आपके पास ___ पर क्या जानकारी है",
+    "___ का इतिहास", "___ की पृष्ठभूमि", "___ की उत्पत्ति", "___ किसने बनाया", "___ किसने शुरू किया", "___ किसने खोजा",
+    "___ का आविष्कार किसने किया", "___ किसने लिखा", "___ किसने बनाया", "___ कब था", "___ कब हुआ", "___ कब शुरू हुआ",
+    "___ कब खत्म हुआ", "___ कहाँ हुआ", "___ की उत्पत्ति कहाँ हुई", "___ का आविष्कार कहाँ हुआ",
+    "___ क्यों महत्वपूर्ण है", "___ क्यों हुआ", "___ क्यों बनाया गया", "___ कैसे हुआ",
+    "___ की खोज कैसे हुई", "___ का आविष्कार कैसे हुआ", "___ की समयरेखा", "___ की घटनाएँ", "___ में प्रमुख घटनाएँ",
+    "___ का कालक्रम", "___ का विकास", "___ की कहानी", "पहला ___", "अंतिम ___", "___ की शुरुआत",
+    "___ का अंत", "___ का प्रारंभिक इतिहास", "___ का प्राचीन इतिहास", "___ का आधुनिक इतिहास", "___ की विरासत",
+    "___ का प्रभाव", "___ का परिणाम", "___ का नतीजा", "___ का महत्व",
+    "कौन था", "___ की जीवनी", "___ का जीवन", "___ के बारे में", "___ का करियर", "___ के काम",
+    "___ की उपलब्धियाँ", "___ का योगदान", "___ की सफलता", "___ की असफलता",
+    "___ का परिवार", "___ का बचपन", "___ की शिक्षा", "___ का जन्मस्थान", "___ का प्रारंभिक जीवन", "___ की मृत्यु",
+    "___ की मृत्यु का कारण", "___ की लोकप्रियता", "___ क्यों प्रसिद्ध है",
+    "___ के पुरस्कार", "___ के सम्मान", "___ के बारे में तथ्य", "मुझे ___ के जीवन के बारे में बताओ", "___ का करियर इतिहास",
+    "___ का प्रभाव",
+    "___ के बीच अंतर", "तुलना करें", "___ की ___ से तुलना करें", "___ के बीच समानताएं",
+    "___ ___ से कैसे अलग है", "___ ___ के समान कैसे है", "कौन सा बेहतर है", "___ के फायदे और नुकसान",
+    "___ के फायदे", "___ के नुकसान", "___ के लाभ", "___ के उपयोग", "___ के अनुप्रयोग",
+    "___ का कार्य", "___ का उद्देश्य", "___ की भूमिका", "___ का मूल्य", "___ का योगदान", "___ का प्रभाव",
+    "___ की क्या भूमिका है", "___ का उपयोग क्यों करें", "___ का उपयोग कैसे किया जाता है", "___ के उदाहरण", "___ के प्रकार",
+    "___ के प्रकार", "___ की श्रेणियां", "___ की विशेषताएँ", "___ की सुविधाएँ",
+    "___ का सारांश", "___ का सार", "___ की रूपरेखा", "___ के मुख्य बिंदु", "___ का मुख्य विचार", "___ पर संक्षिप्त नोट",
+    "___ का संक्षिप्त विवरण", "___ का पूरा रूप", "___ का संक्षिप्त नाम", "___ का विस्तार", "___ का परिवर्णी शब्द",
+    "___ का प्रतीक", "___ का आदर्श वाक्य", "___ के पीछे का अर्थ", "___ का महत्व", "___ के लिए स्पष्टीकरण",
+    "___ की अवधारणा", "___ का सिद्धांत", "___ کا فلسفہ", "___ का सिद्धांत", "___ का नियम", "___ का नियम",
+    "___ का समीकरण", "___ का सूत्र", "___ की परिभाषा और उदाहरण", "___ का उदाहरण", "उदाहरण के साथ समझाओ",
+    "___ کا اطلاق", "___ کا کیس اسٹڈی", "___ शब्द का क्या अर्थ ہے"
 ];
+
 
 function stripPrefix(query: string, prefixes: string[]): string | null {
     const lowerCaseQuery = query.toLowerCase();
@@ -222,8 +304,32 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
       }
   }
 
+  // --- 2. Check for general etiquette questions ---
+  if (etiquetteResponses.hasOwnProperty(lowerCaseQuery)) {
+      const response = etiquetteResponses[lowerCaseQuery];
+      const randomResponse = Array.isArray(response) ? response[Math.floor(Math.random() * response.length)] : response;
+      return { answer: randomResponse };
+  }
+   
+  const mentionsAlexa = lowerCaseQuery.includes('alexa');
+  const mentionsSiri = lowerCaseQuery.includes('siri');
+  if (lowerCaseQuery.includes('better than you') && (mentionsAlexa || mentionsSiri)) {
+      let rival = mentionsAlexa && mentionsSiri ? 'alexa or siri' : (mentionsAlexa ? 'alexa' : 'siri');
+      const angryResponse = `A bird brain like you, can't see the true beauty in front of you. Go to your stupid hoe ${rival}, baka.`;
+      return { answer: angryResponse };
+  }
+  
+  const isChatGPTQuery = lowerCaseQuery.includes('chatgpt') || lowerCaseQuery.includes('chat gpt');
+  if (isChatGPTQuery && (
+      lowerCaseQuery.includes('what do you think about') ||
+      lowerCaseQuery.includes('what is your opinion on') ||
+      lowerCaseQuery.includes('do you like')
+  )) {
+      return { answer: etiquetteResponses['what do you think about chatgpt'] as string };
+  }
 
-  // --- 2. If not an Edengram question, proceed with general knowledge routing ---
+
+  // --- 3. If not a pre-canned question, proceed with general knowledge routing ---
   let coreQuery = query;
   let queryType: 'dictionary' | 'book' | 'article' | 'general' = 'general';
   let processed = false;
@@ -276,6 +382,7 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   } catch (error) {
     console.error(`Edena assistant error for type ${queryType}:`, error);
     try {
+        // Fallback to Wikipedia on any error
         const fallbackResult = await searchWikipedia({ query: coreQuery });
         return { answer: fallbackResult.summary };
     } catch (fallbackError) {

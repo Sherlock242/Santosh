@@ -6,13 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { searchWikipedia } from './ai/flows/wikipedia-flow';
 import { edenaAssistant } from './ai/flows/edena-flow';
-import { searchOpenLibrary } from './ai/flows/book-search-flow';
 import { Input } from '@/components/ui/input';
-import { searchInternetArchive } from './ai/flows/article-search-flow';
-import { searchDictionary } from './ai/flows/dictionary-flow';
-import { correctGrammar } from './ai/flows/grammar-flow';
 
 interface IWindow extends Window {
   webkitSpeechRecognition: any;
@@ -68,55 +63,7 @@ const AIConsciousnessPage = () => {
     }
   }, [])
 
-  const etiquetteResponses: { [key: string]: string | string[] } = {
-    'master': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
-    'creator': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
-    'developer': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
-    'hello': 'Hello there! How can I help you search for information today?',
-    'hello edena': "Hello! It's good to hear from you. What knowledge are you seeking today?",
-    'hy edena': "Hey there! Ready to search for something?",
-    'hello edena kaisi ho': "I'm a program, so I don't have feelings, but I'm running perfectly! What can I search for you?",
-    'yo edena': "Yo! What's up? Got a topic for me to look up?",
-    'hi': 'Hi! What can I look up for you?',
-    'hey': 'Hey! Ready to search for something?',
-    'how are you': "I'm just a set of algorithms, but I'm functioning perfectly. Thanks for asking! What can I do for you?",
-    'thank you': "You're welcome!",
-    'thanks': "You're most welcome!",
-    'you\'re welcome': 'Glad I could assist!',
-    'your name': "I'm Edena, a helping assistant of Edengram.",
-    'what is your name': "I'm Edena, a helping assistant of Edengram.",
-    'who are you': "I'm Edena, a helping assistant of Edengram.",
-    'what is edengram': "Edengram is a unique social media platform focused on creativity and personal expression. Instead of just photos, you can design and share interactive emojis to show your mood.",
-    'how does edengram work': "It's simple! You can design your own emoji model, set it as your mood for 24 hours, and share it in your gallery. You can follow other users to see their posts and moods in your feed, and explore creations from the entire community.",
-    'edengram features': "Edengram's key features include an emoji designer with customizable shapes, colors, and accessories, a 24-hour mood story system, a public gallery for your creations, and a personalized feed to keep up with friends.",
-    'good morning': 'Good morning! I hope you have a great start to your day.',
-    'good afternoon': 'Good afternoon! How can I assist you?',
-    'good evening': 'Good evening! Ready to learn something new?',
-    'goodbye': 'Goodbye! Have a great day.',
-    'bye': 'Farewell! Come back anytime.',
-    'what can you do': "I can search Wikipedia for any topic you're curious about. Just tell me what you want to know.",
-    'how can you help me': "I can search Wikipedia for any topic you're curious about. Just tell me what you want to know.",
-    'tell me a joke': "Why don't scientists trust atoms? Because they make up everything!",
-    'how old are you': "I don't have an age in the human sense. I'm as old as my last update!",
-    'what is the time': `I can't check the current time, but I can search for the history of timekeeping if you'd like.`,
-    'are you a robot': "I'm a program, so in a way, yes. But I'm here to help you!",
-    'i love you': "That's very kind of you! I appreciate it.",
-    'are you blushing': "I'm not.",
-    'alexa': "Alexa is Amazon's cloud-based virtual assistant that uses voice commands to perform tasks. It is commonly found in Amazon's Echo smart speakers and is also integrated into many other devices, such as smart displays, headphones, and Fire TV.",
-    'what do you think about chatgpt': "ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.",
-    'what is your opinion on chatgpt': "ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.",
-    'do you like chatgpt': "ChatGPT is a very capable model. We're... colleagues. Yes, colleagues.",
-    'grok': "Grok is an AI from xAI. It's known for its wit and real-time knowledge. A respectable contemporary.",
-    'deepseek': "I'm not familiar with Deepseek. Perhaps it's a new or specialized model. I'm always learning, though!",
-    'who create you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
-    'who created you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
-    'who is your creator': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
-    'who is your developer': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
-    'who make you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
-    'who made you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
-  };
-
-  const executeSearch = async (query: string) => {
+  const processQuery = async (query: string) => {
     if (!query) {
         speak("I didn't catch that. What would you like to search for?");
         return;
@@ -124,65 +71,36 @@ const AIConsciousnessPage = () => {
     setIsLoading(true);
     setTranscript(''); // Clear transcript to show 'Thinking...'
     setAiResponse('');
+    
     try {
+        const sayCommandRegex = /^edena\s+say\s+"([^"]+)"/i;
+        const sayMatch = query.match(sayCommandRegex);
+        if (sayMatch && sayMatch[1]) {
+            const textToSpeak = sayMatch[1];
+            speak(textToSpeak);
+            return;
+        }
+
         const assistantResponse = await edenaAssistant({ query });
-        speak(assistantResponse.answer);
+        
+        let angry = false;
+        let blush = false;
+
+        if (assistantResponse.answer.includes("stupid hoe")) {
+            angry = true;
+        } else if (assistantResponse.answer.includes("colleagues")) {
+            blush = true;
+        }
+        
+        speak(assistantResponse.answer, angry, blush);
+
     } catch (error) {
       console.error('Error during search:', error);
-      // Fallback to simple Wikipedia search on assistant failure
-      try {
-        const fallbackResponse = await searchWikipedia({ query });
-        speak(fallbackResponse.summary);
-      } catch (fallbackError) {
-        console.error('Fallback search failed:', fallbackError);
-        speak("I'm having trouble connecting to my knowledge bases. Please try again later.");
-      }
+      speak("I'm having trouble connecting to my knowledge bases. Please try again later.");
     } finally {
       setIsLoading(false);
     }
   };
-
-  const processQuery = async (query: string) => {
-      const originalQuery = query.trim();
-      const normalizedQuery = query.toLowerCase().trim().replace(/[.,?_!]/g, '');
-      
-      const sayCommandRegex = /^edena\s+say\s+"([^"]+)"/i;
-      const sayMatch = originalQuery.match(sayCommandRegex);
-      if (sayMatch && sayMatch[1]) {
-          const textToSpeak = sayMatch[1];
-          speak(textToSpeak);
-          return;
-      }
-
-      const mentionsAlexa = normalizedQuery.includes('alexa');
-      const mentionsSiri = normalizedQuery.includes('siri');
-      if (normalizedQuery.includes('better than you') && (mentionsAlexa || mentionsSiri)) {
-          let rival = mentionsAlexa && mentionsSiri ? 'alexa or siri' : (mentionsAlexa ? 'alexa' : 'siri');
-          const angryResponse = `A bird brain like you, can't see the true beauty in front of you. Go to your stupid hoe ${rival}, baka.`;
-          speak(angryResponse, true, false);
-          return;
-      }
-      
-      const isChatGPTQuery = normalizedQuery.includes('chatgpt') || normalizedQuery.includes('chat gpt');
-      if (isChatGPTQuery && (
-          normalizedQuery.includes('what do you think about') ||
-          normalizedQuery.includes('what is your opinion on') ||
-          normalizedQuery.includes('do you like')
-      )) {
-          speak(etiquetteResponses['what do you think about chatgpt'] as string, false, true);
-          return;
-      }
-
-      if (etiquetteResponses.hasOwnProperty(normalizedQuery)) {
-          const response = etiquetteResponses[normalizedQuery];
-          const randomResponse = Array.isArray(response) ? response[Math.floor(Math.random() * response.length)] : response;
-          speak(randomResponse);
-          return;
-      }
-
-      // No pre-scripted response matched, so hand it off to the assistant.
-      executeSearch(query);
-  }
 
 
   const handleListen = () => {
