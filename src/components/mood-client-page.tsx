@@ -167,28 +167,6 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
         );
     }, []);
     
-    if (selectedPostIndex !== null) {
-        const postsForView = feedPosts.map(post => ({
-            ...post,
-            user: {
-                id: post.user?.id || post.user_id || '',
-                name: post.user?.name || 'Unknown',
-                picture: post.user?.picture || '',
-                is_gold_member: post.user?.is_gold_member,
-            }
-        }));
-
-        return (
-            <PostView
-                emojis={postsForView}
-                initialIndex={selectedPostIndex}
-                onClose={() => setSelectedPostIndex(null)}
-                onDelete={handleDeletePost}
-                onMoodChange={refreshMoods}
-            />
-        )
-    }
-
     if (viewingStoryFromFeed) {
          return (
             <PostView 
@@ -197,7 +175,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                 onClose={(updatedMoods) => {
                     setViewingStoryFromFeed(null);
                     if (updatedMoods) {
-                        setMoods(updatedMoods);
+                        // This logic has been simplified; handleMarkMoodAsViewed handles the direct update
                     }
                 }}
                 isMoodView={true}
@@ -222,7 +200,7 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
             return (
                 <div>
                     {feedPosts.map((post, index) => (
-                        <PostCard key={post.id} post={post} onDelete={handleDeletePost} onMoodChange={refreshMoods} />
+                        <PostCard key={post.id} post={post} onDelete={handleDeletePost} onMoodChange={refreshMoods} isCardView={true}/>
                     ))}
                 </div>
             );
@@ -251,17 +229,33 @@ export default function MoodClientPage({ initialMoods, initialPosts }: MoodClien
                     const selectedMood = moods[index];
                     if (!selectedMood) return;
 
-                    // Create a playlist starting from the selected user's first unviewed story
-                    const userStoryMoods = moods.filter(m => m.mood_user_id === selectedMood.mood_user_id);
-                    const firstUnviewedIndex = userStoryMoods.findIndex(m => !m.is_viewed);
-                    const startIndex = firstUnviewedIndex !== -1 ? firstUnviewedIndex : 0;
-                    
-                    const userPlaylist = [
-                        ...userStoryMoods.slice(startIndex),
-                        ...userStoryMoods.slice(0, startIndex)
-                    ];
+                    // Separate stories into viewed and unviewed
+                    const unviewed = moods.filter(m => !m.is_viewed);
+                    const viewed = moods.filter(m => m.is_viewed);
 
-                    setViewingStoryFromFeed(userPlaylist);
+                    // Find the actual story that was clicked inside the unviewed list
+                    const clickedIndexInUnviewed = unviewed.findIndex(m => m.mood_id === selectedMood.mood_id);
+                    
+                    let playlist: Mood[] = [];
+
+                    if (clickedIndexInUnviewed !== -1) {
+                        // If an unviewed story was clicked, start from that one
+                        const playlistUnviewed = [
+                            ...unviewed.slice(clickedIndexInUnviewed),
+                            ...unviewed.slice(0, clickedIndexInUnviewed)
+                        ];
+                        playlist = [...playlistUnviewed, ...viewed];
+                    } else {
+                        // If a viewed story was clicked, start with that one, then other viewed, then all unviewed
+                        const clickedIndexInViewed = viewed.findIndex(m => m.mood_id === selectedMood.mood_id);
+                        const playlistViewed = [
+                            ...viewed.slice(clickedIndexInViewed),
+                            ...viewed.slice(0, clickedIndexInViewed)
+                        ];
+                        playlist = [...playlistViewed, ...unviewed];
+                    }
+                    
+                    setViewingStoryFromFeed(playlist);
                 }}
             />
             <div className="bg-background">
