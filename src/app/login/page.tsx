@@ -109,7 +109,7 @@ function LoginPageContent() {
     <>
       <div className="flex flex-col items-center justify-center h-full text-center p-4 overflow-y-auto">
         <Link href="/" passHref>
-          <Button variant="ghost" size="icon" className="absolute top-4 left-4 text-muted-foreground hover:text-primary rounded-full">
+          <Button variant="ghost" size="icon" className="absolute top-4 left-4 text-cyan-400 hover:text-cyan-400/80 rounded-full">
             <ArrowLeft />
           </Button>
         </Link>
