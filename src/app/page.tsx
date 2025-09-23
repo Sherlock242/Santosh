@@ -17,7 +17,6 @@ const AIConsciousnessPage = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [transcript, setTranscript] = useState('');
   const [searchText, setSearchText] = useState('');
   const [aiResponse, setAiResponse] = useState("Click the orb to start a voice search.");
   const [dots, setDots] = useState('');
@@ -63,13 +62,13 @@ const AIConsciousnessPage = () => {
     }
   }, [])
 
-  const processQuery = async (query: string) => {
+  const processQuery = useCallback(async (query: string) => {
     if (!query) {
         speak("I didn't catch that. What would you like to search for?");
         return;
     }
+    
     setIsLoading(true);
-    setTranscript('');
     setAiResponse('');
     
     try {
@@ -92,7 +91,7 @@ const AIConsciousnessPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [speak]);
 
 
   const handleListen = () => {
@@ -121,7 +120,6 @@ const AIConsciousnessPage = () => {
 
     recognition.onstart = () => {
       setIsListening(true);
-      setTranscript('');
       setAiResponse('');
     };
 
@@ -143,10 +141,9 @@ const AIConsciousnessPage = () => {
       }
 
       if (finalTranscript) {
-        setTranscript(finalTranscript);
         setIsListening(false);
         recognition.stop();
-        processQuery(finalTranscript);
+        await processQuery(finalTranscript);
       }
     };
 
@@ -335,3 +332,5 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
+
+    
