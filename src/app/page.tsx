@@ -68,6 +68,18 @@ const AIConsciousnessPage = () => {
         return;
     }
     
+    // Check for direct "say" command
+    const lowerCaseQuery = query.toLowerCase();
+    if (lowerCaseQuery.startsWith('edena say ')) {
+        const textToSpeak = query.substring(10).trim();
+        if (textToSpeak) {
+            speak(textToSpeak);
+        } else {
+            speak("What should I say?");
+        }
+        return;
+    }
+
     setIsLoading(true);
     setAiResponse('');
     
@@ -332,5 +344,3 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
-
-    
