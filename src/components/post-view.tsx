@@ -114,7 +114,7 @@ const filters = [
 ];
 
 
-const MoodContent = memo(({ emoji, onInteraction, onClose, onMoodChange }: { emoji: Mood, onInteraction: (action: 'next' | 'prev') => void, onClose: (action?: 'delete_current') => void, onMoodChange?: () => void }) => {
+const MoodContent = memo(({ emoji, onInteraction, onClose, onMoodChange, onMarkAsViewed }: { emoji: Mood, onInteraction: (action: 'next' | 'prev') => void, onClose: (action?: 'delete_current') => void, onMoodChange?: () => void, onMarkAsViewed: () => void }) => {
     const { user } = useAuth();
     const { toast } = useToast();
     const progressWidth = useMotionValue('0%');
@@ -124,50 +124,10 @@ const MoodContent = memo(({ emoji, onInteraction, onClose, onMoodChange }: { emo
     const [isFetchingViewers, setIsFetchingViewers] = useState(false);
     const postAuthor = emoji.mood_user;
 
-    const [localLikeCount, setLocalLikeCount] = useState(emoji.like_count);
-    const [isLikedState, setIsLikedState] = useState(emoji.is_liked);
-    const [showHeartIcon, setShowHeartIcon] = useState(false);
-    const likeButtonRef = useRef<{ triggerLike: () => void }>(null);
-
     const featureOffsetX = useMotionValue(emoji.feature_offset_x || 0);
     const featureOffsetY = useMotionValue(emoji.feature_offset_y || 0);
     const activeFilterCss = filters.find(f => f.name === emoji.selected_filter)?.css || 'none';
-
-    const handleLikeAnimation = useCallback(() => {
-        setShowHeartIcon(true);
-    }, []);
-
-    useEffect(() => {
-        if (showHeartIcon) {
-            const timer = setTimeout(() => setShowHeartIcon(false), 600);
-            return () => clearTimeout(timer);
-        }
-    }, [showHeartIcon]);
     
-    const handleDoubleClick = () => {
-        likeButtonRef.current?.triggerLike();
-    }
-    
-    const handleSetMoodClick = async () => {
-        if (!user) return;
-        try {
-            await setMood(emoji.id);
-            toast({
-                title: "Mood Updated!",
-                description: "Your new mood has been set.",
-                variant: "success",
-            });
-            onMoodChange?.();
-        } catch (error: any) {
-             toast({
-                title: "Error setting mood",
-                description: error.message,
-                variant: "destructive",
-            });
-        }
-    };
-
-
     const startAnimation = useCallback(() => {
         progressWidth.set('0%');
         animationControlsRef.current = animate(progressWidth, '100%', {
@@ -181,11 +141,12 @@ const MoodContent = memo(({ emoji, onInteraction, onClose, onMoodChange }: { emo
         startAnimation();
         if (!emoji.is_viewed) {
              recordMoodView(emoji.mood_id);
+             onMarkAsViewed();
         }
         return () => {
           animationControlsRef.current?.stop();
         }
-    }, [emoji.mood_id, emoji.is_viewed, startAnimation]);
+    }, [emoji.mood_id, emoji.is_viewed, startAnimation, onMarkAsViewed]);
 
      useEffect(() => {
         if (isViewersSheetOpen) {
@@ -232,7 +193,7 @@ const MoodContent = memo(({ emoji, onInteraction, onClose, onMoodChange }: { emo
     };
 
     return (
-        <div className="w-full h-full flex flex-col bg-black relative" onDoubleClick={handleDoubleClick}>
+        <div className="w-full h-full flex flex-col bg-black relative">
              <div className="absolute top-0 left-0 right-0 p-3 z-20">
                  <div className="w-full bg-gray-500/50 rounded-full h-1">
                     <motion.div 
@@ -390,6 +351,16 @@ export function PostView({
     }
   }
 
+  const handleMarkAsViewed = useCallback((moodId: number) => {
+    setLocalEmojis(prev =>
+        prev.map(emoji =>
+            ('mood_id' in emoji && emoji.mood_id === moodId)
+                ? { ...emoji, is_viewed: true }
+                : emoji
+        )
+    );
+  }, []);
+
 
   if (isMoodView) {
     const currentMood = localEmojis[currentIndex] as Mood | undefined;
@@ -403,6 +374,7 @@ export function PostView({
                 emoji={currentMood} 
                 onInteraction={handleInteraction}
                 onMoodChange={onMoodChange}
+                onMarkAsViewed={() => handleMarkAsViewed(currentMood.mood_id)}
                 onClose={(action?: any) => {
                     if (action === 'delete_current') {
                         handleMoodDeletion(currentMood);
