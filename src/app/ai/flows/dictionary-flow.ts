@@ -30,18 +30,16 @@ export async function searchDictionary(input: SearchDictionaryInput): Promise<Se
 
     const entry = data[0];
     const word = entry.word;
-    const phonetics = entry.phonetics?.find((p: any) => p.text)?.text || '';
-
+    
     const firstMeaning = entry.meanings?.[0];
     if (!firstMeaning) {
         return { summary: `I found an entry for "${word}", but it has no definitions.` };
     }
 
-    const partOfSpeech = firstMeaning.partOfSpeech;
     const definition = firstMeaning.definitions?.[0]?.definition;
     const example = firstMeaning.definitions?.[0]?.example;
 
-    let summary = `"${word}" ${phonetics ? `(${phonetics})` : ''} is a ${partOfSpeech}. Definition: ${definition}`;
+    let summary = `The definition of "${word}" is: ${definition}`;
     
     if (example) {
         summary += ` For example: "${example}"`;
@@ -54,3 +52,4 @@ export async function searchDictionary(input: SearchDictionaryInput): Promise<Se
     return { summary: 'There was an error connecting to the dictionary. Please try again later.' };
   }
 }
+
