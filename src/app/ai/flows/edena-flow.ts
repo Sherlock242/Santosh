@@ -29,7 +29,8 @@ const edengramResponses = {
   FEATURES_OF_EDENGRAM: "Edengram's key features include an emoji designer with customizable shapes, colors, and accessories, a 24-hour mood story system, a public gallery for your creations, and a personalized feed to keep up with friends.",
   HOW_EDENGRAM_WORKS: "It's simple! You can design your own emoji model, set it as your mood for 24 hours, and share it in your gallery. You can follow other users to see their posts and moods in your feed, and explore creations from the entire community.",
   HOW_EDENGRAM_HELPS: "Edengram helps you express your daily mood in a creative and visual way, beyond simple text. It offers a lightweight, storage-friendly social experience focused on interaction and fun, not data-heavy content.",
-  GENERAL_APP_INFO: "This is Edengram, a social media platform where you create and share interactive emojis to express your mood and connect with others in a fun, visual way."
+  GENERAL_APP_INFO: "This is Edengram, a social media platform where you create and share interactive emojis to express your mood and connect with others in a fun, visual way.",
+  TECHNOLOGY_STACK: "Edengram is built using a modern tech stack. The frontend is created with Next.js and React, using TypeScript for type safety and Tailwind CSS for styling. The backend services, including the database and authentication, are powered by Supabase."
 };
 
 const edengramPrefixes = {
@@ -135,6 +136,12 @@ const edengramPrefixes = {
     "what’s the reason for this website", "what is this portal used for", "can you describe this online service",
     "what’s this online website", "what’s the role of this app", "what’s this new platform", "what is this software for",
     "what’s this digital app", "what is this app", "what is this site", "tell me what this app is"
+  ],
+  TECHNOLOGY_STACK: [
+    "what technology is this website built on", "tech stack of edengram", "what framework is used for edengram",
+    "on which language this website is created", "what programming language is edengram written in",
+    "what is the backend of edengram", "what database does edengram use", "is edengram a react app",
+    "is this a next.js website", "what technologies power edengram"
   ]
 };
 
@@ -282,13 +289,18 @@ const generalKnowledgePrefixes = [
 function stripPrefix(query: string, prefixes: string[]): string | null {
     const lowerCaseQuery = query.toLowerCase();
     for (const prefix of prefixes) {
-        const lowerCasePrefix = prefix.replace(/_/g, ' ').toLowerCase();
-        if (lowerCaseQuery.startsWith(lowerCasePrefix)) {
-            // Find the actual prefix from the original list to get the correct length
-            const originalPrefix = prefixes.find(p => p.replace(/_/g, ' ').toLowerCase() === lowerCasePrefix);
-            if (originalPrefix) {
-                return query.substring(originalPrefix.length).trim();
-            }
+        // Create a flexible prefix that can handle an optional word like 'the', 'a', 'an'
+        const basePrefix = prefix.replace(/_/g, ' ').toLowerCase();
+        const regex = new RegExp(`^${basePrefix}(\\s+(the|a|an))?\\s+`, 'i');
+        
+        if (regex.test(query)) {
+             // Replace the matched prefix part to get the core query
+             return query.replace(regex, '').trim();
+        }
+        
+        // Also check for exact match without a following space, for queries like "what is love"
+        if (lowerCaseQuery.startsWith(basePrefix + ' ')) {
+             return query.substring(basePrefix.length).trim();
         }
     }
     return null;
@@ -403,3 +415,4 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
     
 
     
+
