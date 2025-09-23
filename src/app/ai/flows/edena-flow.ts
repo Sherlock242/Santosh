@@ -241,9 +241,7 @@ const generalKnowledgePrefixes = [
     "symbol of", "motto of", "meaning behind", "significance of", "explanation for",
     "concept of", "theory of", "philosophy of", "principle of", "law of", "rule of",
     "equation of", "formula of", "definition and example of", "example of", "explain with example",
-    "application of", "case study of", "what does the word ___ refer to",
-    // Hindi (Romanized)
-    "kaun hai", "kya hai", "mujhe ___ ke bare mein batao", "kya aap mujhe ___ ke bare mein bata sakte hain", "kripya mujhe ___ ke bare mein bataen"
+    "application of", "case study of", "what does the word ___ refer to"
 ];
 
 
@@ -372,7 +370,3 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
     }
   }
 }
-
-    
-
-    
