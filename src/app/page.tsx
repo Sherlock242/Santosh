@@ -261,7 +261,9 @@ const AIConsciousnessPage = () => {
 
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         
-        <div 
+        <motion.div
+          layout
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           ref={orbRef}
           className="relative flex items-center justify-center w-[40vw] h-[40vw] md:w-[25vw] md:h-[25vw] max-w-[300px] max-h-[300px] min-w-[240px] min-h-[240px] cursor-pointer"
           onClick={(e) => { e.stopPropagation(); handleListen(); }}
@@ -314,7 +316,7 @@ const AIConsciousnessPage = () => {
                 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 15, duration: 0.3 }}
             />
-        </div>
+        </motion.div>
 
         <div className="text-center mt-8 min-h-[4rem] flex items-center justify-center">
              <AnimatePresence mode="wait">
