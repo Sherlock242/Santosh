@@ -12,7 +12,6 @@ import { searchWikipedia } from './wikipedia-flow';
 import { searchOpenLibrary } from './book-search-flow';
 import { searchInternetArchive } from './article-search-flow';
 import { searchDictionary } from './dictionary-flow';
-import { correctGrammar } from './grammar-flow';
 
 
 export interface EdenaInput {
@@ -29,12 +28,6 @@ const bookKeywords = [
 ];
 const articleKeywords = [
     'article', 'paper', 'journal', 'document', 'report', 'study on'
-];
-
-const grammarPrefixes = [
-    "correct the grammar of", "fix this sentence:", "grammar check", "proofread this:",
-    "check the grammar of", "is this grammatically correct:", "correct my grammar:",
-    "correct this sentence:", "check my grammar for", "review this sentence:"
 ];
 
 const dictionaryPrefixes = [
@@ -105,25 +98,15 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   const lowerCaseQuery = query.toLowerCase();
 
   let coreQuery = query;
-  let queryType: 'dictionary' | 'book' | 'article' | 'grammar' | 'general' = 'general';
+  let queryType: 'dictionary' | 'book' | 'article' | 'general' = 'general';
   let processed = false;
 
-  // Highest priority: Grammar check
-  const grammarCoreQuery = stripPrefix(query, grammarPrefixes);
-  if (grammarCoreQuery) {
-      coreQuery = grammarCoreQuery;
-      queryType = 'grammar';
+  // Highest priority: Dictionary check
+  const dictionaryCoreQuery = stripPrefix(query, dictionaryPrefixes);
+  if (dictionaryCoreQuery) {
+      coreQuery = dictionaryCoreQuery;
+      queryType = 'dictionary';
       processed = true;
-  }
-
-  // Second priority: Dictionary check
-  if (!processed) {
-      const dictionaryCoreQuery = stripPrefix(query, dictionaryPrefixes);
-      if (dictionaryCoreQuery) {
-          coreQuery = dictionaryCoreQuery;
-          queryType = 'dictionary';
-          processed = true;
-      }
   }
   
   // General knowledge and topic-based routing
@@ -146,9 +129,6 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   try {
     let result;
     switch(queryType) {
-        case 'grammar':
-            result = await correctGrammar({ sentence: coreQuery });
-            break;
         case 'dictionary':
             result = await searchDictionary({ query: coreQuery });
             break;

@@ -14,7 +14,6 @@ export interface SearchDictionaryInput {
 
 export interface SearchDictionaryOutput {
   summary: string;
-  partOfSpeech?: string;
 }
 
 export async function searchDictionary(input: SearchDictionaryInput): Promise<SearchDictionaryOutput> {
@@ -37,12 +36,11 @@ export async function searchDictionary(input: SearchDictionaryInput): Promise<Se
         return { summary: `I found an entry for "${word}", but it has no definitions.` };
     }
 
-    const partOfSpeech = firstMeaning.partOfSpeech;
     const definition = firstMeaning.definitions?.[0]?.definition;
 
     let summary = `The definition of "${word}" is: ${definition}`;
     
-    return { summary, partOfSpeech };
+    return { summary };
 
   } catch (error) {
     console.error('Error fetching from Dictionary API:', error);
