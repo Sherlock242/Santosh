@@ -21,6 +21,7 @@ export interface GrammarOutput {
 // This is a simplified, rule-based approach and has significant limitations.
 export async function correctGrammar(input: GrammarInput): Promise<GrammarOutput> {
   let sentence = input.sentence.trim();
+  const originalSentence = sentence;
 
   // Basic cleaning
   sentence = sentence.replace(/\s+/g, ' ');
@@ -87,11 +88,14 @@ export async function correctGrammar(input: GrammarInput): Promise<GrammarOutput
       });
   }
 
+  // Rule 5: Remove consecutive duplicate words
+  correctedSentence = correctedSentence.replace(/\b(\w+)\s+\1\b/gi, '$1');
+
   // Final check for I am
   correctedSentence = correctedSentence.replace(/\bi am\b/g, 'I am');
   
-  if (correctedSentence === input.sentence.trim() || correctedSentence === input.sentence.trim() + '.') {
-     return { summary: `"${input.sentence}" seems to be grammatically correct.` };
+  if (correctedSentence === originalSentence || correctedSentence === originalSentence + '.') {
+     return { summary: `"${originalSentence}" seems to be grammatically correct.` };
   }
 
   return { summary: correctedSentence };
