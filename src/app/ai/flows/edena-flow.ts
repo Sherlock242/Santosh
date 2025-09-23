@@ -379,6 +379,12 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
             break;
     }
     
+    // Fallback logic: if the primary search returns a "not found" message, try Wikipedia.
+    if (result.summary.toLowerCase().includes("couldn't find") && queryType !== 'general') {
+        const fallbackResult = await searchWikipedia({ query: coreQuery });
+        return { answer: fallbackResult.summary };
+    }
+
     return { answer: result.summary };
 
   } catch (error) {
@@ -393,5 +399,7 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
     }
   }
 }
+
+    
 
     
