@@ -12,6 +12,7 @@ import { searchWikipedia } from './wikipedia-flow';
 import { searchOpenLibrary } from './book-search-flow';
 import { searchInternetArchive } from './article-search-flow';
 import { searchDictionary } from './dictionary-flow';
+import { searchNews } from './news-flow';
 
 
 export interface EdenaInput {
@@ -197,6 +198,9 @@ const bookKeywords = [
 const articleKeywords = [
     'article', 'paper', 'journal', 'document', 'report', 'study on'
 ];
+const newsKeywords = [
+    'news', 'latest', 'update', 'breaking', 'story', 'report on'
+];
 
 const dictionaryPrefixes = [
     "define", "definition of", "what's the definition of", "meaning of", "what is the meaning of",
@@ -304,7 +308,7 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
 
   // --- 3. If not a pre-canned question, proceed with general knowledge routing ---
   let coreQuery = query;
-  let queryType: 'dictionary' | 'book' | 'article' | 'general' = 'general';
+  let queryType: 'dictionary' | 'book' | 'article' | 'news' | 'general' = 'general';
   let processed = false;
 
   // Highest priority: Dictionary check
@@ -319,8 +323,11 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   if (!processed) {
       const isBookQuery = bookKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       const isArticleQuery = articleKeywords.some(keyword => lowerCaseQuery.includes(keyword));
+      const isNewsQuery = newsKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       
-      if (isBookQuery) {
+      if (isNewsQuery) {
+          queryType = 'news';
+      } else if (isBookQuery) {
           queryType = 'book';
       } else if (isArticleQuery) {
           queryType = 'article';
@@ -343,6 +350,9 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
             break;
         case 'article':
             result = await searchInternetArchive({ query: coreQuery });
+            break;
+        case 'news':
+            result = await searchNews({ query: coreQuery });
             break;
         case 'general':
         default:
