@@ -14,6 +14,7 @@ import { searchInternetArchive } from './article-search-flow';
 import { searchDictionary } from './dictionary-flow';
 import { searchNews } from './news-flow';
 import { getWeather } from './weather-flow';
+import { searchSearxng } from './searxng-flow';
 
 
 export interface EdenaInput {
@@ -419,9 +420,20 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
             break;
     }
     
-    // Fallback logic: if the primary search returns a "not found" message, try Wikipedia.
-    if (result.summary.toLowerCase().includes("couldn't find") && queryType !== 'general') {
-        const fallbackResult = await searchWikipedia({ query: coreQuery });
+    // Fallback logic: if a specialized search returns "not found", try a broader search.
+    if (result.summary.toLowerCase().includes("couldn't find")) {
+        let fallbackResult;
+        if (queryType === 'general') {
+            // If Wikipedia failed, try SearXNG as a final fallback
+            fallbackResult = await searchSearxng({ query: coreQuery });
+        } else {
+             // For other failed types, try Wikipedia first
+            fallbackResult = await searchWikipedia({ query: coreQuery });
+            if (fallbackResult.summary.toLowerCase().includes("couldn't find")) {
+                // If Wikipedia also fails, try SearXNG
+                fallbackResult = await searchSearxng({ query: coreQuery });
+            }
+        }
         return { answer: fallbackResult.summary };
     }
 
@@ -430,8 +442,8 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   } catch (error) {
     console.error(`Edena assistant error for type ${queryType}:`, error);
     try {
-        // Fallback to Wikipedia on any error
-        const fallbackResult = await searchWikipedia({ query: coreQuery });
+        // Fallback to a general search engine on any error
+        const fallbackResult = await searchSearxng({ query: coreQuery });
         return { answer: fallbackResult.summary };
     } catch (fallbackError) {
         console.error('Edena fallback error:', fallbackError);
