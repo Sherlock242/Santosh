@@ -244,20 +244,19 @@ const MoodContent = memo(({ emoji, onInteraction, onClose, onMarkMoodAsViewed }:
             </div>
             
             <div 
-                className="flex-1 flex items-center justify-center min-h-0 relative"
+                className="flex-1 flex flex-col items-center justify-center min-h-0 relative p-4"
                 style={{ 
                     backgroundColor: emoji.background_color,
                     filter: activeFilterCss,
                 }}
             >
+                {emoji.caption && (
+                    <div className="w-full text-center mb-4 z-20">
+                        <p className="text-white text-lg font-semibold drop-shadow-md">{emoji.caption}</p>
+                    </div>
+                )}
                 {renderEmojiFace(emoji)}
             </div>
-
-            {emoji.caption && (
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-center z-20 bg-gradient-to-t from-black/50 to-transparent">
-                    <p className="text-white text-lg font-semibold drop-shadow-md">{emoji.caption}</p>
-                </div>
-            )}
 
             <Sheet open={isViewersSheetOpen} onOpenChange={setIsViewersSheetOpen}>
               <SheetContent side="bottom" className="max-h-[80%] flex flex-col">
