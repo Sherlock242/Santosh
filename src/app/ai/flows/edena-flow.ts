@@ -224,7 +224,7 @@ const dictionaryPrefixes = [
 ];
 
 const weatherPrefixes = [
-    "what is the weather in", "weather in", "forecast for", "temperature in"
+    "what is the weather in", "weather in", "forecast for", "temperature in", "weather of"
 ];
 
 const generalKnowledgePrefixes = [
