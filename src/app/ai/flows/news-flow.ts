@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A utility for searching space news using the Spaceflight News API.
