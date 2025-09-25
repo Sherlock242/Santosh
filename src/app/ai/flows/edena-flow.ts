@@ -269,12 +269,24 @@ function stripPrefix(query: string, prefixes: string[]): string | null {
     return null;
 }
 
+const edengramVariations = [
+    'edangram', 'edengrm', 'edngram', 'idingram', 'adengram', 'edengran', 
+    'eden gram', 'eden-gram', 'edengaram'
+];
+
 
 export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   const { query } = input;
-  const lowerCaseQuery = query.toLowerCase().trim().replace(/[?]$/, '');
+  let lowerCaseQuery = query.toLowerCase().trim().replace(/[?]$/, '');
 
   // --- 1. Check for Edengram-specific questions first ---
+  // Normalize variations of "Edengram" to the correct spelling
+  for (const variation of edengramVariations) {
+    if (lowerCaseQuery.includes(variation)) {
+        lowerCaseQuery = lowerCaseQuery.replace(new RegExp(variation, 'g'), 'edengram');
+    }
+  }
+  
   for (const [category, prefixes] of Object.entries(edengramPrefixes)) {
       if (prefixes.includes(lowerCaseQuery)) {
           return { answer: edengramResponses[category as keyof typeof edengramResponses] };
