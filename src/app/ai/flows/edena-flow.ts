@@ -13,6 +13,7 @@ import { searchOpenLibrary } from './book-search-flow';
 import { searchInternetArchive } from './article-search-flow';
 import { searchDictionary } from './dictionary-flow';
 import { searchNews } from './news-flow';
+import { getWeather } from './weather-flow';
 
 
 export interface EdenaInput {
@@ -213,10 +214,17 @@ const articleKeywords = [
 const newsKeywords = [
     'news', 'latest', 'update', 'breaking', 'story', 'report on'
 ];
+const weatherKeywords = [
+    'weather', 'temperature', 'forecast', 'climate', 'how hot', 'how cold'
+];
 
 const dictionaryPrefixes = [
     "define", "definition of", "what's the definition of", "meaning of", "what is the meaning of",
     "what does ___ mean", "define the word"
+];
+
+const weatherPrefixes = [
+    "what is the weather in", "weather in", "forecast for", "temperature in"
 ];
 
 const generalKnowledgePrefixes = [
@@ -332,7 +340,7 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
 
   // --- 3. If not a pre-canned question, proceed with general knowledge routing ---
   let coreQuery = query;
-  let queryType: 'dictionary' | 'book' | 'article' | 'news' | 'general' = 'general';
+  let queryType: 'dictionary' | 'weather' | 'book' | 'article' | 'news' | 'general' = 'general';
   let processed = false;
 
   // Highest priority: Dictionary check
@@ -343,13 +351,26 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
       processed = true;
   }
   
+  // Second priority: Weather check
+  if (!processed) {
+      const weatherCoreQuery = stripPrefix(query, weatherPrefixes);
+      if (weatherCoreQuery) {
+          coreQuery = weatherCoreQuery;
+          queryType = 'weather';
+          processed = true;
+      }
+  }
+  
   // General knowledge and topic-based routing
   if (!processed) {
       const isBookQuery = bookKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       const isArticleQuery = articleKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       const isNewsQuery = newsKeywords.some(keyword => lowerCaseQuery.includes(keyword));
+      const isWeatherQuery = weatherKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       
-      if (isNewsQuery) {
+      if (isWeatherQuery) {
+          queryType = 'weather';
+      } else if (isNewsQuery) {
           queryType = 'news';
       } else if (isBookQuery) {
           queryType = 'book';
@@ -379,6 +400,9 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
     switch(queryType) {
         case 'dictionary':
             result = await searchDictionary({ query: coreQuery });
+            break;
+        case 'weather':
+            result = await getWeather({ query: coreQuery });
             break;
         case 'book':
             result = await searchOpenLibrary({ query: coreQuery });
