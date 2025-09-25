@@ -31,7 +31,8 @@ const edengramResponses = {
   HOW_EDENGRAM_WORKS: "It's simple! You can design your own emoji model, set it as your mood for 24 hours, and share it in your gallery. You can follow other users to see their posts and moods in your feed, and explore creations from the entire community.",
   HOW_EDENGRAM_HELPS: "Edengram helps you express your daily mood in a creative and visual way, beyond simple text. It offers a lightweight, storage-friendly social experience focused on interaction and fun, not data-heavy content.",
   GENERAL_APP_INFO: "This is Edengram, a social media platform where you create and share interactive emojis to express your mood and connect with others in a fun, visual way.",
-  TECHNOLOGY_STACK: "Edengram is built using a modern tech stack. The frontend is created with Next.js and React, using TypeScript for type safety and Tailwind CSS for styling. The backend services, including the database and authentication, are powered by Supabase."
+  TECHNOLOGY_STACK: "Edengram is built using a modern tech stack. The frontend is created with Next.js and React, using TypeScript for type safety and Tailwind CSS for styling. The backend services, including the database and authentication, are powered by Supabase.",
+  ASSISTANT_CAPABILITIES: "I can help you find information on a wide range of topics. You can ask me about people, places, concepts, book summaries, article details, word definitions, and the latest space news. Just ask your question!"
 };
 
 const edengramPrefixes = {
@@ -143,6 +144,11 @@ const edengramPrefixes = {
     "on which language this website is created", "what programming language is edengram written in",
     "what is the backend of edengram", "what database does edengram use", "is edengram a react app",
     "is this a next.js website", "what technologies power edengram"
+  ],
+  ASSISTANT_CAPABILITIES: [
+    "how can you help me", "what can you do for me", "what can you do", "can you help me",
+    "what is your capability", "what are your capabilities", "tell me what you can do",
+    "show me your functions", "what do you do", "what is your purpose", "how do you help"
   ]
 };
 
