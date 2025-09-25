@@ -160,7 +160,13 @@ const etiquetteResponses: { [key: string]: string | string[] } = {
     'developer': "My creator is Santosh. He's a brilliant entrepreneur who is also sweet, loving, and kind.",
     'hello': 'Hello there! How can I help you search for information today?',
     'hello edena': "Hello! It's good to hear from you. What knowledge are you seeking today?",
+    'hello adina': "Hello! It's good to hear from you. What knowledge are you seeking today?",
+    'hello eedina': "Hello! It's good to hear from you. What knowledge are you seeking today?",
+    'hello aedina': "Hello! It's good to hear from you. What knowledge are you seeking today?",
     'hy edena': "Hey there! Ready to search for something?",
+    'hy adina': "Hey there! Ready to search for something?",
+    'hy eedina': "Hey there! Ready to search for something?",
+    'hy aedina': "Hey there! Ready to search for something?",
     'hello edena kaisi ho': "I'm a program, so I don't have feelings, but I'm running perfectly! What can I search for you?",
     'yo edena': "Yo! What's up? Got a topic for me to look up?",
     'hi': 'Hi! What can I look up for you?',
@@ -409,3 +415,5 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
     }
   }
 }
+
+    
