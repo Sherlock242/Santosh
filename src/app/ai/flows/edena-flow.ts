@@ -351,6 +351,17 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
       }
   }
 
+  // After stripping prefixes, check if the core query is about Edengram
+  let normalizedCoreQuery = coreQuery.toLowerCase().trim();
+  for (const variation of edengramVariations) {
+    if (normalizedCoreQuery.includes(variation)) {
+        normalizedCoreQuery = normalizedCoreQuery.replace(new RegExp(variation, 'g'), 'edengram');
+    }
+  }
+  if (normalizedCoreQuery === 'edengram') {
+    return { answer: edengramResponses.WHAT_IS_EDENGRAM };
+  }
+
   try {
     let result;
     switch(queryType) {
