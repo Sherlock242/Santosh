@@ -25,8 +25,8 @@ interface SearxngResult {
 
 export async function searchSearxng(input: SearxngInput): Promise<SearxngOutput> {
   const { query } = input;
-  // Using a public instance of SearXNG. This could be changed to a self-hosted one.
-  const url = new URL('https://searx.be/search');
+  // Using a different public instance of SearXNG for better reliability.
+  const url = new URL('https://search.ononoki.org/search');
   url.searchParams.append('q', query);
   url.searchParams.append('format', 'json');
 
