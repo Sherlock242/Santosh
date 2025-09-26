@@ -172,6 +172,14 @@ const AIConsciousnessPage = () => {
     }
     setShowSearch(false);
   };
+  
+    const handleWeatherSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchText.trim()) {
+            processQuery(`weather of ${searchText.trim()}`);
+            setSearchText('');
+        }
+    };
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!showSearch) {
@@ -253,8 +261,7 @@ const AIConsciousnessPage = () => {
     : (isBlushing ? '0 0 30px #FFC0CB, 0 0 15px #FFB6C1' : '0 0 30px #0ff, 0 0 15px hsl(var(--primary))');
 
   const sunRing1Color = 'rgba(255, 215, 0, 0.5)';
-  const sunRing2Color = 'rgba(255, 165, 0, 0.6)';
-  const sunRing3Color = 'rgba(255, 69, 0, 0.7)';
+  const sunRing2Color = 'rgba(255, 69, 0, 0.7)';
   const sunOrbGradient = 'linear-gradient(to bottom right, #FFD700, #FF4500)';
   const sunOrbBoxShadow = '0 0 15px #FFD700, 0 0 7px #FF4500';
 
@@ -314,6 +321,16 @@ const AIConsciousnessPage = () => {
 
        {/* Small orb clone in top-right */}
         <div className="absolute top-16 right-4 z-10 flex items-center gap-4">
+            <form onSubmit={handleWeatherSearch} className="flex items-center gap-2">
+                <span className="text-amber-300">weather of</span>
+                <Input
+                    type="text"
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    placeholder="____________"
+                    className="w-24 bg-transparent border-0 border-b border-amber-300/50 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-amber-300 text-amber-300 p-0 h-6"
+                />
+            </form>
             {weatherText && (
                 <motion.p 
                   initial={{ opacity: 0, x: 20 }}
@@ -434,3 +451,5 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
+
+    
