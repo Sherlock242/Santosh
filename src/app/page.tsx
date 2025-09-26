@@ -215,46 +215,7 @@ const AIConsciousnessPage = () => {
 
   const handleWeatherClick = () => {
     setShowWeatherSearch(true);
-    if (!navigator.geolocation) {
-        speak("I'm sorry, your browser doesn't support location services.");
-        return;
-    }
-
-    setIsLoading(true);
-    setAiResponse('');
-    speak("Getting your location for the weather forecast.");
-
-    navigator.geolocation.getCurrentPosition(async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-            const weatherResult = await getWeather({ latitude, longitude });
-            speak(weatherResult.summary);
-        } catch (error) {
-            console.error('Error fetching weather:', error);
-            speak("I had trouble getting the weather. Please try again.");
-        } finally {
-            setIsLoading(false);
-        }
-    }, (error) => {
-        let message = "I couldn't get your location. ";
-        switch(error.code) {
-            case error.PERMISSION_DENIED:
-                message += "Please enable location permissions to get weather updates.";
-                break;
-            case error.POSITION_UNAVAILABLE:
-                message += "Your location information is currently unavailable.";
-                break;
-            case error.TIMEOUT:
-                message += "The request to get your location timed out.";
-                break;
-            default:
-                message += "An unknown error occurred.";
-                break;
-        }
-        speak(message);
-        setIsLoading(false);
-    });
-};
+  };
   
   const ring1Color = isAngry ? 'rgba(255, 69, 0, 0.5)' : (isBlushing ? 'rgba(255, 182, 193, 0.5)' : 'rgba(0, 255, 255, 0.5)');
   const ring2Color = isAngry ? 'rgba(255, 69, 0, 0.6)' : (isBlushing ? 'rgba(255, 182, 193, 0.6)' : 'rgba(0, 255, 255, 0.6)');
@@ -344,7 +305,7 @@ const AIConsciousnessPage = () => {
                                 value={searchText}
                                 onChange={(e) => setSearchText(e.target.value)}
                                 placeholder="____________"
-                                className="w-24 bg-transparent p-0 h-6 text-amber-300 border-none outline-none focus:outline-none focus:ring-0"
+                                className="w-24 bg-transparent p-0 h-6 text-amber-300 border-0 outline-none focus:outline-none focus:ring-0"
                                 autoFocus
                             />
                         </form>
