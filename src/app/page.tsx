@@ -204,6 +204,11 @@ const AIConsciousnessPage = () => {
     ? '0 0 30px #FF4500, 0 0 15px #FF8C00'
     : (isBlushing ? '0 0 30px #FFC0CB, 0 0 15px #FFB6C1' : '0 0 30px #0ff, 0 0 15px hsl(var(--primary))');
 
+  const sunRing1Color = 'rgba(255, 215, 0, 0.5)';
+  const sunRing2Color = 'rgba(255, 165, 0, 0.6)';
+  const sunRing3Color = 'rgba(255, 69, 0, 0.7)';
+  const sunOrbGradient = 'linear-gradient(to bottom right, #FFD700, #FF4500)';
+  const sunOrbBoxShadow = '0 0 15px #FFD700, 0 0 7px #FF4500';
 
   return (
     <div className="flex flex-col h-screen bg-black text-white p-4 overflow-hidden" onClick={handleContainerClick}>
@@ -267,22 +272,20 @@ const AIConsciousnessPage = () => {
               className="relative flex items-center justify-center w-20 h-20"
             >
                 <motion.svg className="absolute w-[50%] h-[50%]" viewBox="0 0 300 300" initial={{rotate: 20}} animate={{ rotate: 380 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}>
-                    <motion.circle cx="150" cy="150" r="140" fill="none" stroke={ring1Color} strokeWidth="6" strokeDasharray="68.4 20" transition={{duration: 0.3}} />
+                    <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing1Color} strokeWidth="6" strokeDasharray="68.4 20" transition={{duration: 0.3}} />
                 </motion.svg>
                 <motion.svg className="absolute w-[65%] h-[65%]" viewBox="0 0 300 300" initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
-                    <motion.circle cx="150" cy="150" r="140" fill="none" stroke={ring2Color} strokeWidth="8" strokeDasharray="150 40 80 110" transition={{duration: 0.3}} />
+                    <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing2Color} strokeWidth="8" strokeDasharray="150 40 80 110" transition={{duration: 0.3}} />
                 </motion.svg>
                 <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
-                    <motion.circle cx="150" cy="150" r="140" fill="none" stroke={ring3Color} strokeWidth="10" strokeDasharray="100 80 50 120 130" transition={{duration: 0.3}} />
+                    <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing3Color} strokeWidth="10" strokeDasharray="100 80 50 120 130" transition={{duration: 0.3}} />
                 </motion.svg>
                 <motion.div
                     className="absolute w-[30%] h-[30%] rounded-full"
-                    style={{ background: orbGradient }}
+                    style={{ background: sunOrbGradient }}
                     animate={{
                         scale: isListening || isSpeaking ? 1.1 : 1,
-                        boxShadow: isAngry
-                            ? '0 0 15px #FF4500, 0 0 7px #FF8C00'
-                            : (isBlushing ? '0 0 15px #FFC0CB, 0 0 7px #FFB6C1' : '0 0 15px #0ff, 0 0 7px hsl(var(--primary))'),
+                        boxShadow: sunOrbBoxShadow,
                     }}
                     transition={{ type: 'spring', stiffness: 300, damping: 15, duration: 0.3 }}
                 />
