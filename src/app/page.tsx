@@ -20,6 +20,7 @@ const AIConsciousnessPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [aiResponse, setAiResponse] = useState("Click the orb to start a voice search.");
+  const [weatherText, setWeatherText] = useState('');
   const [dots, setDots] = useState('');
   const [isAngry, setIsAngry] = useState(false);
   const [isBlushing, setIsBlushing] = useState(false);
@@ -203,6 +204,7 @@ const AIConsciousnessPage = () => {
 
     setIsLoading(true);
     setAiResponse('');
+    setWeatherText('Getting weather...');
     speak("Getting your location for the weather forecast.");
 
     navigator.geolocation.getCurrentPosition(async (position) => {
@@ -210,9 +212,11 @@ const AIConsciousnessPage = () => {
         try {
             const weatherResult = await getWeather({ latitude, longitude });
             speak(weatherResult.summary);
+            setWeatherText(weatherResult.summary);
         } catch (error) {
             console.error('Error fetching weather:', error);
             speak("I had trouble getting the weather. Please try again.");
+            setWeatherText('');
         } finally {
             setIsLoading(false);
         }
@@ -233,6 +237,7 @@ const AIConsciousnessPage = () => {
                 break;
         }
         speak(message);
+        setWeatherText('');
         setIsLoading(false);
     });
 };
@@ -308,7 +313,16 @@ const AIConsciousnessPage = () => {
       </header>
 
        {/* Small orb clone in top-right */}
-        <div className="absolute top-16 right-4 z-10">
+        <div className="absolute top-16 right-4 z-10 flex items-center gap-4">
+            {weatherText && (
+                <motion.p 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="text-sm text-amber-300 bg-black/30 backdrop-blur-sm p-2 rounded-md max-w-[200px]"
+                >
+                  {weatherText}
+                </motion.p>
+            )}
             <motion.div
               layout
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
@@ -320,9 +334,6 @@ const AIConsciousnessPage = () => {
                 </motion.svg>
                 <motion.svg className="absolute w-[65%] h-[65%]" viewBox="0 0 300 300" initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
                     <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing2Color} strokeWidth="8" strokeDasharray="150 40 80 110" transition={{duration: 0.3}} />
-                </motion.svg>
-                <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
-                    <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing3Color} strokeWidth="10" strokeDasharray="100 80 50 120 130" transition={{duration: 0.3}} />
                 </motion.svg>
                 <motion.div
                     className="absolute w-[30%] h-[30%] rounded-full"
