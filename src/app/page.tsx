@@ -259,6 +259,36 @@ const AIConsciousnessPage = () => {
         </div>
       </header>
 
+       {/* Small orb clone in top-right */}
+        <div className="absolute top-16 right-4 z-10 pointer-events-none">
+            <motion.div
+              layout
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="relative flex items-center justify-center w-20 h-20"
+            >
+                <motion.svg className="absolute w-[50%] h-[50%]" viewBox="0 0 300 300" initial={{rotate: 20}} animate={{ rotate: 380 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}>
+                    <motion.circle cx="150" cy="150" r="140" fill="none" stroke={ring1Color} strokeWidth="6" strokeDasharray="68.4 20" transition={{duration: 0.3}} />
+                </motion.svg>
+                <motion.svg className="absolute w-[65%] h-[65%]" viewBox="0 0 300 300" initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
+                    <motion.circle cx="150" cy="150" r="140" fill="none" stroke={ring2Color} strokeWidth="8" strokeDasharray="150 40 80 110" transition={{duration: 0.3}} />
+                </motion.svg>
+                <motion.svg className="absolute w-full h-full" viewBox="0 0 300 300" initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
+                    <motion.circle cx="150" cy="150" r="140" fill="none" stroke={ring3Color} strokeWidth="10" strokeDasharray="100 80 50 120 130" transition={{duration: 0.3}} />
+                </motion.svg>
+                <motion.div
+                    className="absolute w-[30%] h-[30%] rounded-full"
+                    style={{ background: orbGradient }}
+                    animate={{
+                        scale: isListening || isSpeaking ? 1.1 : 1,
+                        boxShadow: isAngry
+                            ? '0 0 15px #FF4500, 0 0 7px #FF8C00'
+                            : (isBlushing ? '0 0 15px #FFC0CB, 0 0 7px #FFB6C1' : '0 0 15px #0ff, 0 0 7px hsl(var(--primary))'),
+                    }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 15, duration: 0.3 }}
+                />
+            </motion.div>
+        </div>
+
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         
         <motion.div
