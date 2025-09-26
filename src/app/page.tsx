@@ -344,7 +344,7 @@ const AIConsciousnessPage = () => {
                                 value={searchText}
                                 onChange={(e) => setSearchText(e.target.value)}
                                 placeholder="____________"
-                                className="w-24 bg-transparent p-0 h-6 text-amber-300 border-0 focus:outline-none focus:ring-0"
+                                className="w-24 bg-transparent p-0 h-6 text-amber-300 border-none outline-none focus:outline-none focus:ring-0"
                                 autoFocus
                             />
                         </form>
@@ -363,9 +363,6 @@ const AIConsciousnessPage = () => {
                 </motion.svg>
                  <motion.svg className="absolute w-[65%] h-[65%]" viewBox="0 0 300 300" initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
                   <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRingMiddleColor} strokeWidth="7" strokeDasharray="150 40 80 110" transition={{duration: 0.3}} />
-                </motion.svg>
-                <motion.svg className="absolute w-[85%] h-[85%]" viewBox="0 0 300 300" initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
-                  <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing2Color} strokeWidth="4" strokeDasharray="100 80 50 120 130" transition={{duration: 0.3}} />
                 </motion.svg>
                 <motion.div
                     className="absolute w-[30%] h-[30%] rounded-full"
