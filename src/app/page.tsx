@@ -25,9 +25,11 @@ const AIConsciousnessPage = () => {
   const [isAngry, setIsAngry] = useState(false);
   const [isBlushing, setIsBlushing] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showWeatherSearch, setShowWeatherSearch] = useState(false);
 
   const recognitionRef = useRef<any | null>(null);
   const searchFormRef = useRef<HTMLFormElement>(null);
+  const weatherSearchFormRef = useRef<HTMLFormElement>(null);
   const orbRef = useRef<HTMLDivElement>(null);
 
   const speak = useCallback((text: string, angryMode: boolean = false, blushingMode: boolean = false) => {
@@ -182,17 +184,24 @@ const AIConsciousnessPage = () => {
     };
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!showSearch) {
-      return;
-    }
-
     const target = e.target as Node;
 
-    const isClickOnSearch = searchFormRef.current?.contains(target);
-    const isClickOnOrb = orbRef.current?.contains(target);
-
-    if (!isClickOnSearch && !isClickOnOrb) {
-      setShowSearch(false);
+    if (showSearch) {
+        const isClickOnSearch = searchFormRef.current?.contains(target);
+        const isClickOnOrb = orbRef.current?.contains(target);
+        if (!isClickOnSearch && !isClickOnOrb) {
+          setShowSearch(false);
+        }
+    }
+    if (showWeatherSearch) {
+        const isClickOnWeatherSearch = weatherSearchFormRef.current?.contains(target);
+        if (!isClickOnWeatherSearch) {
+            // Check if the click was on the small orb itself
+            const smallOrb = document.getElementById('small-weather-orb');
+            if (!smallOrb || !smallOrb.contains(target)) {
+                 setShowWeatherSearch(false);
+            }
+        }
     }
   };
 
@@ -205,6 +214,7 @@ const AIConsciousnessPage = () => {
   }, []);
 
   const handleWeatherClick = () => {
+    setShowWeatherSearch(true);
     if (!navigator.geolocation) {
         speak("I'm sorry, your browser doesn't support location services.");
         return;
@@ -321,16 +331,29 @@ const AIConsciousnessPage = () => {
 
        {/* Small orb clone in top-right */}
         <div className="absolute top-16 right-4 z-10 flex items-center gap-4">
-            <form onSubmit={handleWeatherSearch} className="flex items-center gap-2">
-                <span className="text-amber-300">weather of</span>
-                <Input
-                    type="text"
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    placeholder="____________"
-                    className="w-24 bg-transparent border-0 border-b border-amber-300/50 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-amber-300 text-amber-300 p-0 h-6"
-                />
-            </form>
+            <AnimatePresence>
+                {showWeatherSearch && (
+                     <motion.div
+                        key="weather-search"
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: 'auto', opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        transition={{ duration: 0.5, ease: 'easeInOut' }}
+                     >
+                        <form onSubmit={handleWeatherSearch} ref={weatherSearchFormRef} className="flex items-center gap-2">
+                            <span className="text-amber-300">weather of</span>
+                            <Input
+                                type="text"
+                                value={searchText}
+                                onChange={(e) => setSearchText(e.target.value)}
+                                placeholder="____________"
+                                className="w-24 bg-transparent border-0 border-b border-amber-300/50 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-amber-300 text-amber-300 p-0 h-6"
+                                autoFocus
+                            />
+                        </form>
+                    </motion.div>
+                )}
+            </AnimatePresence>
             {weatherText && (
                 <motion.p 
                   initial={{ opacity: 0, x: 20 }}
@@ -341,6 +364,7 @@ const AIConsciousnessPage = () => {
                 </motion.p>
             )}
             <motion.div
+              id="small-weather-orb"
               layout
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               className="relative flex items-center justify-center w-20 h-20 cursor-pointer"
