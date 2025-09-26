@@ -264,11 +264,11 @@ const AIConsciousnessPage = () => {
     : (isBlushing ? 'linear-gradient(to bottom right, #FFC0CB, #FFB6C1)' : 'linear-gradient(to bottom right, hsl(var(--primary)), #00BFFF)');
   const orbBoxShadow = isAngry
     ? '0 0 30px #FF4500, 0 0 15px #FF8C00'
-    : (isBlushing ? '0 0 30px #FFC0CB, 0 0 15px #FFB6C1' : '0 0 30px #0ff, 0 0 15px hsl(var(--primary))');
+    : (isBlushing ? '0 0 30px #FFC0CB, 0 0 15px #FFB6C1)' : '0 0 30px #0ff, 0 0 15px hsl(var(--primary))');
 
   const sunRing1Color = 'rgba(255, 215, 0, 0.5)';
   const sunRingMiddleColor = 'rgba(255, 150, 0, 0.55)';
-  const sunRing2Color = 'rgba(255, 100, 0, 0.6)';
+  const sunRing2Color = 'rgba(255, 120, 0, 0.5)';
   const sunOrbGradient = 'linear-gradient(to bottom right, #FFD700, #FF4500)';
   const sunOrbBoxShadow = '0 0 15px #FFD700, 0 0 7px #FF4500';
 
@@ -344,7 +344,7 @@ const AIConsciousnessPage = () => {
                                 value={searchText}
                                 onChange={(e) => setSearchText(e.target.value)}
                                 placeholder="____________"
-                                className="w-24 bg-transparent border-0 border-b border-amber-300/50 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-amber-300 focus:outline-none text-amber-300 p-0 h-6"
+                                className="w-24 bg-transparent border-0 border-b border-amber-300/50 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-amber-300 text-amber-300 p-0 h-6"
                                 autoFocus
                             />
                         </form>
@@ -361,11 +361,11 @@ const AIConsciousnessPage = () => {
                 <motion.svg className="absolute w-[50%] h-[50%]" viewBox="0 0 300 300" initial={{rotate: 20}} animate={{ rotate: 380 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}>
                     <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing1Color} strokeWidth="6" strokeDasharray="68.4 20" transition={{duration: 0.3}} />
                 </motion.svg>
-                <motion.svg className="absolute w-[65%] h-[65%]" viewBox="0 0 300 300" initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
+                 <motion.svg className="absolute w-[65%] h-[65%]" viewBox="0 0 300 300" initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
                   <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRingMiddleColor} strokeWidth="7" strokeDasharray="150 40 80 110" transition={{duration: 0.3}} />
                 </motion.svg>
                 <motion.svg className="absolute w-[85%] h-[85%]" viewBox="0 0 300 300" initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
-                  <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing2Color} strokeWidth="8" strokeDasharray="100 80 50 120 130" transition={{duration: 0.3}} />
+                  <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing2Color} strokeWidth="5" strokeDasharray="100 80 50 120 130" transition={{duration: 0.3}} />
                 </motion.svg>
                 <motion.div
                     className="absolute w-[30%] h-[30%] rounded-full"
