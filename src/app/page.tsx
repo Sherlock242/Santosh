@@ -7,6 +7,7 @@ import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { edenaAssistant } from './ai/flows/edena-flow';
+import { getWeather } from './ai/flows/weather-flow';
 import { Input } from '@/components/ui/input';
 
 interface IWindow extends Window {
@@ -193,6 +194,48 @@ const AIConsciousnessPage = () => {
     }, 500);
     return () => clearInterval(interval);
   }, []);
+
+  const handleWeatherClick = () => {
+    if (!navigator.geolocation) {
+        speak("I'm sorry, your browser doesn't support location services.");
+        return;
+    }
+
+    setIsLoading(true);
+    setAiResponse('');
+    speak("Getting your location for the weather forecast.");
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+            const weatherResult = await getWeather({ latitude, longitude });
+            speak(weatherResult.summary);
+        } catch (error) {
+            console.error('Error fetching weather:', error);
+            speak("I had trouble getting the weather. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
+    }, (error) => {
+        let message = "I couldn't get your location. ";
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                message += "Please enable location permissions to get weather updates.";
+                break;
+            case error.POSITION_UNAVAILABLE:
+                message += "Your location information is currently unavailable.";
+                break;
+            case error.TIMEOUT:
+                message += "The request to get your location timed out.";
+                break;
+            default:
+                message += "An unknown error occurred.";
+                break;
+        }
+        speak(message);
+        setIsLoading(false);
+    });
+};
   
   const ring1Color = isAngry ? 'rgba(255, 69, 0, 0.5)' : (isBlushing ? 'rgba(255, 182, 193, 0.5)' : 'rgba(0, 255, 255, 0.5)');
   const ring2Color = isAngry ? 'rgba(255, 69, 0, 0.6)' : (isBlushing ? 'rgba(255, 182, 193, 0.6)' : 'rgba(0, 255, 255, 0.6)');
@@ -265,11 +308,12 @@ const AIConsciousnessPage = () => {
       </header>
 
        {/* Small orb clone in top-right */}
-        <div className="absolute top-16 right-4 z-10 pointer-events-none">
+        <div className="absolute top-16 right-4 z-10">
             <motion.div
               layout
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="relative flex items-center justify-center w-20 h-20"
+              className="relative flex items-center justify-center w-20 h-20 cursor-pointer"
+              onClick={handleWeatherClick}
             >
                 <motion.svg className="absolute w-[50%] h-[50%]" viewBox="0 0 300 300" initial={{rotate: 20}} animate={{ rotate: 380 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}>
                     <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing1Color} strokeWidth="6" strokeDasharray="68.4 20" transition={{duration: 0.3}} />

@@ -8,7 +8,9 @@
  */
 
 export interface WeatherInput {
-  query: string;
+  query?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface WeatherOutput {
@@ -42,28 +44,52 @@ function getWeatherDescription(code: number): string {
 
 
 export async function getWeather(input: WeatherInput): Promise<WeatherOutput> {
-  const { query } = input;
+  const { query, latitude, longitude } = input;
   
-  // 1. Geocode the location name to get coordinates
-  const geocodeUrl = new URL('https://geocoding-api.open-meteo.com/v1/search');
-  geocodeUrl.searchParams.append('name', query);
-  geocodeUrl.searchParams.append('count', '1');
-
   let location: GeocodingResult;
-  try {
-    const geoResponse = await fetch(geocodeUrl.toString());
-    const geoData = await geoResponse.json();
 
-    if (!geoData.results || geoData.results.length === 0) {
-      return { summary: `I couldn't find a location named "${query}". Please be more specific.` };
+  if (latitude && longitude) {
+    // Reverse geocode to get location name from coordinates
+    const reverseGeocodeUrl = new URL('https://api.bigdatacloud.net/data/reverse-geocode-client');
+    reverseGeocodeUrl.searchParams.append('latitude', latitude.toString());
+    reverseGeocodeUrl.searchParams.append('longitude', longitude.toString());
+    reverseGeocodeUrl.searchParams.append('localityLanguage', 'en');
+    try {
+        const geoResponse = await fetch(reverseGeocodeUrl.toString());
+        const geoData = await geoResponse.json();
+        location = {
+            latitude,
+            longitude,
+            name: geoData.city || geoData.locality || 'your location',
+            country: geoData.countryName || '',
+        };
+    } catch (error) {
+        console.error('Reverse Geocoding API error:', error);
+        // Fallback if reverse geocoding fails
+        location = { latitude, longitude, name: 'your current location', country: '' };
     }
-    location = geoData.results[0];
-  } catch (error) {
-    console.error('Geocoding API error:', error);
-    return { summary: 'There was an error finding the location. Please try again later.' };
+  } else if (query) {
+      // Geocode the location name to get coordinates
+      const geocodeUrl = new URL('https://geocoding-api.open-meteo.com/v1/search');
+      geocodeUrl.searchParams.append('name', query);
+      geocodeUrl.searchParams.append('count', '1');
+      try {
+        const geoResponse = await fetch(geocodeUrl.toString());
+        const geoData = await geoResponse.json();
+
+        if (!geoData.results || geoData.results.length === 0) {
+          return { summary: `I couldn't find a location named "${query}". Please be more specific.` };
+        }
+        location = geoData.results[0];
+      } catch (error) {
+        console.error('Geocoding API error:', error);
+        return { summary: 'There was an error finding the location. Please try again later.' };
+      }
+  } else {
+    return { summary: "Please provide a location name or coordinates." };
   }
 
-  // 2. Fetch the weather for the found coordinates
+  // Fetch the weather for the found coordinates
   const weatherUrl = new URL('https://api.open-meteo.com/v1/forecast');
   weatherUrl.searchParams.append('latitude', location.latitude.toString());
   weatherUrl.searchParams.append('longitude', location.longitude.toString());
