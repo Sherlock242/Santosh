@@ -268,7 +268,7 @@ const AIConsciousnessPage = () => {
 
   const sunRing1Color = 'rgba(255, 215, 0, 0.5)';
   const sunRingMiddleColor = 'rgba(255, 150, 0, 0.55)';
-  const sunRing2Color = 'rgba(255, 120, 0, 0.5)';
+  const sunRing2Color = 'rgba(255, 160, 0, 0.5)';
   const sunOrbGradient = 'linear-gradient(to bottom right, #FFD700, #FF4500)';
   const sunOrbBoxShadow = '0 0 15px #FFD700, 0 0 7px #FF4500';
 
