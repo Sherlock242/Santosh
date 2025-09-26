@@ -268,7 +268,7 @@ const AIConsciousnessPage = () => {
 
   const sunRing1Color = 'rgba(255, 215, 0, 0.5)';
   const sunRingMiddleColor = 'rgba(255, 150, 0, 0.55)';
-  const sunRing2Color = 'rgba(255, 160, 0, 0.5)';
+  const sunRing2Color = 'rgba(255, 160, 0, 0.4)';
   const sunOrbGradient = 'linear-gradient(to bottom right, #FFD700, #FF4500)';
   const sunOrbBoxShadow = '0 0 15px #FFD700, 0 0 7px #FF4500';
 
@@ -344,7 +344,7 @@ const AIConsciousnessPage = () => {
                                 value={searchText}
                                 onChange={(e) => setSearchText(e.target.value)}
                                 placeholder="____________"
-                                className="w-24 bg-transparent p-0 h-6 text-amber-300 border-0 border-b border-amber-300 focus:ring-0 focus:outline-none"
+                                className="w-24 bg-transparent p-0 h-6 text-amber-300 border-0 focus:outline-none focus:ring-0"
                                 autoFocus
                             />
                         </form>
@@ -365,7 +365,7 @@ const AIConsciousnessPage = () => {
                   <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRingMiddleColor} strokeWidth="7" strokeDasharray="150 40 80 110" transition={{duration: 0.3}} />
                 </motion.svg>
                 <motion.svg className="absolute w-[85%] h-[85%]" viewBox="0 0 300 300" initial={{rotate: 90}} animate={{ rotate: 450 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
-                  <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing2Color} strokeWidth="5" strokeDasharray="100 80 50 120 130" transition={{duration: 0.3}} />
+                  <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing2Color} strokeWidth="4" strokeDasharray="100 80 50 120 130" transition={{duration: 0.3}} />
                 </motion.svg>
                 <motion.div
                     className="absolute w-[30%] h-[30%] rounded-full"
