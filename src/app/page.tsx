@@ -287,56 +287,6 @@ const AIConsciousnessPage = () => {
         </div>
       </header>
 
-       {/* Small orb clone in top-right */}
-        <div className="absolute top-16 right-4 z-10 flex items-center gap-4">
-            <AnimatePresence>
-                {showWeatherSearch && (
-                     <motion.div
-                        key="weather-search"
-                        initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: 'auto', opacity: 1 }}
-                        exit={{ width: 0, opacity: 0 }}
-                        transition={{ duration: 0.5, ease: 'easeInOut' }}
-                     >
-                        <form onSubmit={handleWeatherSearch} ref={weatherSearchFormRef} className="flex items-center gap-2">
-                            <span className="text-amber-300">weather of</span>
-                             <input
-                                type="text"
-                                value={searchText}
-                                onChange={(e) => setSearchText(e.target.value)}
-                                placeholder="____________"
-                                className="w-24 bg-transparent p-0 h-6 text-amber-300 border-0 outline-none focus:outline-none focus:ring-0"
-                                autoFocus
-                            />
-                        </form>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            <motion.div
-              id="small-weather-orb"
-              layout
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="relative flex items-center justify-center w-20 h-20 cursor-pointer"
-              onClick={(e) => { e.stopPropagation(); handleWeatherClick(); }}
-            >
-                <motion.svg className="absolute w-[50%] h-[50%]" viewBox="0 0 300 300" initial={{rotate: 20}} animate={{ rotate: 380 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}>
-                    <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRing1Color} strokeWidth="6" strokeDasharray="68.4 20" transition={{duration: 0.3}} />
-                </motion.svg>
-                 <motion.svg className="absolute w-[65%] h-[65%]" viewBox="0 0 300 300" initial={{rotate: -50}} animate={{ rotate: -410 }} transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}>
-                  <motion.circle cx="150" cy="150" r="140" fill="none" stroke={sunRingMiddleColor} strokeWidth="7" strokeDasharray="150 40 80 110" transition={{duration: 0.3}} />
-                </motion.svg>
-                <motion.div
-                    className="absolute w-[30%] h-[30%] rounded-full"
-                    style={{ background: sunOrbGradient }}
-                    animate={{
-                        scale: isListening || isSpeaking ? 1.1 : 1,
-                        boxShadow: sunOrbBoxShadow,
-                    }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 15, duration: 0.3 }}
-                />
-            </motion.div>
-        </div>
-
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         
         <motion.div
