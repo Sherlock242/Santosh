@@ -344,7 +344,7 @@ const AIConsciousnessPage = () => {
                                 value={searchText}
                                 onChange={(e) => setSearchText(e.target.value)}
                                 placeholder="____________"
-                                className="w-24 bg-transparent border-0 border-b border-amber-300/50 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-amber-300 text-amber-300 p-0 h-6"
+                                className="w-24 bg-transparent border-0 border-b border-amber-300/50 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-amber-300 focus:outline-none text-amber-300 p-0 h-6"
                                 autoFocus
                             />
                         </form>
