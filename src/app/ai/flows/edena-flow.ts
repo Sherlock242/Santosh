@@ -14,7 +14,6 @@ import { searchInternetArchive } from './article-search-flow';
 import { searchDictionary } from './dictionary-flow';
 import { searchNews } from './news-flow';
 import { getWeather } from './weather-flow';
-import { searchGoogle } from './google-search-flow';
 
 
 export interface EdenaInput {
@@ -419,35 +418,11 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
             result = await searchWikipedia({ query: coreQuery });
             break;
     }
-    
-    // Fallback logic: if a specialized search returns "not found", try a broader search.
-    if (result.summary.toLowerCase().includes("couldn't find")) {
-        let fallbackResult;
-        if (queryType === 'general') {
-            // If Wikipedia failed, try Google Search as a final fallback
-            fallbackResult = await searchGoogle({ query: coreQuery });
-        } else {
-             // For other failed types, try Wikipedia first
-            fallbackResult = await searchWikipedia({ query: coreQuery });
-            if (fallbackResult.summary.toLowerCase().includes("couldn't find")) {
-                // If Wikipedia also fails, try Google Search
-                fallbackResult = await searchGoogle({ query: coreQuery });
-            }
-        }
-        return { answer: fallbackResult.summary };
-    }
 
     return { answer: result.summary };
 
   } catch (error) {
     console.error(`Edena assistant error for type ${queryType}:`, error);
-    try {
-        // Fallback to a general search engine on any error
-        const fallbackResult = await searchGoogle({ query: coreQuery });
-        return { answer: fallbackResult.summary };
-    } catch (fallbackError) {
-        console.error('Edena fallback error:', fallbackError);
-        return { answer: "I'm having trouble connecting to my knowledge bases right now. Please try again later." };
-    }
+    return { answer: "I'm having trouble connecting to my knowledge bases right now. Please try again later." };
   }
 }
