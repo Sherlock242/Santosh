@@ -215,7 +215,7 @@ const newsKeywords = [
     'news', 'latest', 'update', 'breaking', 'story', 'report on'
 ];
 const weatherKeywords = [
-    'weather', 'temperature', 'forecast', 'climate', 'how hot', 'how cold'
+    'weather', 'temperature', 'temp', 'forecast', 'climate', 'how hot', 'how cold'
 ];
 
 const dictionaryPrefixes = [
@@ -354,10 +354,25 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
   // Second priority: Weather check
   if (!processed) {
       const weatherCoreQuery = stripPrefix(query, weatherPrefixes);
+      const isWeatherKeywordQuery = weatherKeywords.some(keyword => lowerCaseQuery.includes(keyword));
+
       if (weatherCoreQuery) {
           coreQuery = weatherCoreQuery;
           queryType = 'weather';
           processed = true;
+      } else if (isWeatherKeywordQuery) {
+          // Extract location from a general weather query
+          let location = lowerCaseQuery;
+          for (const keyword of weatherKeywords) {
+              location = location.replace(new RegExp(keyword, 'gi'), '');
+          }
+          location = location.replace(/ in /gi, '').replace(/ of /gi, '').replace(/ for /gi, '').trim();
+
+          if (location) {
+              coreQuery = location;
+              queryType = 'weather';
+              processed = true;
+          }
       }
   }
   
@@ -366,11 +381,8 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
       const isBookQuery = bookKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       const isArticleQuery = articleKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       const isNewsQuery = newsKeywords.some(keyword => lowerCaseQuery.includes(keyword));
-      const isWeatherQuery = weatherKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       
-      if (isWeatherQuery) {
-          queryType = 'weather';
-      } else if (isNewsQuery) {
+      if (isNewsQuery) {
           queryType = 'news';
       } else if (isBookQuery) {
           queryType = 'book';
