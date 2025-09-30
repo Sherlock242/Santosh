@@ -435,8 +435,14 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
 
     return { answer: result.summary };
 
-  } catch (error) {
+  } catch (error: any) {
+    const errorResponses = [
+        "I'm having trouble connecting to my knowledge bases right now. Please try again later.",
+        "Apologies, my connection seems to be unstable. Could you try that again?",
+        "Something went wrong on my end. Let's give that another shot.",
+    ];
+    const randomResponse = errorResponses[Math.floor(Math.random() * errorResponses.length)];
     console.error(`Edena assistant error for type ${queryType}:`, error);
-    return { answer: "I'm having trouble connecting to my knowledge bases right now. Please try again later." };
+    return { answer: randomResponse };
   }
 }

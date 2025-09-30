@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A utility for searching books using the Open Library API.
@@ -15,6 +16,16 @@ export interface SearchBookOutput {
   summary: string;
 }
 
+const getNotFoundResponse = (query: string) => {
+    const responses = [
+        `I couldn't find any books matching "${query}". Please try a different title or author.`,
+        `My book search for "${query}" didn't turn up any results.`,
+        `Looks like "${query}" isn't in the library. Could you check the spelling?`
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
+
+
 export async function searchOpenLibrary(input: SearchBookInput): Promise<SearchBookOutput> {
   const { query } = input;
   const url = new URL('https://openlibrary.org/search.json');
@@ -27,7 +38,7 @@ export async function searchOpenLibrary(input: SearchBookInput): Promise<SearchB
     const data = await response.json();
 
     if (data.numFound === 0 || !data.docs || data.docs.length === 0) {
-      return { summary: "I couldn't find any books matching that query. Please try a different title or author." };
+      return { summary: getNotFoundResponse(query) };
     }
 
     const book = data.docs[0];

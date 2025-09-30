@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A utility for searching space news using the Spaceflight News API.
@@ -23,6 +24,15 @@ interface Article {
   news_site: string;
 }
 
+const getNotFoundResponse = (query: string) => {
+    const responses = [
+        `I couldn't find any recent space news matching "${query}". Try a different keyword?`,
+        `My search for space news about "${query}" was empty.`,
+        `No space news on "${query}" right now. Maybe check for general news instead?`
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
+
 export async function searchNews(input: SearchNewsInput): Promise<SearchNewsOutput> {
   const { query } = input;
   // Use the search endpoint from Spaceflight News API
@@ -35,7 +45,7 @@ export async function searchNews(input: SearchNewsInput): Promise<SearchNewsOutp
     const data = await response.json();
 
     if (!data.results || data.results.length === 0) {
-      return { summary: `I couldn't find any recent space news matching "${query}".` };
+      return { summary: getNotFoundResponse(query) };
     }
 
     const article: Article = data.results[0];

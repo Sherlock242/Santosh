@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A utility for searching articles using the Internet Archive API.
@@ -15,6 +16,16 @@ export interface SearchArticleOutput {
   summary: string;
 }
 
+const getNotFoundResponse = (query: string) => {
+    const responses = [
+        `I couldn't find any articles or documents matching "${query}" on the Internet Archive.`,
+        `My archive search for "${query}" didn't yield any results.`,
+        `I searched the archives for "${query}", but found nothing. Maybe try a different topic?`
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
+
+
 export async function searchInternetArchive(input: SearchArticleInput): Promise<SearchArticleOutput> {
   const { query } = input;
   // Using the scrape endpoint which is simpler for this use case
@@ -28,7 +39,7 @@ export async function searchInternetArchive(input: SearchArticleInput): Promise<
     const data = await response.json();
 
     if (!data.items || data.items.length === 0) {
-      return { summary: "I couldn't find any articles or documents matching that query on the Internet Archive." };
+      return { summary: getNotFoundResponse(query) };
     }
 
     const item = data.items[0];

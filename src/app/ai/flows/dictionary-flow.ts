@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A utility for searching for word definitions using a free dictionary API.
@@ -15,6 +16,15 @@ export interface SearchDictionaryOutput {
   summary: string;
 }
 
+const getNotFoundResponse = (query: string) => {
+    const responses = [
+        `I couldn't find a definition for "${query}". Please check the spelling.`,
+        `Sorry, I don't have a definition for "${query}".`,
+        `Hmm, "${query}" doesn't seem to be in my dictionary.`,
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
+
 export async function searchDictionary(input: SearchDictionaryInput): Promise<SearchDictionaryOutput> {
   const { query } = input;
   const url = new URL(`https://api.dictionaryapi.dev/api/v2/entries/en/${query}`);
@@ -24,7 +34,7 @@ export async function searchDictionary(input: SearchDictionaryInput): Promise<Se
     const data = await response.json();
 
     if (!response.ok || !Array.isArray(data) || data.length === 0) {
-      return { summary: `I couldn't find a definition for "${query}". Please check the spelling.` };
+      return { summary: getNotFoundResponse(query) };
     }
 
     const entry = data[0];

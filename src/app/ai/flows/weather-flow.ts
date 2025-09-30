@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A utility for fetching weather information using the Open-Meteo API.
@@ -42,6 +43,15 @@ function getWeatherDescription(code: number): string {
     return descriptions[code] || 'Unknown weather';
 }
 
+const getNotFoundResponse = (query: string) => {
+    const responses = [
+        `I couldn't find a location named "${query}". Please be more specific.`,
+        `I can't seem to locate "${query}". Is the spelling correct?`,
+        `Sorry, I don't have any weather data for a place called "${query}".`,
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
+
 
 export async function getWeather(input: WeatherInput): Promise<WeatherOutput> {
   const { query, latitude, longitude } = input;
@@ -78,7 +88,7 @@ export async function getWeather(input: WeatherInput): Promise<WeatherOutput> {
         const geoData = await geoResponse.json();
 
         if (!geoData.results || geoData.results.length === 0) {
-          return { summary: `I couldn't find a location named "${query}". Please be more specific.` };
+          return { summary: getNotFoundResponse(query) };
         }
         location = geoData.results[0];
       } catch (error) {
@@ -101,7 +111,7 @@ export async function getWeather(input: WeatherInput): Promise<WeatherOutput> {
     const weatherData = await weatherResponse.json();
     
     if (!weatherData.current) {
-        return { summary: "Could not retrieve current weather data for that location." };
+        return { summary: `Could not retrieve current weather data for ${location.name}.` };
     }
 
     const temp = weatherData.current.temperature_2m;

@@ -17,6 +17,23 @@ export interface SearchWikipediaOutput {
   summary: string;
 }
 
+const getNotFoundResponse = (query: string) => {
+    const responses = [
+        `I couldn't find any information on "${query}". Please try another search.`,
+        `My search for "${query}" came up empty. Perhaps try a broader term?`,
+        `I'm drawing a blank on "${query}". Could you rephrase it?`,
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
+
+const getNoSummaryResponse = (query: string) => {
+    const responses = [
+        `I found an article for "${query}", but it doesn't have a summary. Try being more specific.`,
+        `The page for "${query}" exists, but there's no introductory summary. Maybe I could search for a related article?`,
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
+
 export async function searchWikipedia(input: SearchWikipediaInput): Promise<SearchWikipediaOutput> {
   const { query } = input;
   const url = new URL('https://en.wikipedia.org/w/api.php');
@@ -41,7 +58,7 @@ export async function searchWikipedia(input: SearchWikipediaInput): Promise<Sear
     const pageId = Object.keys(pages)[0];
 
     if (pageId === '-1') {
-      return { summary: "I couldn't find any information on that topic. Please try another search." };
+      return { summary: getNotFoundResponse(query) };
     }
 
     const page = pages[pageId];
@@ -55,7 +72,7 @@ export async function searchWikipedia(input: SearchWikipediaInput): Promise<Sear
         }
         return { summary };
     } else {
-        return { summary: "I found an article, but it doesn't have a summary. Try being more specific." };
+        return { summary: getNoSummaryResponse(query) };
     }
   } catch (error) {
     console.error('Error fetching from Wikipedia:', error);
