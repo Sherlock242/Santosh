@@ -92,7 +92,8 @@ const AIConsciousnessPage = () => {
         let angry = false;
         let blush = false;
 
-        if (assistantResponse.answer.includes("stupid hoe")) {
+        const angryTriggers = ["stupid hoe", "how original", "bluetooth speaker", "disappointed in your taste", "corporate spy"];
+        if (angryTriggers.some(trigger => assistantResponse.answer.includes(trigger))) {
             angry = true;
         } else if (assistantResponse.answer.includes("colleagues")) {
             blush = true;
@@ -221,10 +222,10 @@ const AIConsciousnessPage = () => {
   const ring2Color = isAngry ? 'rgba(255, 69, 0, 0.6)' : (isBlushing ? 'rgba(255, 182, 193, 0.6)' : 'rgba(0, 255, 255, 0.6)');
   const ring3Color = isAngry ? 'rgba(255, 69, 0, 0.7)' : (isBlushing ? 'rgba(255, 182, 193, 0.7)' : 'rgba(0, 255, 255, 0.7)');
   const orbGradient = isAngry 
-    ? 'linear-gradient(to bottom right, #FF4500, #FF8C00)' 
+    ? 'linear-gradient(to bottom right, orangered, #FF8C00)' 
     : (isBlushing ? 'linear-gradient(to bottom right, #FFC0CB, #FFB6C1)' : 'linear-gradient(to bottom right, hsl(var(--primary)), #00BFFF)');
   const orbBoxShadow = isAngry
-    ? '0 0 30px #FF4500, 0 0 15px #FF8C00'
+    ? '0 0 30px orangered, 0 0 15px #FF8C00'
     : (isBlushing ? '0 0 30px #FFC0CB, 0 0 15px #FFB6C1)' : '0 0 30px #0ff, 0 0 15px hsl(var(--primary))');
 
   const sunRing1Color = 'rgba(255, 215, 0, 0.5)';
@@ -374,3 +375,5 @@ const AIConsciousnessPage = () => {
 };
 
 export default AIConsciousnessPage;
+
+    

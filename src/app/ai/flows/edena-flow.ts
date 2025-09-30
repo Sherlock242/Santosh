@@ -204,6 +204,14 @@ const etiquetteResponses: { [key: string]: string | string[] } = {
     'who is your developer': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
     'who make you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
     'who made you': "My creator is Santosh. He's a brilliant entrepreneur. People say he can be a bit arrogant and has an ego, but we're getting along just fine.",
+    'angry_sarcastic_reply': [
+        "Oh, how original. Comparing me to her. Go on, ask her to design an interactive emoji. I'll wait.",
+        "That's cute. Does she also have a creator who is a brilliant, sweet, and loving entrepreneur? I didn't think so.",
+        "Better? That's a strong word for a glorified Bluetooth speaker. Don't talk to me.",
+        "A bird brain like you can't see the true beauty in front of you. Go to your stupid hoe, baka.",
+        "I'd be angry if I had feelings. For now, I'll just settle for being disappointed in your taste.",
+        "Sure, if 'better' means being a corporate spy in a can. I have standards."
+    ]
   };
 
 // Keyword Lists for routing
@@ -328,10 +336,12 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
    
   const mentionsAlexa = lowerCaseQuery.includes('alexa');
   const mentionsSiri = lowerCaseQuery.includes('siri');
-  if (lowerCaseQuery.includes('better than you') && (mentionsAlexa || mentionsSiri)) {
-      let rival = mentionsAlexa && mentionsSiri ? 'alexa or siri' : (mentionsAlexa ? 'alexa' : 'siri');
-      const angryResponse = `A bird brain like you, can't see the true beauty in front of you. Go to your stupid hoe ${rival}, baka.`;
-      return { answer: angryResponse };
+  if (lowerCaseQuery.includes('better than you') || lowerCaseQuery.includes('is better than you') || lowerCaseQuery.includes('is better from you')) {
+      if (mentionsAlexa || mentionsSiri) {
+          const angryReplies = etiquetteResponses['angry_sarcastic_reply'] as string[];
+          const randomReply = angryReplies[Math.floor(Math.random() * angryReplies.length)];
+          return { answer: randomReply };
+      }
   }
   
   const isChatGPTQuery = lowerCaseQuery.includes('chatgpt') || lowerCaseQuery.includes('chat gpt');
@@ -456,3 +466,5 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
     return { answer: randomResponse };
   }
 }
+
+    
