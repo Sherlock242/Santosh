@@ -15,6 +15,7 @@ import { searchInternetArchive } from './article-search-flow';
 import { searchDictionary } from './dictionary-flow';
 import { searchNews } from './news-flow';
 import { getWeather } from './weather-flow';
+import { searchAnime } from './anime-search-flow';
 
 
 export interface EdenaInput {
@@ -218,6 +219,9 @@ const newsKeywords = [
 const weatherKeywords = [
     'weather', 'temperature', 'temp', 'forecast', 'climate', 'how hot', 'how cold'
 ];
+const animeKeywords = [
+    'anime', 'manga', 'character in', 'plot of', 'about the anime', 'about the manga'
+];
 
 const dictionaryPrefixes = [
     "define", "definition of", "what's the definition of", "meaning of", "what is the meaning of",
@@ -342,7 +346,7 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
 
   // --- 3. If not a pre-canned question, proceed with general knowledge routing ---
   let coreQuery = query;
-  let queryType: 'dictionary' | 'weather' | 'book' | 'article' | 'news' | 'general' = 'general';
+  let queryType: 'dictionary' | 'weather' | 'book' | 'article' | 'news' | 'anime' | 'general' = 'general';
   let processed = false;
 
   // Highest priority: Dictionary check
@@ -383,8 +387,11 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
       const isBookQuery = bookKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       const isArticleQuery = articleKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       const isNewsQuery = newsKeywords.some(keyword => lowerCaseQuery.includes(keyword));
+      const isAnimeQuery = animeKeywords.some(keyword => lowerCaseQuery.includes(keyword));
       
-      if (isNewsQuery) {
+      if (isAnimeQuery) {
+        queryType = 'anime';
+      } else if (isNewsQuery) {
           queryType = 'news';
       } else if (isBookQuery) {
           queryType = 'book';
@@ -426,6 +433,9 @@ export async function edenaAssistant(input: EdenaInput): Promise<EdenaOutput> {
             break;
         case 'news':
             result = await searchNews({ query: coreQuery });
+            break;
+        case 'anime':
+            result = await searchAnime({ query: coreQuery });
             break;
         case 'general':
         default:
