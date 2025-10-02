@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -108,11 +108,7 @@ function LoginPageContent() {
   return (
     <>
       <div className="flex flex-col items-center justify-center h-full text-center p-4 overflow-y-auto">
-        <Link href="/" passHref>
-          <Button variant="ghost" size="icon" className="absolute top-4 left-4 text-cyan-400 hover:text-cyan-400/80 rounded-full">
-            <ArrowLeft />
-          </Button>
-        </Link>
+        
         <motion.div 
           className="flex flex-col items-center justify-center gap-6 w-full max-w-sm"
           initial="hidden"
