@@ -1,5 +1,5 @@
 
-import { serve } from 'https://deno.land/std@0.164.0/http/server.ts';
+import { serve } from 'https://deno.land/std@0.203.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_API_KEY');
